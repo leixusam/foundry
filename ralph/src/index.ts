@@ -3,9 +3,15 @@ import { spawnClaude, extractFinalOutput } from './lib/claude.js';
 import { sleep, handleRateLimit } from './lib/rate-limit.js';
 import { loadPrompt } from './lib/prompts.js';
 import { gitSafetyNetPush, getCurrentBranch } from './lib/git.js';
+import { generateAgentName } from './lib/agent-name.js';
 
 async function runLoop(iteration: number): Promise<void> {
-  console.log(`\n${'='.repeat(24)} LOOP ${iteration} ${'='.repeat(24)}\n`);
+  // Generate a unique name for this loop instance
+  // All agents in this loop share the same name for attribution in Linear comments
+  const agentName = generateAgentName();
+
+  console.log(`\n${'='.repeat(24)} LOOP ${iteration} ${'='.repeat(24)}`);
+  console.log(`Agent Name: ${agentName}\n`);
   const loopStart = Date.now();
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -13,7 +19,16 @@ async function runLoop(iteration: number): Promise<void> {
   // ═══════════════════════════════════════════════════════════════════════════
   console.log('Agent 1: Linear Reader starting...');
 
-  const agent1Prompt = await loadPrompt('agent1-linear-reader');
+  const agent1BasePrompt = await loadPrompt('agent1-linear-reader');
+  const agent1Prompt = `## Agent Instance
+
+You are agent instance: **${agentName}**
+
+This name identifies your loop instance. Include it in any claims or comments you make to Linear so that when multiple agents work in parallel, we can tell which agent made which comment.
+
+---
+
+${agent1BasePrompt}`;
   const agent1Result = await spawnClaude({
     prompt: agent1Prompt,
     model: 'opus',
@@ -44,7 +59,15 @@ async function runLoop(iteration: number): Promise<void> {
 
   // Build worker prompt by combining the base prompt with agent 1's output
   const workerBasePrompt = await loadPrompt('agent2-worker');
-  const workerPrompt = `## Context from Linear (gathered by Agent 1)
+  const workerPrompt = `## Agent Instance
+
+You are part of agent instance: **${agentName}**
+
+This name identifies your loop instance for attribution purposes.
+
+---
+
+## Context from Linear (gathered by Agent 1)
 
 ${agent1Output}
 
@@ -69,7 +92,15 @@ ${workerBasePrompt}`;
   console.log('\nAgent 3: Linear Writer starting...');
 
   const writerBasePrompt = await loadPrompt('agent3-linear-writer');
-  const writerPrompt = `## Context from Agent 1 (Linear issue details)
+  const writerPrompt = `## Agent Instance
+
+You are part of agent instance: **${agentName}**
+
+**IMPORTANT**: Include this agent name in all comments you post to Linear so that when multiple agents work in parallel, we can identify which agent made which comment.
+
+---
+
+## Context from Agent 1 (Linear issue details)
 
 ${agent1Output}
 
@@ -83,6 +114,7 @@ ${agent2Output}
 
 ## Session Stats
 
+- Agent Name: ${agentName}
 - Agent 2 Cost: $${agent2Result.cost.toFixed(4)}
 - Agent 2 Duration: ${Math.round(agent2Result.duration / 1000)}s
 - Agent 2 Exit code: ${agent2Result.exitCode}
