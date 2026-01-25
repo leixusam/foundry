@@ -15,7 +15,7 @@ export const config = {
     workingDirectory: getRepoRoot(),
     gitBranch: 'main',
     staleTimeoutHours: 4,
-    noWorkSleepMinutes: 5,
+    noWorkSleepMinutes: 15,
     errorSleepMinutes: 1,
 };
 export function getConfig() {

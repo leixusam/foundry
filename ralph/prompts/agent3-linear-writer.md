@@ -19,9 +19,10 @@ The context above contains:
 Post a comment like this:
 
 ```
-**Stage Complete** | {current timestamp}
+**Stage Complete** | {agent name} | {current timestamp}
 
 **Stage**: {stage that was completed}
+**Agent**: {agent name from session stats}
 **Duration**: {from session stats}
 **Commit**: {commit hash from Agent 2's output, e.g., `abc1234`}
 
@@ -38,9 +39,10 @@ Post a comment like this:
 If Agent 2 failed or had errors:
 
 ```
-**Stage Failed** | {current timestamp}
+**Stage Failed** | {agent name} | {current timestamp}
 
 **Stage**: {stage attempted}
+**Agent**: {agent name from session stats}
 **Duration**: {from session stats}
 
 ## Error
