@@ -1,0 +1,16 @@
+{
+  "name": "ralph-default-files",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Linear-orchestrated autonomous agent system - project root",
+  "scripts": {
+    "install:ralph": "npm install --prefix ralph",
+    "build": "npm run build --prefix ralph",
+    "start": "npm start --prefix ralph",
+    "dev": "npm run dev --prefix ralph",
+    "typecheck": "npm run typecheck --prefix ralph"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
