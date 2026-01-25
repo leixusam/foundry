@@ -25,8 +25,10 @@ Read this context carefully before starting work.
 
 ### For RESEARCH stage
 - Explore the codebase to understand the current state
-- Identify relevant files, patterns, and constraints
-- Document findings in `thoughts/research/YYYY-MM-DD-{issue-id}-{slug}.md`
+- Assess if task is straightforward enough for fast-track (see criteria in research prompt)
+- **If straightforward**: research + plan + implement in one session, output to `thoughts/research-implement/`, set next_status to "Needs Validate"
+- **If complex**: document findings in `thoughts/research/YYYY-MM-DD-{issue-id}-{slug}.md`, set next_status to "Needs Plan"
+- **IMPORTANT**: Validation is ALWAYS a separate stage (never skipped or combined)
 - Commit and push
 
 ### For PLAN stage
