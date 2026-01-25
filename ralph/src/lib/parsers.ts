@@ -2,8 +2,9 @@ import { DispatchResult, WorkResult, LinearUpdateResult } from '../types.js';
 
 // Parse DISPATCH_RESULT YAML block from Agent 1 output
 export function parseDispatchResult(output: string): DispatchResult | null {
-  // Find the DISPATCH_RESULT block
-  const match = output.match(/DISPATCH_RESULT:\s*\n([\s\S]*?)(?:\n```|$)/);
+  // Find the DISPATCH_RESULT block - handle both with and without code block wrapper
+  const match = output.match(/DISPATCH_RESULT:\s*\n([\s\S]*?)(?:\n```|$)/) ||
+                output.match(/```\s*\n?DISPATCH_RESULT:\s*\n([\s\S]*?)```/);
   if (!match) {
     console.error('Could not find DISPATCH_RESULT block in output');
     return null;
@@ -27,6 +28,11 @@ export function parseDispatchResult(output: string): DispatchResult | null {
       labels: [],
       priority: 'none',
       existingArtifacts: {},
+      parentIssue: '',
+      subIssues: '',
+      blockingIssues: '',
+      blockedByIssues: '',
+      relatedContext: '',
       commentsSummary: '',
     };
   }
@@ -105,6 +111,51 @@ export function parseDispatchResult(output: string): DispatchResult | null {
   } else {
     const singleLineComment = yamlContent.match(/comments_summary:\s*(.+)/);
     if (singleLineComment) result.commentsSummary = singleLineComment[1].trim();
+  }
+
+  // Parse parent_issue
+  const parentMatch = yamlContent.match(/parent_issue:\s*\|\s*\n([\s\S]*?)(?=\n\s*\w+:|$)/);
+  if (parentMatch) {
+    result.parentIssue = parentMatch[1].trim();
+  } else {
+    const singleLineParent = yamlContent.match(/parent_issue:\s*(.+)/);
+    if (singleLineParent) result.parentIssue = singleLineParent[1].trim();
+  }
+
+  // Parse sub_issues
+  const subMatch = yamlContent.match(/sub_issues:\s*\|\s*\n([\s\S]*?)(?=\n\s*\w+:|$)/);
+  if (subMatch) {
+    result.subIssues = subMatch[1].trim();
+  } else {
+    const singleLineSub = yamlContent.match(/sub_issues:\s*(.+)/);
+    if (singleLineSub) result.subIssues = singleLineSub[1].trim();
+  }
+
+  // Parse blocking_issues
+  const blockingMatch = yamlContent.match(/blocking_issues:\s*\|\s*\n([\s\S]*?)(?=\n\s*\w+:|$)/);
+  if (blockingMatch) {
+    result.blockingIssues = blockingMatch[1].trim();
+  } else {
+    const singleLineBlocking = yamlContent.match(/blocking_issues:\s*(.+)/);
+    if (singleLineBlocking) result.blockingIssues = singleLineBlocking[1].trim();
+  }
+
+  // Parse blocked_by_issues
+  const blockedByMatch = yamlContent.match(/blocked_by_issues:\s*\|\s*\n([\s\S]*?)(?=\n\s*\w+:|$)/);
+  if (blockedByMatch) {
+    result.blockedByIssues = blockedByMatch[1].trim();
+  } else {
+    const singleLineBlockedBy = yamlContent.match(/blocked_by_issues:\s*(.+)/);
+    if (singleLineBlockedBy) result.blockedByIssues = singleLineBlockedBy[1].trim();
+  }
+
+  // Parse related_context
+  const relatedMatch = yamlContent.match(/related_context:\s*\|\s*\n([\s\S]*?)(?=\n\s*\w+:|$)/);
+  if (relatedMatch) {
+    result.relatedContext = relatedMatch[1].trim();
+  } else {
+    const singleLineRelated = yamlContent.match(/related_context:\s*(.+)/);
+    if (singleLineRelated) result.relatedContext = singleLineRelated[1].trim();
   }
 
   // Validate required fields

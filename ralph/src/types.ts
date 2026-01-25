@@ -16,6 +16,11 @@ export interface DispatchResult {
     research?: string;
     plan?: string;
   };
+  parentIssue: string;
+  subIssues: string;
+  blockingIssues: string;
+  blockedByIssues: string;
+  relatedContext: string;
   commentsSummary: string;
 }
 
