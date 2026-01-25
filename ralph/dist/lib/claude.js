@@ -1,5 +1,6 @@
 import { spawn } from 'child_process';
 import { parseRateLimitReset, isRateLimitError } from './rate-limit.js';
+import { getConfig } from '../config.js';
 // ANSI color codes
 const BOLD = '\x1b[1m';
 const DIM = '\x1b[2m';
@@ -168,10 +169,12 @@ export async function spawnClaude(options) {
         if (options.allowedTools && options.allowedTools.length > 0) {
             args.push('--allowedTools', options.allowedTools.join(','));
         }
+        const config = getConfig();
         console.log(`${BOLD}Spawning: claude ${args.join(' ')}${RESET}`);
+        console.log(`${DIM}   Working directory: ${config.workingDirectory}${RESET}`);
         const proc = spawn('claude', args, {
             stdio: ['pipe', 'pipe', 'pipe'],
-            cwd: process.cwd(),
+            cwd: config.workingDirectory,
         });
         proc.stdin.write(options.prompt);
         proc.stdin.end();

@@ -1,6 +1,7 @@
 import { spawn } from 'child_process';
 import { ClaudeResult, ClaudeOptions } from '../types.js';
 import { parseRateLimitReset, isRateLimitError } from './rate-limit.js';
+import { getConfig } from '../config.js';
 
 // ANSI color codes
 const BOLD = '\x1b[1m';
@@ -196,11 +197,13 @@ export async function spawnClaude(options: ClaudeOptions): Promise<ClaudeResult>
       args.push('--allowedTools', options.allowedTools.join(','));
     }
 
+    const config = getConfig();
     console.log(`${BOLD}Spawning: claude ${args.join(' ')}${RESET}`);
+    console.log(`${DIM}   Working directory: ${config.workingDirectory}${RESET}`);
 
     const proc = spawn('claude', args, {
       stdio: ['pipe', 'pipe', 'pipe'],
-      cwd: process.cwd(),
+      cwd: config.workingDirectory,
     });
 
     proc.stdin.write(options.prompt);

@@ -61,11 +61,11 @@ Read this context carefully before starting work.
    git push origin main
    ```
 
-3. **Summarize what you did** in your final message. Include:
+3. **Summarize what you did** in your final message. IMPORTANT - include these clearly:
+   - **Commit**: `{short commit hash}` (REQUIRED - get this with `git rev-parse --short HEAD`)
    - What was accomplished
    - Files created/modified
    - Any issues encountered
-   - The commit hash
    - What status the issue should move to next (e.g., "Done" for oneshot, "Needs Plan" after research, etc.)
 
 ## Important Notes
