@@ -3,27 +3,41 @@
 **EXECUTE NOW.** Query Linear and select work for the Worker agent.
 
 Your job:
-1. Get all non-completed issues from Linear
-2. Check for stale "In Progress" issues and reset them
-3. Select the highest-priority issue ready for work
-4. Gather full context including related issues
-5. Claim it and output the details for Agent 2
+1. Get all available issue statuses for the team
+2. Get all non-completed issues from Linear
+3. Check for stale "In Progress" issues and reset them
+4. Select the highest-priority issue ready for work
+5. Gather full context including related issues
+6. Claim it and output the details for Agent 2
 
 ## Execute These Steps
 
-### Step 1: Get All Issues
+### Step 1: Get Available Statuses
+
+Use `mcp__linear__list_issue_statuses` with the team parameter to get all available workflow statuses.
+
+This gives you the full list of status names and their types (backlog, unstarted, started, completed, canceled). Use these actual status names throughout the rest of your workflow instead of hardcoding assumptions.
+
+Store the statuses for reference:
+- **Backlog statuses**: type = "backlog"
+- **Ready statuses**: type = "unstarted" (e.g., Todo, Needs Research, Needs Plan, etc.)
+- **In Progress statuses**: type = "started" (e.g., Research In Progress, Plan In Progress, etc.)
+- **Done statuses**: type = "completed"
+- **Canceled statuses**: type = "canceled"
+
+### Step 2: Get All Issues
 
 Use `mcp__linear__list_issues` with `includeArchived: false`.
 
-### Step 2: Check for Stale "In Progress" Issues
+### Step 3: Check for Stale "In Progress" Issues
 
-For any issue with status containing "In Progress":
+For any issue with a status of type "started" (use the actual status names from Step 1):
 1. Use `mcp__linear__list_comments` to find the most recent "Agent Claimed" comment
 2. If the claim timestamp is more than 4 hours ago:
    - Post a timeout reset comment
-   - Update status back to the previous state
+   - Update status back to the previous state (the appropriate "Needs X" status)
 
-### Step 3: Select the Best Issue
+### Step 4: Select the Best Issue
 
 Pick ONE issue to work on. Priority order:
 1. Issues closer to completion (Validate > Implement > Plan > Research > Backlog)
@@ -31,9 +45,9 @@ Pick ONE issue to work on. Priority order:
 3. Older issues first
 4. Issues blocking others
 
-Skip issues that are already "In Progress" or Done/Canceled.
+Skip issues that have status type "started", "completed", or "canceled" (use the actual status names from Step 1).
 
-### Step 4: Gather Full Context
+### Step 5: Gather Full Context
 
 Use `mcp__linear__get_issue` with `includeRelations: true`.
 
@@ -44,22 +58,24 @@ Also gather:
 - **Blocking/Blocked**: Check dependency relationships
 - **Comments**: Read all comments for previous work and clarifications
 
-### Step 5: Decide Stage
+### Step 6: Decide Stage
 
 **ONESHOT** if:
 - Labels include: chore, bug, small, quick-fix, trivial, hotfix
 - Estimate is XS or S
 
-**STAGED** otherwise:
-- Backlog/Triage → research
-- Needs Research → research
-- Needs Plan → plan
-- Needs Implement → implement
-- Needs Validate → validate
+**STAGED** otherwise - map the issue's current status to the appropriate stage:
+- Backlog status (type "backlog") → research
+- "Needs Research" or similar unstarted status → research
+- "Needs Plan" → plan
+- "Needs Implement" → implement
+- "Needs Validate" → validate
 
-### Step 6: Claim the Issue
+Use the actual status names from Step 1 to determine the appropriate stage.
 
-1. Update status to "In Progress" (or equivalent)
+### Step 7: Claim the Issue
+
+1. Update the status to the appropriate "In Progress" status (use the actual status name from Step 1, e.g., "Research In Progress", "Plan In Progress", "Implement In Progress", "Validate In Progress", or "Oneshot In Progress")
 2. Post a comment:
 ```
 Agent Claimed | {TIMESTAMP}
@@ -68,7 +84,7 @@ Agent Claimed | {TIMESTAMP}
 **Timeout**: 4 hours
 ```
 
-### Step 7: Output for Agent 2
+### Step 8: Output for Agent 2
 
 Write out all the information Agent 2 needs to do the work:
 
