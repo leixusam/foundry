@@ -147,8 +147,8 @@ Assess whether this feature needs a UX specification before planning. The Specif
 - Following existing UX patterns exactly
 
 **Based on this assessment:**
-- If specification IS needed → `next_status: "Needs Specification"`
-- If specification is NOT needed → `next_status: "Needs Plan"`
+- If specification IS needed → `next_status: "[RL] Needs Specification"`
+- If specification is NOT needed → `next_status: "[RL] Needs Plan"`
 
 Note your assessment in the research document.
 
@@ -236,14 +236,14 @@ WORK_RESULT:
   branch_name: ralph/{identifier}
   artifact_path: thoughts/research/YYYY-MM-DD-{identifier}-{slug}.md
   commit_hash: {short hash}
-  next_status: "Needs Specification"  # OR "Needs Plan" if specification not needed
+  next_status: "[RL] Needs Specification"  # OR "[RL] Needs Plan" if specification not needed
   summary: |
     {Description of what was researched and key findings}
 ```
 
 **Choose next_status based on your Specification Assessment:**
-- `"Needs Specification"` - For features with significant UX components
-- `"Needs Plan"` - For backend/infrastructure changes or simple changes with clear UX
+- `"[RL] Needs Specification"` - For features with significant UX components
+- `"[RL] Needs Plan"` - For backend/infrastructure changes or simple changes with clear UX
 
 ### Error Output
 

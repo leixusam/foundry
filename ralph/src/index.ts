@@ -5,6 +5,7 @@ import { getCurrentBranch } from './lib/git.js';
 import { generateLoopInstanceName } from './lib/loop-instance-name.js';
 import { initLoopLogger, getCurrentOutputDir } from './lib/output-logger.js';
 import { createProvider, ProviderResult } from './lib/provider.js';
+import { checkInitialized, runInitialization } from './init.js';
 
 // Import providers to register them
 import './lib/claude.js';
@@ -210,6 +211,38 @@ async function main(): Promise<void> {
   if (config.maxIterations > 0) {
     console.log(`   Max Iterations: ${config.maxIterations}`);
   }
+
+  // Check if Linear is configured and initialized
+  if (!config.linearApiKey || !config.linearTeamId) {
+    console.log('\n⚠️  Linear configuration missing.');
+    console.log('   Set LINEAR_API_KEY and LINEAR_TEAM_KEY environment variables,');
+    console.log('   or run initialization wizard.\n');
+
+    const result = await runInitialization();
+    if (!result || !result.success) {
+      console.log('\nCannot start Ralph without Linear configuration.');
+      process.exit(1);
+    }
+
+    console.log('\nRestart Ralph with the environment variables set to continue.\n');
+    process.exit(0);
+  }
+
+  // Check if Ralph statuses exist in Linear
+  const isInitialized = await checkInitialized(config.linearApiKey, config.linearTeamId);
+  if (!isInitialized) {
+    console.log('\n⚠️  [RL] statuses not found in Linear.');
+    console.log('   Running initialization wizard...\n');
+
+    const result = await runInitialization();
+    if (!result || !result.success) {
+      console.log('\nFailed to create [RL] statuses. Please check Linear permissions.');
+      process.exit(1);
+    }
+  }
+
+  console.log('   Linear Team: ' + config.linearTeamId);
+  console.log('   [RL] Statuses: ✓ configured');
 
   let iteration = 0;
 

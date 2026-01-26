@@ -129,7 +129,7 @@ WORK_RESULT:
   branch_name: ralph/{identifier}
   artifact_path: thoughts/plans/YYYY-MM-DD-{identifier}-{slug}.md
   commit_hash: {short hash of final commit}
-  next_status: "Needs Validate"
+  next_status: "[RL] Needs Validate"
   summary: |
     Completed {N} phases:
     - Phase 1: {description}

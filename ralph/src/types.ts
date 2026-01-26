@@ -21,10 +21,36 @@ export interface ClaudeResult {
   exitCode: number;
 }
 
+// Linear workflow state types
+
+export type LinearStateType = 'backlog' | 'unstarted' | 'started' | 'completed' | 'canceled';
+
+export interface WorkflowState {
+  id: string;
+  name: string;
+  type: LinearStateType;
+  position: number;
+}
+
+// Ralph status definition for creating workflow states
+export interface RalphStatusDefinition {
+  name: string;
+  type: LinearStateType;
+}
+
+// Initialization result
+export interface InitResult {
+  success: boolean;
+  created: string[];
+  existing: string[];
+  errors: string[];
+}
+
 // Config types
 
 export interface RalphConfig {
   workingDirectory: string;
+  linearApiKey?: string;
   linearTeamId?: string;
   gitBranch: string;
   staleTimeoutHours: number;

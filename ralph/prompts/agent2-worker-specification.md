@@ -220,7 +220,7 @@ WORK_RESULT:
   branch_name: ralph/{identifier}
   artifact_path: thoughts/specifications/YYYY-MM-DD-{identifier}-{slug}.md
   commit_hash: {short hash}
-  next_status: "Needs Plan"
+  next_status: "[RL] Needs Plan"
   summary: |
     {Description of the specification - key UX decisions made, any simplifications identified}
 ```

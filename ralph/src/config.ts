@@ -51,6 +51,8 @@ function getMaxIterations(): number {
 // Future: Read from .ralph.config.json or interactive setup
 export const config: RalphConfig = {
   workingDirectory: getRepoRoot(),
+  linearApiKey: process.env.LINEAR_API_KEY,
+  linearTeamId: process.env.LINEAR_TEAM_KEY,
   gitBranch: 'main',
   staleTimeoutHours: 4,
   noWorkSleepMinutes: 15,
