@@ -30,12 +30,15 @@ Multiple agents may be running simultaneously and looking at issues together. Th
 
 Use `mcp__linear__list_issue_statuses` with the team parameter to get all available workflow statuses.
 
-**IMPORTANT**: Ralph uses `[RL]` prefixed statuses to avoid conflicts with user's existing workflows. Only work with issues in `[RL]` statuses.
+**IMPORTANT**: Ralph uses `[RL]` prefixed statuses for its workflow stages. However, Ralph can pick up work from ANY backlog status (not just `[RL] Backlog`).
 
-This gives you the full list of status names and their types. Look for Ralph statuses with the `[RL]` prefix:
+This gives you the full list of status names and their types. Look for:
 
-**Ralph Statuses (use these exact names)**:
-- **Backlog**: `[RL] Backlog`
+**Entry Points (any of these can be picked up for work)**:
+- Any status with type "backlog" (e.g., `Backlog`, `[RL] Backlog`, `Triage`, etc.)
+- Any `[RL] Needs ...` status (issues already in Ralph's workflow)
+
+**Ralph Workflow Statuses (use these exact names for stage transitions)**:
 - **Ready statuses** (unstarted):
   - `[RL] Needs Research`
   - `[RL] Needs Specification`
@@ -110,8 +113,8 @@ Also gather:
 
 ### Step 6: Decide Stage
 
-Map the issue's current `[RL]` status to the appropriate stage:
-- `[RL] Backlog` → research
+Map the issue's current status to the appropriate stage:
+- Any backlog-type status (e.g., `Backlog`, `[RL] Backlog`, `Triage`) → research
 - `[RL] Needs Research` → research
 - `[RL] Needs Specification` → specification
 - `[RL] Needs Plan` → plan
