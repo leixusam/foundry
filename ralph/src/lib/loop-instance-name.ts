@@ -1,5 +1,6 @@
 // Loop instance name generator
-// Generates unique, memorable names for loop instances (e.g., "calm-pegasus-20250125-143052")
+// Generates unique, memorable names for loop instances (e.g., "20250125-143052-calm-pegasus")
+// Timestamp prefix enables easy sorting by date/time in file explorers
 // This helps identify which loop instance made comments in Linear when multiple instances work in parallel
 
 // Word lists for generating memorable names
@@ -50,12 +51,12 @@ function formatTimestamp(date: Date): string {
 
 /**
  * Generates a unique name for a loop instance
- * Format: {adjective}-{animal}-{YYYYMMDD-HHMMSS}
- * Example: "calm-pegasus-20250125-143052"
+ * Format: {YYYYMMDD-HHMMSS}-{adjective}-{animal}
+ * Example: "20250125-143052-calm-pegasus"
  *
+ * The timestamp prefix enables easy chronological sorting in file explorers.
  * The name is deterministic based on the current timestamp (Unix seconds),
  * ensuring each loop gets a unique name while being reproducible for debugging.
- * The human-readable timestamp format makes it easy to identify when a loop ran.
  */
 export function generateLoopInstanceName(): string {
   const now = new Date();
@@ -70,21 +71,30 @@ export function generateLoopInstanceName(): string {
   const adjective = ADJECTIVES[adjIndex];
   const animal = ANIMALS[animalIndex];
 
-  return `${adjective}-${animal}-${humanTimestamp}`;
+  return `${humanTimestamp}-${adjective}-${animal}`;
 }
 
 /**
- * Extracts the human-readable part of a loop instance name (without timestamp)
- * New format: "calm-pegasus-20250125-143052" -> "calm-pegasus"
- * Old format (backwards compatible): "red-giraffe-1706223456" -> "red-giraffe"
+ * Extracts the human-readable part of a loop instance name (adjective-animal)
+ * Current format: "20250125-143052-calm-pegasus" -> "calm-pegasus"
+ * Old format (backwards compatible): "calm-pegasus-20250125-143052" -> "calm-pegasus"
+ * Legacy format: "red-giraffe-1706223456" -> "red-giraffe"
  */
 export function getLoopInstanceNameDisplay(fullName: string): string {
   const parts = fullName.split('-');
-  // New format has 4 parts: adjective-animal-YYYYMMDD-HHMMSS
-  // Old format has 3 parts: adjective-animal-unixTimestamp
+
+  // Current format: YYYYMMDD-HHMMSS-adjective-animal (4 parts with timestamp first)
+  // Check if first part looks like a date (8 digits)
+  if (parts.length >= 4 && /^\d{8}$/.test(parts[0])) {
+    // Return adjective-animal (last two parts)
+    return `${parts[2]}-${parts[3]}`;
+  }
+
+  // Old format: adjective-animal-YYYYMMDD-HHMMSS or adjective-animal-unixTimestamp
   if (parts.length >= 3) {
     // Return just adjective-animal (first two parts)
     return `${parts[0]}-${parts[1]}`;
   }
+
   return fullName;
 }
