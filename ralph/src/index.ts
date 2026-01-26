@@ -20,7 +20,7 @@ async function runLoop(podName: string, iteration: number): Promise<void> {
   initLoopLogger(podName, iteration);
 
   // Initialize stats tracking for this loop iteration
-  initLoopStats(loopInstanceName, iteration);
+  initLoopStats(podName, iteration);
 
   console.log(`\n${'='.repeat(24)} LOOP ${iteration} ${'='.repeat(24)}`);
   console.log(`Pod: ${podName}`);
