@@ -96,6 +96,39 @@ Multiple pods can work on the same codebase simultaneously. Foundry prevents con
 
 This lets you scale development by running multiple Foundry pods in parallel - on different machines, in CI, or as background processes.
 
+### Linear as State Machine
+
+Foundry uses Linear as its state machine. You don't need to configure Foundry or tell it what to work on - just add tickets to Linear and Foundry handles the rest.
+
+```
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│  ∞ Needs    │────▶│  ∞ Needs    │────▶│  ∞ Needs    │────▶│  ∞ Needs    │
+│  Research   │     │    Plan     │     │  Implement  │     │  Validate   │
+└─────────────┘     └─────────────┘     └─────────────┘     └─────────────┘
+       │                  │                   │                   │
+       ▼                  ▼                   ▼                   ▼
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│ ∞ Research  │     │  ∞ Plan In  │     │∞ Implement  │     │ ∞ Validate  │
+│ In Progress │     │  Progress   │     │ In Progress │     │ In Progress │
+└─────────────┘     └─────────────┘     └─────────────┘     └─────────────┘
+                                                                  │
+                                                                  ▼
+                                                            ┌─────────────┐
+                                                            │   ∞ Done    │
+                                                            └─────────────┘
+```
+
+**How it works:**
+
+1. **You create a ticket** in Linear and set its status to `∞ Needs Research` (or any "Needs" status)
+2. **Foundry picks it up** - Agent 1 scans for tickets in "Needs" statuses
+3. **Foundry claims it** - Changes status to "In Progress" so other pods skip it
+4. **Foundry works on it** - Agent 2 does the actual development work
+5. **Foundry advances it** - Agent 3 moves the ticket to the next status
+6. **Repeat** until the ticket reaches `∞ Done`
+
+This means you can queue up work by creating tickets, and Foundry will process them in priority order. You can also intervene at any point - move a ticket back to a "Needs" status and Foundry will re-do that step.
+
 ## Directory Structure
 
 After `foundry init`, your project will have:
