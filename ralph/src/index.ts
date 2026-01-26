@@ -398,8 +398,15 @@ async function main(): Promise<void> {
       process.exit(1);
     }
 
-    console.log('\nRestart Ralph to continue.\n');
-    process.exit(0);
+    // Reload config values from process.env (set by runInitialization)
+    config.linearApiKey = process.env.LINEAR_API_KEY;
+    config.linearTeamId = process.env.LINEAR_TEAM_KEY;
+  }
+
+  // Verify config has values before proceeding
+  if (!config.linearApiKey || !config.linearTeamId) {
+    console.log('\nCannot start Ralph without Linear configuration.');
+    process.exit(1);
   }
 
   // Check if Ralph statuses exist in Linear
