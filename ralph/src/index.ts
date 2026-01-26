@@ -1,5 +1,5 @@
 import { getConfig } from './config.js';
-import { sleep, handleRateLimit } from './lib/rate-limit.js';
+import { sleep, executeWithRateLimitRetry, RateLimitRetryConfig } from './lib/rate-limit.js';
 import { loadPrompt } from './lib/prompts.js';
 import { getCurrentBranch } from './lib/git.js';
 import { generatePodName } from './lib/loop-instance-name.js';
@@ -82,15 +82,25 @@ ${agent1BasePrompt}`;
 
   // Select model based on provider
   const agent1Model = config.provider === 'codex' ? config.codexModel : 'opus';
-  const agent1Result = await agent1Provider.spawn({
-    prompt: agent1Prompt,
-    model: agent1Model,
-    allowedTools: ['mcp__linear__*'],
-    reasoningEffort: config.provider === 'codex' ? config.codexAgentReasoning.agent1 : undefined,
-  }, 1);
 
+  // Rate limit retry config - uses configured max retries
+  const retryConfig: RateLimitRetryConfig = { maxRetries: config.rateLimitMaxRetries };
+
+  // Agent 1 with rate limit retry
+  const agent1Result = await executeWithRateLimitRetry(
+    () => agent1Provider.spawn({
+      prompt: agent1Prompt,
+      model: agent1Model,
+      allowedTools: ['mcp__linear__*'],
+      reasoningEffort: config.provider === 'codex' ? config.codexAgentReasoning.agent1 : undefined,
+    }, 1),
+    retryConfig,
+    'Agent 1 (Linear Reader)'
+  );
+
+  // If still rate limited after max retries, skip this iteration
   if (agent1Result.rateLimited) {
-    await handleRateLimit(agent1Result.retryAfterMs || 5 * 60 * 1000);
+    console.log('Agent 1 still rate limited after max retries. Skipping iteration.');
     return;
   }
 
@@ -182,22 +192,32 @@ ${attachmentSection}
 
 ${workerBasePrompt}`;
 
+  // Agent 2 with rate limit retry
   let agent2Result: ProviderResult;
   if (config.provider === 'codex') {
-    agent2Result = await agent2Provider.spawn({
-      prompt: workerPrompt,
-      model: config.codexModel,
-      reasoningEffort: config.codexReasoningEffort,
-    }, 2);
+    agent2Result = await executeWithRateLimitRetry(
+      () => agent2Provider.spawn({
+        prompt: workerPrompt,
+        model: config.codexModel,
+        reasoningEffort: config.codexReasoningEffort,
+      }, 2),
+      retryConfig,
+      'Agent 2 (Worker)'
+    );
   } else {
-    agent2Result = await agent2Provider.spawn({
-      prompt: workerPrompt,
-      model: config.claudeModel,
-    }, 2);
+    agent2Result = await executeWithRateLimitRetry(
+      () => agent2Provider.spawn({
+        prompt: workerPrompt,
+        model: config.claudeModel,
+      }, 2),
+      retryConfig,
+      'Agent 2 (Worker)'
+    );
   }
 
+  // Note: Agent 2 rate limits are logged but we continue to Agent 3 regardless
   if (agent2Result.rateLimited) {
-    console.log('Agent 2 was rate limited. Will continue to Agent 3 to log status.');
+    console.log('Agent 2 still rate limited after max retries. Continuing to Agent 3 to log status.');
   }
 
   // Log Agent 2 stats
@@ -285,17 +305,21 @@ ${agent2Output}
 
 ${writerBasePrompt}`;
 
-  // Select model based on provider
+  // Agent 3 with rate limit retry
   const agent3Model = config.provider === 'codex' ? config.codexModel : 'sonnet';
-  const agent3Result = await agent3Provider.spawn({
-    prompt: writerPrompt,
-    model: agent3Model,
-    allowedTools: ['mcp__linear__*'],
-    reasoningEffort: config.provider === 'codex' ? config.codexAgentReasoning.agent3 : undefined,
-  }, 3);
+  const agent3Result = await executeWithRateLimitRetry(
+    () => agent3Provider.spawn({
+      prompt: writerPrompt,
+      model: agent3Model,
+      allowedTools: ['mcp__linear__*'],
+      reasoningEffort: config.provider === 'codex' ? config.codexAgentReasoning.agent3 : undefined,
+    }, 3),
+    retryConfig,
+    'Agent 3 (Linear Writer)'
+  );
 
   if (agent3Result.rateLimited) {
-    console.log('Agent 3 was rate limited.');
+    console.log('Agent 3 still rate limited after max retries.');
   }
 
   // Log Agent 3 stats
