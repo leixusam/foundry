@@ -4,7 +4,7 @@
 **Date**: 2026-01-26
 **Research**: thoughts/research/2026-01-26-RSK-28-move-oneshot-classification.md
 **Specification**: N/A
-**Status**: Ready for Implementation
+**Status**: Implementation Complete
 
 ## Overview
 
@@ -12,13 +12,13 @@ Move the oneshot vs staged workflow classification from Agent 1's label/estimate
 
 ## Success Criteria
 
-- [ ] Agent 1 no longer makes oneshot vs staged decisions based on labels/estimates
-- [ ] Agent 2 research stage outputs `workflow: oneshot | staged` in WORK_RESULT
-- [ ] Classification uses defined criteria (1 day of work OR ~100 LOC)
-- [ ] Agent 3 correctly routes based on Agent 2's classification
-- [ ] Existing research → plan → implement → validate flow still works for staged tickets
-- [ ] Simple tasks still redirect to oneshot flow during research
-- [ ] Type check passes: `npm run typecheck`
+- [x] Agent 1 no longer makes oneshot vs staged decisions based on labels/estimates
+- [x] Agent 2 research stage outputs `workflow: oneshot | staged` in WORK_RESULT
+- [x] Classification uses defined criteria (1 day of work OR ~100 LOC)
+- [x] Agent 3 correctly routes based on Agent 2's classification
+- [x] Existing research → plan → implement → validate flow still works for staged tickets
+- [x] Simple tasks still redirect to oneshot flow during research
+- [x] Type check passes: `npm run typecheck`
 
 ## Phases
 
