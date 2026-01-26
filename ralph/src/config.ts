@@ -51,6 +51,7 @@ loadRalphEnv();
 // Parse CLI arguments
 interface CLIArgs {
   provider?: ProviderName;
+  gcpAutoStop?: boolean;
 }
 
 function parseCLIArgs(): CLIArgs {
@@ -60,6 +61,9 @@ function parseCLIArgs(): CLIArgs {
         provider: {
           type: 'string',
           short: 'p',
+        },
+        'gcp-auto-stop': {
+          type: 'boolean',
         },
         help: {
           type: 'boolean',
@@ -79,6 +83,7 @@ Usage:
 
 Options:
   -p, --provider <name>  Provider to use: claude (default) or codex
+  --gcp-auto-stop        Auto-stop GCP VM when no work available
   -h, --help             Show this help message
 
 Environment Variables:
@@ -86,6 +91,7 @@ Environment Variables:
   RALPH_CLAUDE_MODEL         Claude model: opus (default), sonnet, or haiku
   RALPH_MAX_ITERATIONS       Limit iterations (0 = unlimited)
   RALPH_RATE_LIMIT_MAX_RETRIES  Max retries on rate limit (default: 3)
+  RALPH_GCP_AUTO_STOP        Auto-stop GCP VM when no work (true/false)
   CODEX_MODEL                Codex model name
   CODEX_REASONING_EFFORT     Global default: low, medium, high (default), extra_high
   CODEX_AGENT1_REASONING     Agent 1 reasoning: low, medium, high (default), extra_high
@@ -93,9 +99,10 @@ Environment Variables:
   CODEX_AGENT3_REASONING     Agent 3 reasoning: low, medium (default), high, extra_high
 
 Examples:
-  npm start                   # Run with Claude (default)
+  npm start                      # Run with Claude (default)
   npm start -- --provider codex  # Run with Codex
   npm start -- -p codex          # Short form
+  npm start -- --gcp-auto-stop   # Auto-stop VM when no work available
 `);
       process.exit(0);
     }
@@ -110,6 +117,10 @@ Examples:
         console.error(`Invalid provider: ${values.provider}. Must be 'claude' or 'codex'.`);
         process.exit(1);
       }
+    }
+
+    if (values['gcp-auto-stop']) {
+      result.gcpAutoStop = true;
     }
 
     return result;
@@ -171,6 +182,14 @@ function getRateLimitMaxRetries(): number {
   return 3; // Default: 3 retries
 }
 
+// Parse GCP auto-stop from CLI args or environment variable
+function getGcpAutoStop(): boolean {
+  // CLI args take precedence over env vars
+  if (cliArgs.gcpAutoStop) return true;
+  const envVal = process.env.RALPH_GCP_AUTO_STOP?.toLowerCase();
+  return envVal === 'true' || envVal === '1';
+}
+
 // Parse per-agent reasoning effort from environment variables
 // Agent 1 and 2 default to 'high', Agent 3 defaults to 'medium' (as specified in ticket RSK-40)
 function getCodexAgentReasoning(): CodexAgentReasoningConfig {
@@ -214,6 +233,9 @@ export const config: RalphConfig = {
 
   // Rate limit configuration
   rateLimitMaxRetries: getRateLimitMaxRetries(),
+
+  // GCP configuration
+  gcpAutoStop: getGcpAutoStop(),
 };
 
 export function getConfig(): RalphConfig {
