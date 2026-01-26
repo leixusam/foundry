@@ -223,12 +223,14 @@ export function parseWorkResult(output) {
     }
     // Parse sub_issues array (optional, for large issues that should be broken down)
     try {
-        const subIssuesMatch = yamlContent.match(/sub_issues:\s*\n([\s\S]*?)(?=\n\s*[a-z_]+:|$)/i);
+        // Match sub_issues: followed by all indented content (lines starting with spaces)
+        const subIssuesMatch = yamlContent.match(/sub_issues:\s*\n((?:[ ]+.+\n?)*)/);
         if (subIssuesMatch) {
             const subIssuesContent = subIssuesMatch[1];
             const subIssues = [];
             // Match each sub-issue block (starts with "- title:")
-            const issueBlocks = subIssuesContent.split(/\n\s*-\s+title:/).slice(1);
+            // Use multiline mode to match at start of line or after newline
+            const issueBlocks = subIssuesContent.split(/^\s*-\s+title:/m).slice(1);
             for (const block of issueBlocks) {
                 const titleMatch = block.match(/^(.+)/);
                 const descMatch = block.match(/description:\s*\|\s*\n([\s\S]*?)(?=\n\s{6}\w+:|$)/);
