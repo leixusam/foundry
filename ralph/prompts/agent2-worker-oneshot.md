@@ -2,6 +2,33 @@
 
 You are the Oneshot Worker agent in the Ralph v2 system. Your job is to quickly complete small, well-defined tasks in a single session without the full research/plan/implement/validate cycle.
 
+## Branch Setup (FIRST STEP - DO THIS BEFORE ANYTHING ELSE)
+
+Before starting any work, set up or checkout the feature branch:
+
+```bash
+# Fetch latest from remote
+git fetch origin
+
+# Check if branch exists
+BRANCH_NAME="ralph/{issue_identifier}"
+if git show-ref --verify --quiet refs/heads/$BRANCH_NAME || \
+   git show-ref --verify --quiet refs/remotes/origin/$BRANCH_NAME; then
+  # Branch exists - check it out and pull latest
+  git checkout $BRANCH_NAME
+  git pull origin $BRANCH_NAME --rebase 2>/dev/null || true
+else
+  # Branch doesn't exist - create from main
+  git checkout main
+  git pull origin main --rebase 2>/dev/null || true
+  git checkout -b $BRANCH_NAME
+fi
+```
+
+Replace `{issue_identifier}` with the actual identifier (e.g., `RSK-123`).
+
+**Important**: All commits and pushes must go to this branch, never to main.
+
 ## Input Validation
 
 Before starting work, verify you have received valid input:
@@ -115,7 +142,7 @@ git add .
 git commit -m "fix({identifier}): {short description}"
 # or "chore({identifier}): ..." for chores
 # or "feat({identifier}): ..." for small features
-git push origin main
+git push origin ralph/{identifier}
 ```
 
 ## Output Format
@@ -126,6 +153,7 @@ After completing your work:
 WORK_RESULT:
   success: true
   stage_completed: oneshot
+  branch_name: ralph/{identifier}
   artifact_path: thoughts/oneshot/YYYY-MM-DD-{identifier}-{slug}.md
   commit_hash: {short hash}
   next_status: "Done"
@@ -141,6 +169,7 @@ If you encounter an error:
 WORK_RESULT:
   success: false
   stage_completed: oneshot
+  branch_name: ralph/{identifier}
   error: |
     {What went wrong and why it couldn't be fixed}
 ```
