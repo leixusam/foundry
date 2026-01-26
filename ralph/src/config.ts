@@ -1,8 +1,10 @@
 import { execSync } from 'child_process';
+import { readFileSync, existsSync } from 'fs';
+import { join } from 'path';
 import { RalphConfig, ProviderName, ClaudeModel, CodexReasoningEffort } from './types.js';
 
 // Get the git repo root directory
-function getRepoRoot(): string {
+export function getRepoRoot(): string {
   try {
     return execSync('git rev-parse --show-toplevel', { encoding: 'utf-8' }).trim();
   } catch {
@@ -10,6 +12,40 @@ function getRepoRoot(): string {
     return process.cwd();
   }
 }
+
+// Load .ralph.env file if it exists
+function loadRalphEnv(): void {
+  const envPath = join(getRepoRoot(), '.ralph.env');
+  if (!existsSync(envPath)) {
+    return;
+  }
+
+  try {
+    const content = readFileSync(envPath, 'utf-8');
+    for (const line of content.split('\n')) {
+      const trimmed = line.trim();
+      // Skip empty lines and comments
+      if (!trimmed || trimmed.startsWith('#')) {
+        continue;
+      }
+      const eqIndex = trimmed.indexOf('=');
+      if (eqIndex === -1) {
+        continue;
+      }
+      const key = trimmed.slice(0, eqIndex);
+      const value = trimmed.slice(eqIndex + 1);
+      // Only set if not already in environment (env vars take precedence)
+      if (!process.env[key]) {
+        process.env[key] = value;
+      }
+    }
+  } catch {
+    // Ignore errors reading the file
+  }
+}
+
+// Load .ralph.env before reading config
+loadRalphEnv();
 
 // Parse provider from environment variable
 function getProvider(): ProviderName {
