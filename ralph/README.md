@@ -93,6 +93,7 @@ The wizard will:
 2. Ask which Linear team to work with
 3. Create the required `[RL]` workflow statuses in Linear
 4. Save configuration to `.ralph.env`
+5. Configure MCP tools in `.mcp.json` (for Linear API access)
 
 ### 5. Create Your First Ticket
 
@@ -109,6 +110,7 @@ your-project/
 │   ├── prompts/           # Agent prompt templates
 │   ├── dist/              # Compiled JavaScript
 │   ├── .output/           # Runtime logs (gitignored)
+│   ├── .attachments/      # Downloaded Linear attachments (gitignored)
 │   └── package.json
 ├── thoughts/              # Ralph's work artifacts
 │   ├── research/          # Research documents
@@ -118,6 +120,7 @@ your-project/
 │   ├── oneshot/           # Oneshot task records
 │   └── shared/            # Shared context
 ├── .ralph.env             # Linear configuration (gitignored)
+├── .mcp.json              # MCP tool configuration (gitignored)
 └── CLAUDE.md              # Claude Code project instructions
 ```
 
@@ -134,6 +137,13 @@ Set these in `.ralph.env` or export them:
 | `RALPH_PROVIDER` | AI provider: "claude" or "codex" | "claude" |
 | `RALPH_CLAUDE_MODEL` | Claude model: "opus", "sonnet", "haiku" | "opus" |
 | `RALPH_MAX_ITERATIONS` | Stop after N iterations (0 = unlimited) | 0 |
+| `RALPH_RATE_LIMIT_MAX_RETRIES` | Max retries when rate limited | 3 |
+| `RALPH_GCP_AUTO_STOP` | Auto-stop GCP VM when no work | false |
+| `CODEX_MODEL` | Codex model name | gpt-5.2-codex |
+| `CODEX_REASONING_EFFORT` | Global default reasoning effort | high |
+| `CODEX_AGENT1_REASONING` | Agent 1 reasoning: low, medium, high, extra_high | high |
+| `CODEX_AGENT2_REASONING` | Agent 2 reasoning: low, medium, high, extra_high | high |
+| `CODEX_AGENT3_REASONING` | Agent 3 reasoning: low, medium, high, extra_high | medium |
 
 ### Using Codex CLI as Provider
 
@@ -181,6 +191,15 @@ Ralph creates these statuses in Linear:
 ```bash
 cd ralph
 npm start
+```
+
+Or with CLI options:
+
+```bash
+npm start -- --provider codex    # Use Codex instead of Claude
+npm start -- -p codex            # Short form
+npm start -- --gcp-auto-stop     # Auto-stop VM when no work (GCP only)
+npm start -- --help              # Show all options
 ```
 
 Ralph will:
@@ -237,6 +256,35 @@ These artifacts are committed to git, providing a record of Ralph's reasoning.
 - Oneshot and validate stages merge to main automatically
 - Complex conflicts are flagged for human resolution
 
+## Attachments
+
+Ralph automatically downloads attachments (images, screenshots, files) from Linear tickets:
+
+- Files are downloaded between Agent 1 and Agent 2
+- Stored in `ralph/.attachments/{ticket-id}/` (gitignored)
+- Agent 2 receives the local file paths so it can view images and read files
+- Supports images, PDFs, and other file types attached to Linear issues
+- Failed downloads don't block the workflow
+
+This allows Agent 2 to see screenshots and mockups attached to tickets.
+
+## Running on GCP
+
+Ralph can run on a Google Cloud Platform VM and automatically stop when no work is available:
+
+```bash
+npm start -- --gcp-auto-stop
+```
+
+Or set `RALPH_GCP_AUTO_STOP=true` in your environment.
+
+When enabled:
+1. Ralph checks if it's running on a GCP VM (via metadata server)
+2. When no tickets are available, it stops the VM instance using `gcloud`
+3. If not on GCP or stop fails, falls back to normal sleep behavior
+
+This helps reduce cloud costs when running Ralph on dedicated infrastructure.
+
 ## Parallel Execution
 
 Multiple Ralph instances (pods) can run simultaneously:
@@ -254,7 +302,14 @@ Multiple Ralph instances (pods) can run simultaneously:
 
 ### Rate limiting
 
-Ralph handles Anthropic rate limits automatically by waiting and retrying.
+Ralph handles rate limits automatically by waiting and retrying. When a rate limit is hit:
+
+1. Ralph detects the rate limit from the agent output
+2. Parses the reset time (with timezone support for PST, EST, etc.)
+3. Waits until the reset time passes
+4. Retries the same agent (up to `RALPH_RATE_LIMIT_MAX_RETRIES` times, default: 3)
+
+This applies to both Anthropic (Claude) and OpenAI (Codex) rate limits.
 
 ### Merge conflicts
 
