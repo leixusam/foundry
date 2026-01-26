@@ -4,7 +4,7 @@
 **Date**: 2026-01-25
 **Research**: thoughts/research/2026-01-25-RSK-21-linear-cli-integration.md
 **Specification**: N/A
-**Status**: Ready for Implementation
+**Status**: Implementation Complete
 
 ## Overview
 
@@ -47,14 +47,14 @@ Implement automatic creation of Ralph-specific workflow statuses in Linear durin
 
 ## Success Criteria
 
-- [ ] Ralph detects first-run (no `[RL]` statuses exist) and prompts user for initialization
-- [ ] User can provide Linear API key during initialization
-- [ ] All 14 `[RL]` prefixed statuses are created in the target team
-- [ ] Subsequent runs detect existing statuses and skip initialization
-- [ ] All agent prompts use `[RL]` prefixed status names
-- [ ] All tests pass: `npm run typecheck`
-- [ ] Type check passes: `npm run typecheck`
-- [ ] Build succeeds: `npm run build`
+- [x] Ralph detects first-run (no `[RL]` statuses exist) and prompts user for initialization
+- [x] User can provide Linear API key during initialization
+- [x] All 14 `[RL]` prefixed statuses are created in the target team
+- [x] Subsequent runs detect existing statuses and skip initialization
+- [x] All agent prompts use `[RL]` prefixed status names
+- [x] All tests pass: `npm run typecheck`
+- [x] Type check passes: `npm run typecheck`
+- [x] Build succeeds: `npm run build`
 
 ## Phases
 
