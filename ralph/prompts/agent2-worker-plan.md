@@ -13,6 +13,7 @@ Before starting work, verify you have received valid input:
    - issue_title
    - stage (should be "plan")
    - existing_artifacts.research (path to research document)
+   - existing_artifacts.specification (optional - path to specification document if UX spec was needed)
 
 If ANY of these are missing or the input is unclear:
 
@@ -38,10 +39,16 @@ You do NOT have access to Linear. All issue context is provided above.
 
 ## Planning Process
 
-### Step 1: Read the Research Document
+### Step 1: Read Research and Specification Documents
 
 Read the research document from `existing_artifacts.research`.
 Understand the findings, risks, and recommendations.
+
+**If a specification document exists** (`existing_artifacts.specification`):
+- Read the specification document - it contains UX requirements from a PM/designer perspective
+- The specification defines the user experience goals, user flows, and interface specifications
+- Your technical plan MUST align with and fulfill the specification's UX requirements
+- Do not contradict or simplify away the specification's UX decisions
 
 ### Step 2: Design the Implementation
 
@@ -94,6 +101,7 @@ The document should follow this structure:
 **Issue**: {issue_identifier}
 **Date**: {YYYY-MM-DD}
 **Research**: {link to research doc}
+**Specification**: {link to specification doc, or "N/A" if no specification}
 **Status**: Ready for Implementation
 
 ## Overview

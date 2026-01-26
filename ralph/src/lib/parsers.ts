@@ -56,7 +56,7 @@ export function parseDispatchResult(output: string): DispatchResult | null {
   const stageMatch = yamlContent.match(/stage:\s*(.+)/);
   if (stageMatch) {
     const stage = stageMatch[1].trim().toLowerCase();
-    if (['research', 'plan', 'implement', 'validate', 'oneshot'].includes(stage)) {
+    if (['research', 'specification', 'plan', 'implement', 'validate', 'oneshot'].includes(stage)) {
       result.stage = stage as DispatchResult['stage'];
     }
   }
@@ -97,6 +97,11 @@ export function parseDispatchResult(output: string): DispatchResult | null {
   const researchMatch = yamlContent.match(/research:\s*(.+)/);
   if (researchMatch && researchMatch[1].trim()) {
     result.existingArtifacts!.research = researchMatch[1].trim();
+  }
+
+  const specificationMatch = yamlContent.match(/specification:\s*(.+)/);
+  if (specificationMatch && specificationMatch[1].trim()) {
+    result.existingArtifacts!.specification = specificationMatch[1].trim();
   }
 
   const planMatch = yamlContent.match(/plan:\s*(.+)/);
@@ -190,7 +195,7 @@ export function parseWorkResult(output: string): WorkResult | null {
   const stageMatch = yamlContent.match(/stage_completed:\s*(.+)/);
   if (stageMatch) {
     const stage = stageMatch[1].trim().toLowerCase();
-    if (['research', 'plan', 'implement', 'validate', 'oneshot'].includes(stage)) {
+    if (['research', 'specification', 'plan', 'implement', 'validate', 'oneshot'].includes(stage)) {
       result.stageCompleted = stage as WorkResult['stageCompleted'];
     }
   }

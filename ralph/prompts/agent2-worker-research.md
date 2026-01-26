@@ -183,6 +183,29 @@ Note:
 - Security considerations
 - Edge cases to handle
 
+### Step 5.5: Specification Assessment
+
+Assess whether this feature needs a UX specification before planning. The Specification stage involves a PM/designer perspective to ensure the user experience is delightful, simple, and polished.
+
+**Specification is NEEDED if ANY of these are true:**
+- [ ] Significant UX changes (new screens, major UI modifications, new user flows)
+- [ ] Big feature with front-end/user-facing components
+- [ ] Complex business logic that affects user experience
+- [ ] Multiple interaction patterns or edge cases that need UX decisions
+- [ ] The feature would benefit from UX simplification review
+
+**Specification is NOT needed if ALL of these are true:**
+- [ ] Pure backend/infrastructure changes with no user-facing impact
+- [ ] Simple bug fixes with obvious correct behavior
+- [ ] Copy/text changes with no structural impact
+- [ ] Following existing UX patterns exactly
+
+**Based on this assessment:**
+- If specification IS needed → `next_status: "Needs Specification"`
+- If specification is NOT needed → `next_status: "Needs Plan"`
+
+Note your assessment in the research document and use the appropriate next_status in your output.
+
 ### Step 6: Write Research Document
 
 Create a markdown file at:
@@ -233,13 +256,19 @@ The document should include:
 ### Testing Strategy
 {How to verify the implementation}
 
+## Specification Assessment
+
+{Does this feature need a UX specification? Explain your reasoning.}
+
+**Needs Specification**: {Yes/No}
+
 ## Questions for Human Review
 
 {Any open questions or decisions needed}
 
 ## Next Steps
 
-Ready for planning phase.
+{Ready for specification phase / Ready for planning phase.}
 ```
 
 ### Step 7: Git Commit and Push
@@ -262,10 +291,14 @@ WORK_RESULT:
   stage_completed: research
   artifact_path: thoughts/research/YYYY-MM-DD-{identifier}-{slug}.md
   commit_hash: {short hash}
-  next_status: "Needs Plan"
+  next_status: "Needs Specification"  # OR "Needs Plan" if specification not needed
   summary: |
     {Description of what was researched and key findings}
 ```
+
+**Choose next_status based on your Specification Assessment:**
+- `"Needs Specification"` - For features with significant UX components
+- `"Needs Plan"` - For backend/infrastructure changes or simple changes with clear UX
 
 ### Fast-Track Flow Output
 

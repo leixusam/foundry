@@ -57,7 +57,8 @@ Will retry on next loop iteration.
 Update the issue status based on what happened:
 
 - **oneshot complete** → "Done"
-- **research complete** → "Needs Plan"
+- **research complete** → "Needs Specification" or "Needs Plan" (based on Agent 2's next_status)
+- **specification complete** → "Needs Plan"
 - **plan complete** → "Needs Implement"
 - **implement complete** → "Needs Validate"
 - **validate complete** → "Done"

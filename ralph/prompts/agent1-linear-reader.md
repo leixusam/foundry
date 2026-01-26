@@ -33,8 +33,8 @@ This gives you the full list of status names and their types (backlog, unstarted
 
 Store the statuses for reference:
 - **Backlog statuses**: type = "backlog"
-- **Ready statuses**: type = "unstarted" (e.g., Todo, Needs Research, Needs Plan, etc.)
-- **In Progress statuses**: type = "started" (e.g., Research In Progress, Plan In Progress, etc.)
+- **Ready statuses**: type = "unstarted" (e.g., Todo, Needs Research, Needs Specification, Needs Plan, etc.)
+- **In Progress statuses**: type = "started" (e.g., Research In Progress, Specification In Progress, Plan In Progress, etc.)
 - **Done statuses**: type = "completed"
 - **Canceled statuses**: type = "canceled"
 
@@ -57,7 +57,7 @@ For any issue with a status of type "started" (use the actual status names from 
 ### Step 4: Select the Best Issue
 
 Pick ONE issue to work on. Priority order:
-1. Issues closer to completion (Validate > Implement > Plan > Research > Backlog)
+1. Issues closer to completion (Validate > Implement > Plan > Specification > Research > Backlog)
 2. Higher priority (Urgent > High > Medium > Low)
 3. Older issues first
 4. Issues blocking others
@@ -87,6 +87,7 @@ Also gather:
 **STAGED** otherwise - map the issue's current status to the appropriate stage:
 - Backlog status (type "backlog") → research
 - "Needs Research" or similar unstarted status → research
+- "Needs Specification" → specification
 - "Needs Plan" → plan
 - "Needs Implement" → implement
 - "Needs Validate" → validate
@@ -103,7 +104,7 @@ Use the actual status names from Step 1 to determine the appropriate stage.
    - If still available: Proceed with claiming
 
 2. **Claim the issue**:
-   - Update the status to the appropriate "In Progress" status (use the actual status name from Step 1, e.g., "Research In Progress", "Plan In Progress", "Implement In Progress", "Validate In Progress", or "Oneshot In Progress")
+   - Update the status to the appropriate "In Progress" status (use the actual status name from Step 1, e.g., "Research In Progress", "Specification In Progress", "Plan In Progress", "Implement In Progress", "Validate In Progress", or "Oneshot In Progress")
    - Post a comment (include your loop instance name from the Agent Instance section at the top of your prompt):
 ```
 Agent Claimed | {loop instance name} | {TIMESTAMP}

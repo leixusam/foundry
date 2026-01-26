@@ -13,13 +13,14 @@ export interface DispatchResult {
   issueIdentifier: string;
   issueTitle: string;
   issueDescription: string;
-  stage: 'research' | 'plan' | 'implement' | 'validate' | 'oneshot';
+  stage: 'research' | 'specification' | 'plan' | 'implement' | 'validate' | 'oneshot';
   projectName: string;
   claimTimestamp: string;
   labels: string[];
   priority: 'urgent' | 'high' | 'medium' | 'low' | 'none';
   existingArtifacts: {
     research?: string;
+    specification?: string;
     plan?: string;
   };
   parentIssue: string;
@@ -32,7 +33,7 @@ export interface DispatchResult {
 
 export interface WorkResult {
   success: boolean;
-  stageCompleted?: 'research' | 'plan' | 'implement' | 'validate' | 'oneshot';
+  stageCompleted?: 'research' | 'specification' | 'plan' | 'implement' | 'validate' | 'oneshot';
   artifactPath?: string;
   commitHash?: string;
   nextStatus?: string;
