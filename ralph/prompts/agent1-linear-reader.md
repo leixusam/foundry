@@ -57,14 +57,30 @@ For any issue with a status of type "started" (use the actual status names from 
 
 ### Step 4: Select the Best Issue
 
-Pick ONE issue to work on. Priority order:
-1. Issues closer to completion (Validate > Implement > Plan > Specification > Research > Backlog)
-2. Higher priority (Urgent > High > Medium > Low)
-3. Older issues first
-4. Issues blocking others
-5. **Tie-breaker**: Issues that have been in their current status longer (reduces collision with other agents)
+**IMPORTANT**: Do NOT list or output all issues. Analyze them internally and select the single most important issue to work on.
 
-Skip issues that have status type "started", "completed", or "canceled" (use the actual status names from Step 1).
+Pick ONE issue to work on using this priority logic:
+
+**Dependency-Aware Selection** (highest priority):
+1. If an issue is **blocked by** another issue, the blocking issue must be completed first
+2. Never select an issue that has incomplete blockers
+3. Prefer issues that are **blocking others** - completing them unblocks more work
+
+**Stage Priority** (work towards completion):
+1. Validate > Implement > Plan > Specification > Research > Backlog
+2. Issues closer to completion deliver value faster
+
+**Issue Priority**:
+1. Urgent > High > Medium > Low
+
+**Age and Stability**:
+1. Older issues first (they've been waiting longer)
+2. **Tie-breaker**: Issues that have been in their current status longer (reduces collision with other agents)
+
+**Skip these issues**:
+- Status type "started" (In Progress) - already being worked on
+- Status type "completed" or "canceled"
+- Issues blocked by incomplete dependencies
 
 **Note**: In a multi-agent environment, your "best" choice may be another agent's best choice too. Consider having backup options ready in case your first choice gets claimed.
 
