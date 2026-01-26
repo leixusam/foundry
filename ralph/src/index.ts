@@ -4,6 +4,7 @@ import { loadPrompt } from './lib/prompts.js';
 import { getCurrentBranch } from './lib/git.js';
 import { generatePodName } from './lib/loop-instance-name.js';
 import { initLoopLogger, getCurrentOutputDir } from './lib/output-logger.js';
+import { initLoopStats, logAgentStats, finalizeLoopStats } from './lib/stats-logger.js';
 import { createProvider, ProviderResult } from './lib/provider.js';
 import { checkInitialized, runInitialization } from './init.js';
 
@@ -17,6 +18,9 @@ async function runLoop(podName: string, iteration: number): Promise<void> {
   // Initialize output logger for this loop iteration
   // Pod name persists across all loops in this Ralph session
   initLoopLogger(podName, iteration);
+
+  // Initialize stats tracking for this loop iteration
+  initLoopStats(loopInstanceName, iteration);
 
   console.log(`\n${'='.repeat(24)} LOOP ${iteration} ${'='.repeat(24)}`);
   console.log(`Pod: ${podName}`);
@@ -59,6 +63,17 @@ ${agent1BasePrompt}`;
     await handleRateLimit(agent1Result.retryAfterMs || 5 * 60 * 1000);
     return;
   }
+
+  // Log Agent 1 stats
+  await logAgentStats(1, 'claude', 'opus', {
+    tokenUsage: agent1Result.tokenUsage,
+    cost: agent1Result.cost,
+    costEstimated: agent1Result.costEstimated,
+    duration: agent1Result.duration,
+    exitCode: agent1Result.exitCode,
+    rateLimited: agent1Result.rateLimited,
+    output: agent1Result.output,
+  });
 
   // Extract the text output from agent 1
   const agent1Output = agent1Result.finalOutput;
@@ -117,6 +132,18 @@ ${workerBasePrompt}`;
   if (agent2Result.rateLimited) {
     console.log('Agent 2 was rate limited. Will continue to Agent 3 to log status.');
   }
+
+  // Log Agent 2 stats
+  const agent2Model = config.provider === 'codex' ? config.codexModel : config.claudeModel;
+  await logAgentStats(2, config.provider, agent2Model, {
+    tokenUsage: agent2Result.tokenUsage,
+    cost: agent2Result.cost,
+    costEstimated: agent2Result.costEstimated,
+    duration: agent2Result.duration,
+    exitCode: agent2Result.exitCode,
+    rateLimited: agent2Result.rateLimited,
+    output: agent2Result.output,
+  });
 
   const agent2Output = agent2Result.finalOutput;
 
@@ -196,6 +223,20 @@ ${writerBasePrompt}`;
   if (agent3Result.rateLimited) {
     console.log('Agent 3 was rate limited.');
   }
+
+  // Log Agent 3 stats
+  await logAgentStats(3, 'claude', 'sonnet', {
+    tokenUsage: agent3Result.tokenUsage,
+    cost: agent3Result.cost,
+    costEstimated: agent3Result.costEstimated,
+    duration: agent3Result.duration,
+    exitCode: agent3Result.exitCode,
+    rateLimited: agent3Result.rateLimited,
+    output: agent3Result.output,
+  });
+
+  // Finalize loop stats
+  await finalizeLoopStats();
 
   // Loop stats
   const duration = Math.round((Date.now() - loopStart) / 1000);
