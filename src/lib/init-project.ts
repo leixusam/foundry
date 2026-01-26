@@ -126,13 +126,13 @@ export async function initProject(): Promise<void> {
   const provider = await promptWithDefault(rl, 'Provider (claude/codex)', defaultProvider);
 
   let claudeModel = 'opus';
-  let codexModel = 'o3';
+  let codexModel = 'gpt-5.2';
   let codexEffort = 'high';
 
   if (provider === 'claude') {
     claudeModel = await promptWithDefault(rl, 'Claude model (opus/sonnet/haiku)', 'opus');
   } else {
-    codexModel = await promptWithDefault(rl, 'Codex model', 'o3');
+    codexModel = await promptWithDefault(rl, 'Codex model', 'gpt-5.2');
     codexEffort = await promptWithDefault(rl, 'Reasoning effort (low/medium/high/extra_high)', 'high');
   }
 
