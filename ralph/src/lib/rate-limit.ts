@@ -143,3 +143,46 @@ const rateLimitPatterns = [
 export function isRateLimitError(text: string): boolean {
   return rateLimitPatterns.some(pattern => pattern.test(text));
 }
+
+// Rate limit retry configuration
+export interface RateLimitRetryConfig {
+  maxRetries: number;
+}
+
+export const DEFAULT_RETRY_CONFIG: RateLimitRetryConfig = {
+  maxRetries: 3,
+};
+
+// Result type for operations that can be rate limited
+export interface RateLimitableResult {
+  rateLimited: boolean;
+  retryAfterMs?: number;
+}
+
+// Execute an operation with automatic retry on rate limits
+export async function executeWithRateLimitRetry<T extends RateLimitableResult>(
+  operation: () => Promise<T>,
+  config: RateLimitRetryConfig,
+  agentName: string
+): Promise<T> {
+  let attempt = 0;
+
+  while (true) {
+    const result = await operation();
+
+    if (!result.rateLimited) {
+      return result;
+    }
+
+    attempt++;
+    if (attempt >= config.maxRetries) {
+      console.log(`[Rate Limit] ${agentName} rate limited ${attempt} times, max retries reached. Continuing...`);
+      return result;
+    }
+
+    const waitMs = result.retryAfterMs || 5 * 60 * 1000;
+    console.log(`[Rate Limit] ${agentName} rate limited (attempt ${attempt}/${config.maxRetries}). Waiting for reset...`);
+    await handleRateLimit(waitMs);
+    console.log(`[Rate Limit] Retrying ${agentName}...`);
+  }
+}
