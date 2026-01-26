@@ -67,6 +67,13 @@ export interface DownloadedAttachment {
   filename: string;
 }
 
+// Per-agent reasoning effort configuration for Codex
+export interface CodexAgentReasoningConfig {
+  agent1: CodexReasoningEffort;
+  agent2: CodexReasoningEffort;
+  agent3: CodexReasoningEffort;
+}
+
 // Config types
 
 export interface RalphConfig {
@@ -83,5 +90,6 @@ export interface RalphConfig {
   claudeModel: ClaudeModel;
   codexModel: string;
   codexReasoningEffort: CodexReasoningEffort;
+  codexAgentReasoning: CodexAgentReasoningConfig;
   maxIterations: number;
 }
