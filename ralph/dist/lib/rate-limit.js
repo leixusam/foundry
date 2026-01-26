@@ -49,15 +49,22 @@ export function parseRateLimitReset(jsonOrText) {
     // Default: wait 5 minutes
     return 5 * 60 * 1000;
 }
+// Rate limit patterns for both Claude and Codex
+const rateLimitPatterns = [
+    // Common patterns
+    /rate.?limit/i,
+    /too many requests/i,
+    /quota exceeded/i,
+    /usage.?limit/i,
+    // Claude-specific
+    /hit your limit/i,
+    // Codex-specific
+    /RateLimitError/i,
+    /request limit reached/i,
+    /exceeded.*quota/i,
+];
 // Check if an error message indicates a rate limit
 export function isRateLimitError(text) {
-    const rateLimitPatterns = [
-        /rate.?limit/i,
-        /hit your limit/i,
-        /too many requests/i,
-        /quota exceeded/i,
-        /usage.?limit/i,
-    ];
     return rateLimitPatterns.some(pattern => pattern.test(text));
 }
 //# sourceMappingURL=rate-limit.js.map

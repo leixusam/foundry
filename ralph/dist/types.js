@@ -1,3 +1,3 @@
-// Agent output types
+// Provider types
 export {};
 //# sourceMappingURL=types.js.map

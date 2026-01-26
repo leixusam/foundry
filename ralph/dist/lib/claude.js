@@ -2,6 +2,7 @@ import { spawn } from 'child_process';
 import { parseRateLimitReset, isRateLimitError } from './rate-limit.js';
 import { getConfig } from '../config.js';
 import { logAgentOutput, logTerminalOutput } from './output-logger.js';
+import { registerClaudeProvider } from './provider.js';
 // ANSI color codes
 const BOLD = '\x1b[1m';
 const DIM = '\x1b[2m';
@@ -155,6 +156,7 @@ function processJsonLine(json) {
     }
     return null;
 }
+// Legacy function for backwards compatibility
 export async function spawnClaude(options, agentNumber) {
     // Clear subagent map for new session
     subagentMap.clear();
@@ -297,4 +299,53 @@ export function extractFinalOutput(streamOutput) {
     }
     return lastTextContent;
 }
+// Claude provider implementation
+class ClaudeProvider {
+    name = 'claude';
+    async spawn(options, agentNumber) {
+        // Map model string to ClaudeModel type
+        const model = options.model || getConfig().claudeModel;
+        const result = await spawnClaude({
+            prompt: options.prompt,
+            model,
+            allowedTools: options.allowedTools,
+        }, agentNumber);
+        // Extract token usage from the output
+        const tokenUsage = { input: 0, output: 0, cached: 0 };
+        for (const line of result.output.split('\n')) {
+            if (!line.trim())
+                continue;
+            try {
+                const json = JSON.parse(line);
+                if (json.type === 'result' && json.modelUsage) {
+                    for (const usage of Object.values(json.modelUsage)) {
+                        tokenUsage.input += usage.inputTokens || 0;
+                        tokenUsage.output += usage.outputTokens || 0;
+                        tokenUsage.cached += usage.cacheReadInputTokens || 0;
+                    }
+                }
+            }
+            catch {
+                // Ignore parse errors
+            }
+        }
+        return {
+            output: result.output,
+            finalOutput: extractFinalOutput(result.output),
+            rateLimited: result.rateLimited,
+            retryAfterMs: result.retryAfterMs,
+            cost: result.cost,
+            costEstimated: false, // Claude provides exact cost
+            duration: result.duration,
+            exitCode: result.exitCode,
+            tokenUsage,
+        };
+    }
+}
+// Factory function
+export function createClaudeProvider() {
+    return new ClaudeProvider();
+}
+// Register the Claude provider
+registerClaudeProvider(createClaudeProvider);
 //# sourceMappingURL=claude.js.map
