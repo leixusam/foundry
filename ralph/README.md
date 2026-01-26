@@ -135,6 +135,22 @@ Set these in `.ralph.env` or export them:
 | `RALPH_CLAUDE_MODEL` | Claude model: "opus", "sonnet", "haiku" | "opus" |
 | `RALPH_MAX_ITERATIONS` | Stop after N iterations (0 = unlimited) | 0 |
 
+### Using Codex CLI as Provider
+
+When using Codex as the provider (`--provider codex` or `RALPH_PROVIDER=codex`), you must configure Linear MCP in Codex:
+
+```bash
+# Add Linear MCP to Codex configuration
+codex mcp add linear --url https://mcp.linear.app/mcp
+
+# Verify Linear MCP is configured
+codex mcp list
+```
+
+Ralph will check for Linear MCP configuration at startup and show a helpful error if it's missing.
+
+**Note**: Codex CLI uses global MCP configuration (`~/.codex/config.toml`) rather than per-session tool restriction like Claude Code. All three agents will have access to all configured MCP tools when using Codex, but they are prompted to only use Linear tools for Agents 1 and 3.
+
 ### Linear Workflow Statuses
 
 Ralph creates these statuses in Linear:
