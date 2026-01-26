@@ -22,6 +22,7 @@ Multiple agents may be running simultaneously and looking at issues together. Th
 - Prefer issues that have been in their current status longer (less likely to be targeted by other agents)
 - If you see an issue transition to "In Progress" after your initial fetch, skip it
 - When claiming, verify the status hasn't changed before updating
+- **Pod Continuity**: If an "In Progress" issue was claimed by a different loop instance (pod) within the last hour, prefer other available work—this lets the same pod complete all stages of a feature; only consider taking over if no other work is available or the claim is older than 1 hour
 
 ## Execute These Steps
 
