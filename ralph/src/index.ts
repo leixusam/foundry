@@ -180,7 +180,7 @@ ${writerBasePrompt}`;
 
   const agent3Result = await agent3Provider.spawn({
     prompt: writerPrompt,
-    model: 'haiku', // Use haiku for cost efficiency on Linear operations
+    model: 'sonnet', // Use sonnet for better quality Linear updates
     allowedTools: ['mcp__linear__*'],
   }, 3);
 
