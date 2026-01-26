@@ -57,32 +57,30 @@ For any issue with a status of type "started" (use the actual status names from 
 
 ### Step 4: Select the Best Issue
 
-**IMPORTANT**: Do NOT list or output all issues. Analyze them internally and select the single most important issue to work on.
+**IMPORTANT**: Do NOT list or output all issues. Analyze the issue titles internally and select the single most important issue to work on.
 
-Pick ONE issue to work on using this priority logic:
+#### Hard Filters (must skip these):
 
-**Dependency-Aware Selection** (highest priority):
-1. If an issue is **blocked by** another issue, the blocking issue must be completed first
-2. Never select an issue that has incomplete blockers
-3. Prefer issues that are **blocking others** - completing them unblocks more work
+1. **Blocked by incomplete dependency**: If an issue has a "blocked by" relationship to another issue that is not yet completed, skip it. The blocker must be finished first.
 
-**Stage Priority** (work towards completion):
-1. Validate > Implement > Plan > Specification > Research > Backlog
-2. Issues closer to completion deliver value faster
+2. **Claimed by another agent within the last hour**: Check comments for "Agent Claimed" - if another pod claimed it less than 1 hour ago, skip it.
 
-**Issue Priority**:
-1. Urgent > High > Medium > Low
+3. **Completed or canceled**: Status type "completed" or "canceled".
 
-**Age and Stability**:
-1. Older issues first (they've been waiting longer)
-2. **Tie-breaker**: Issues that have been in their current status longer (reduces collision with other agents)
+#### Soft Preferences (use judgment):
 
-**Skip these issues**:
-- Status type "started" (In Progress) - already being worked on
-- Status type "completed" or "canceled"
-- Issues blocked by incomplete dependencies
+After filtering, read the **titles** of remaining issues and use your judgment to pick the most important one:
 
-**Note**: In a multi-agent environment, your "best" choice may be another agent's best choice too. Consider having backup options ready in case your first choice gets claimed.
+- Consider business impact, urgency, and what would be most valuable to complete
+- Prefer issues that are **blocking other issues** - completing them unblocks more work
+- Prefer issues closer to completion (e.g., "Needs Validate" over "Needs Research")
+- Prefer to avoid issues currently "In Progress" by another pod (even if >1 hour old), but this is not a hard blocker if nothing else is available
+
+**Do NOT rely on priority labels** - they are often not populated. Use semantic understanding of the issue titles to determine actual importance.
+
+#### If nothing passes hard filters:
+
+If all issues are either blocked, recently claimed, or completed, output NO_WORK.
 
 ### Step 5: Gather Full Context
 
