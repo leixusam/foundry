@@ -2,6 +2,7 @@ import { spawn } from 'child_process';
 import { ClaudeResult, ClaudeOptions } from '../types.js';
 import { parseRateLimitReset, isRateLimitError } from './rate-limit.js';
 import { getConfig } from '../config.js';
+import { logAgentOutput } from './output-logger.js';
 
 // ANSI color codes
 const BOLD = '\x1b[1m';
@@ -179,7 +180,7 @@ function processJsonLine(json: Record<string, unknown>): string | null {
   return null;
 }
 
-export async function spawnClaude(options: ClaudeOptions): Promise<ClaudeResult> {
+export async function spawnClaude(options: ClaudeOptions, agentNumber?: number): Promise<ClaudeResult> {
   // Clear subagent map for new session
   subagentMap.clear();
 
@@ -222,6 +223,13 @@ export async function spawnClaude(options: ClaudeOptions): Promise<ClaudeResult>
       // Parse streaming JSON output
       for (const line of text.split('\n')) {
         if (!line.trim()) continue;
+
+        // Persist raw line to output log file if agent number provided
+        if (agentNumber !== undefined) {
+          logAgentOutput(agentNumber, line).catch(() => {
+            // Silently ignore logging errors
+          });
+        }
 
         try {
           const json = JSON.parse(line);
