@@ -2,7 +2,7 @@ import { mkdir, appendFile } from 'fs/promises';
 import { existsSync } from 'fs';
 import { join } from 'path';
 import { getConfig } from '../config.js';
-import { getAgentNameDisplay } from './agent-name.js';
+import { getLoopInstanceNameDisplay } from './loop-instance-name.js';
 
 // Track current logging context
 let currentLoopName: string | null = null;
@@ -27,7 +27,7 @@ function getAgentLogPath(agentNumber: number): string | null {
 
   const outputDir = getOutputDir();
   // Use the human-readable part of the agent name (e.g., "arctic-lynx" from "arctic-lynx-1234567")
-  const loopNameDisplay = getAgentNameDisplay(currentLoopName);
+  const loopNameDisplay = getLoopInstanceNameDisplay(currentLoopName);
 
   return join(
     outputDir,
@@ -47,7 +47,7 @@ function getAgentTerminalLogPath(agentNumber: number): string | null {
   }
 
   const outputDir = getOutputDir();
-  const loopNameDisplay = getAgentNameDisplay(currentLoopName);
+  const loopNameDisplay = getLoopInstanceNameDisplay(currentLoopName);
 
   return join(
     outputDir,
@@ -69,11 +69,11 @@ async function ensureDir(filePath: string): Promise<void> {
 
 /**
  * Initializes the output logger for a new loop iteration
- * @param agentName - The full agent name (e.g., "arctic-lynx-1234567")
+ * @param loopInstanceName - The full loop instance name (e.g., "arctic-lynx-1234567")
  * @param loopNumber - The loop iteration number (0, 1, 2, ...)
  */
-export function initLoopLogger(agentName: string, loopNumber: number): void {
-  currentLoopName = agentName;
+export function initLoopLogger(loopInstanceName: string, loopNumber: number): void {
+  currentLoopName = loopInstanceName;
   currentLoopNumber = loopNumber;
 }
 
@@ -126,7 +126,7 @@ export function getCurrentOutputDir(): string | null {
   }
 
   const outputDir = getOutputDir();
-  const loopNameDisplay = getAgentNameDisplay(currentLoopName);
+  const loopNameDisplay = getLoopInstanceNameDisplay(currentLoopName);
 
   return join(outputDir, loopNameDisplay, `loop-${currentLoopNumber}`);
 }

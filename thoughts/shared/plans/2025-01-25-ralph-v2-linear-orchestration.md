@@ -12,6 +12,55 @@ This architecture enables parallel agent execution across multiple VMs, crash re
 
 ---
 
+## Naming Conventions
+
+Ralph v2 uses a three-level naming hierarchy for identification and attribution:
+
+### 1. Pod
+
+An `npm start` instance (the outer orchestration layer). Named like `red-dolphin` with adjective-animal format. Multiple pods can run in parallel on different machines.
+
+*Note: Pod naming will be implemented in RSK-18.*
+
+### 2. Loop
+
+An iteration within a pod (loop 0, loop 1, loop 2, etc.). Each loop contains three sequential agent runs.
+
+### 3. Agent
+
+An individual Claude Code instance within a loop:
+- **Agent 1**: Linear Reader - queries Linear, selects and claims issues
+- **Agent 2**: Worker - executes development work, writes to repo
+- **Agent 3**: Linear Writer - updates Linear with results
+
+### 4. Loop Instance Name
+
+A unique identifier for a specific loop instance, formatted as `{adjective}-{animal}-{timestamp}` (e.g., `red-giraffe-1737848125`).
+
+This identifier:
+- Is generated once per loop iteration
+- Is shared by all three agents within the same loop
+- Is included in Linear comments for attribution
+- Allows tracking which loop instance made which changes
+- Supports debugging when multiple instances work in parallel
+
+### Hierarchy Visualization
+
+```
+Pod: red-dolphin (npm start instance)
+├── Loop 0 (Loop Instance: red-giraffe-1737848125)
+│   ├── Agent 1: Linear Reader
+│   ├── Agent 2: Worker
+│   └── Agent 3: Linear Writer
+├── Loop 1 (Loop Instance: blue-falcon-1737848200)
+│   ├── Agent 1: Linear Reader
+│   ├── Agent 2: Worker
+│   └── Agent 3: Linear Writer
+└── ...
+```
+
+---
+
 ## Current State Analysis
 
 ### What Exists Now
