@@ -46,36 +46,55 @@ Foundry will claim the ticket, work on it autonomously, and update Linear with p
 
 ## How It Works
 
-Foundry runs a continuous loop, processing Linear tickets through a three-agent pipeline:
+Foundry uses three core concepts: **Pods**, **Loops**, and **Agents**.
+
+### Pods, Loops, and Agents
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                           Foundry Loop                                   │
+│                         Pod (swift-wyvern)                              │
 ├─────────────────────────────────────────────────────────────────────────┤
-│                                                                          │
-│   ┌──────────────┐     ┌──────────────┐     ┌──────────────┐            │
-│   │   Agent 1    │     │   Agent 2    │     │   Agent 3    │            │
-│   │    Linear    │────▶│    Worker    │────▶│    Linear    │            │
-│   │    Reader    │     │              │     │    Writer    │            │
-│   └──────────────┘     └──────────────┘     └──────────────┘            │
-│         │                    │                    │                      │
-│         ▼                    ▼                    ▼                      │
-│   Scans Linear,        Executes work:       Updates Linear:             │
-│   claims tickets,      - Research           - Posts comments            │
-│   gathers context      - Plan               - Updates status            │
-│                        - Implement          - Links artifacts           │
-│                        - Validate                                        │
-│                                                                          │
+│                                                                         │
+│  Loop 1: Ticket RSK-42                                                  │
+│  ┌──────────────┐     ┌──────────────┐     ┌──────────────┐            │
+│  │   Agent 1    │     │   Agent 2    │     │   Agent 3    │            │
+│  │    Linear    │────▶│    Worker    │────▶│    Linear    │            │
+│  │    Reader    │     │              │     │    Writer    │            │
+│  └──────────────┘     └──────────────┘     └──────────────┘            │
+│                                                                         │
+│  Loop 2: Ticket RSK-43                                                  │
+│  ┌──────────────┐     ┌──────────────┐     ┌──────────────┐            │
+│  │   Agent 1    │────▶│   Agent 2    │────▶│   Agent 3    │            │
+│  └──────────────┘     └──────────────┘     └──────────────┘            │
+│                                                                         │
+│  Loop 3: ...                                                            │
+│                                                                         │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
+- **Pod**: A running instance of Foundry. Each pod gets a unique name (e.g., "swift-wyvern") and continuously processes tickets until stopped. You can run multiple pods in parallel.
+
+- **Loop**: One complete cycle of work. Each loop claims a ticket, works on it, and updates Linear. A pod runs loops continuously until there's no more work.
+
+- **Agent**: An AI worker that handles one part of the loop. Three agents work in sequence to complete each loop.
+
 ### The Agent Pipeline
 
-1. **Agent 1 (Linear Reader)**: Queries Linear for available tickets, prioritizes work, claims the most important ticket, and gathers context.
+1. **Agent 1 (Linear Reader)**: Scans Linear for available tickets, prioritizes by urgency, **claims** the highest-priority ticket, and gathers context.
 
-2. **Agent 2 (Worker)**: The actual developer. Reads code, writes code, runs tests, and commits changes.
+2. **Agent 2 (Worker)**: The developer. Reads code, writes code, runs tests, and commits changes.
 
-3. **Agent 3 (Linear Writer)**: Updates Linear with results - posts detailed comments, updates ticket status, and links to commits.
+3. **Agent 3 (Linear Writer)**: Updates Linear with results - posts comments, updates status, and links commits.
+
+### Parallel Execution
+
+Multiple pods can work on the same codebase simultaneously. Foundry prevents conflicts through **ticket claiming**:
+
+1. When Agent 1 finds a ticket to work on, it immediately changes the status to "In Progress"
+2. Other pods see this status and skip the ticket
+3. Each pod works on different tickets, avoiding collisions
+
+This lets you scale development by running multiple Foundry pods in parallel - on different machines, in CI, or as background processes.
 
 ## Directory Structure
 
