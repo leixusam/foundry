@@ -4,7 +4,7 @@
 **Date**: 2026-01-26
 **Research**: thoughts/research/2026-01-26-RSK-39-linear-attachment-downloader.md
 **Specification**: N/A (pure infrastructure feature, no UX changes)
-**Status**: Ready for Implementation
+**Status**: Implementation Complete
 
 ## Overview
 
@@ -18,14 +18,14 @@ The implementation:
 
 ## Success Criteria
 
-- [ ] Attachments from Linear issues are downloaded to `ralph/.attachments/{issue-identifier}/`
-- [ ] Embedded images from issue descriptions are extracted and downloaded
-- [ ] File paths are passed to Agent 2's prompt so it can view images
-- [ ] Both Claude Code and Codex CLI can access downloaded files
-- [ ] Failed downloads don't crash Ralph (graceful error handling)
-- [ ] Type check passes: `npm run typecheck`
-- [ ] Build succeeds: `npm run build`
-- [ ] Manual test: Run Ralph on an issue with attachments and verify download
+- [x] Attachments from Linear issues are downloaded to `ralph/.attachments/{issue-identifier}/`
+- [x] Embedded images from issue descriptions are extracted and downloaded
+- [x] File paths are passed to Agent 2's prompt so it can view images
+- [x] Both Claude Code and Codex CLI can access downloaded files
+- [x] Failed downloads don't crash Ralph (graceful error handling)
+- [x] Type check passes: `npm run typecheck`
+- [x] Build succeeds: `npm run build`
+- [ ] Manual test: Run Ralph on an issue with attachments and verify download (deferred to validation stage)
 
 ## Phases
 
@@ -176,3 +176,23 @@ This is out of scope for the initial implementation but noted for future work.
 
 ### Comment Attachments (Out of Scope)
 The research mentioned potentially downloading images from comments. This is deferred to a future ticket if needed. For now, only description and explicit attachments are handled.
+
+---
+
+## Implementation Notes
+
+**Completed**: 2026-01-25
+
+### Changes Made
+1. **Phase 1**: Created `ralph/src/lib/attachment-downloader.ts` with all download logic, including the Phase 4 helper (`parseAgent1Attachments`) which was logically part of the same module.
+2. **Phase 2**: Updated `.gitignore` to ignore `ralph/.attachments/`
+3. **Phase 3**: Integrated attachment download into `ralph/src/index.ts` between Agent 1 and Agent 2, including `extractIssueIdentifier()` helper.
+4. **Phase 4**: Merged into Phase 1 - the helper function is part of the attachment-downloader module.
+
+### Commits
+- `feat(RSK-39): phase 1 - create attachment-downloader module`
+- `feat(RSK-39): phase 2 - gitignore ralph/.attachments/`
+- `feat(RSK-39): phase 3 - integrate attachment downloader into main loop`
+
+### Deviations from Plan
+- Phase 4 was implemented as part of Phase 1 since the helper function logically belongs in the attachment-downloader module rather than as a separate phase.
