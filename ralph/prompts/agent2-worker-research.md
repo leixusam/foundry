@@ -83,22 +83,31 @@ Read the issue description carefully. Identify:
 
 ### Step 2: Quick Complexity Assessment
 
-After understanding requirements, do a quick assessment: Is this task simple enough to complete right now?
+After understanding requirements, assess whether this task should follow the oneshot or staged workflow.
 
-**Criteria for Simple Tasks** (ALL must be true):
+**Oneshot Criteria** (either condition is sufficient):
+- Can be completed by one engineer in one day, OR
+- Less than ~100 lines of code/changes
+
+**Additional oneshot indicators** (supporting evidence, not required):
 - Changes limited to 5 or fewer files
 - Clear, well-defined scope with no ambiguity
-- No complex dependencies or external integrations
-- No breaking changes to existing APIs or interfaces
-- No new architectural patterns or major structural changes
 - Follows existing patterns already established in codebase
-- No security-sensitive changes (auth, encryption, user data)
-- No database migrations required
-- Estimated implementation time under 30 minutes
+- No new architectural patterns or major structural changes
 
-**If ALL criteria are met**: This task is simple. Read and follow `ralph/prompts/agent2-worker-oneshot.md` instead of continuing with research.
+**Staged workflow indicators** (any of these suggests staged):
+- Requires architectural decisions or design review
+- Involves complex dependencies or external integrations
+- Breaking changes to existing APIs or interfaces
+- Security-sensitive changes (auth, encryption, user data)
+- Database migrations required
+- Multiple phases of work needed
 
-**If ANY criteria is NOT met**: Continue with the normal research flow below.
+**Classification decision**:
+- If task meets **oneshot criteria**: Read and follow `ralph/prompts/agent2-worker-oneshot.md` instead of continuing with research. The oneshot worker will complete the task in this session.
+- If task requires **staged workflow**: Continue with the normal research flow below and output `workflow: staged` in WORK_RESULT.
+
+**Important**: When redirecting to oneshot, you will complete the task in this same session. The oneshot WORK_RESULT will include `workflow: oneshot`.
 
 ---
 
@@ -233,6 +242,7 @@ After completing research, output:
 WORK_RESULT:
   success: true
   stage_completed: research
+  workflow: staged
   branch_name: ralph/{identifier}
   artifact_path: thoughts/research/YYYY-MM-DD-{identifier}-{slug}.md
   commit_hash: {short hash}
@@ -240,6 +250,8 @@ WORK_RESULT:
   summary: |
     {Description of what was researched and key findings}
 ```
+
+**Note**: Research stage always outputs `workflow: staged` because if the task was classified as oneshot, the agent would have switched to the oneshot worker prompt and that stage outputs `workflow: oneshot`.
 
 **Choose next_status based on your Specification Assessment:**
 - `"[RL] Needs Specification"` - For features with significant UX components
