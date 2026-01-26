@@ -91,7 +91,7 @@ export const config: RalphConfig = {
   linearTeamId: process.env.LINEAR_TEAM_KEY,
   gitBranch: 'main',
   staleTimeoutHours: 4,
-  noWorkSleepMinutes: 15,
+  noWorkSleepMinutes: 60,
   errorSleepMinutes: 1,
 
   // Provider configuration
