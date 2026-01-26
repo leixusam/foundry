@@ -4,7 +4,7 @@
 **Date**: 2025-01-25
 **Research**: `thoughts/research/2025-01-25-RSK-37-codex-cli-all-agents.md`
 **Specification**: N/A (pure infrastructure change, no UX components)
-**Status**: Ready for Implementation
+**Status**: Implementation Complete
 
 ## Overview
 
@@ -12,11 +12,11 @@ Enable Codex CLI as an alternative provider for Agent 1 (Linear Reader) and Agen
 
 ## Success Criteria
 
-- [ ] Agent 1, 2, and 3 all use `config.provider` to determine which provider to use
-- [ ] When using Codex with `allowedTools`, a warning is logged (since it's ignored)
-- [ ] Ralph startup checks for Linear MCP configuration when using Codex
-- [ ] Type check passes: `npm run typecheck`
-- [ ] Build succeeds: `npm run build`
+- [x] Agent 1, 2, and 3 all use `config.provider` to determine which provider to use
+- [x] When using Codex with `allowedTools`, a warning is logged (since it's ignored)
+- [x] Ralph startup checks for Linear MCP configuration when using Codex
+- [x] Type check passes: `npm run typecheck`
+- [x] Build succeeds: `npm run build`
 - [ ] Manual test: Ralph starts successfully with `--provider codex` (requires Linear MCP configured)
 
 ## Phases
