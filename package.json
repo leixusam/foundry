@@ -1,16 +1,48 @@
 {
-  "name": "ralph-default-files",
-  "version": "1.0.0",
-  "private": true,
-  "description": "Linear-orchestrated autonomous agent system - project root",
+  "name": "@leixusam/ralph",
+  "version": "2.0.0",
+  "description": "Linear-orchestrated autonomous agent system",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "ralph": "./dist/cli.js"
+  },
+  "files": [
+    "dist/**/*",
+    "prompts/**/*",
+    ".claude/**/*"
+  ],
   "scripts": {
-    "install:ralph": "npm install --prefix ralph",
-    "build": "npm run build --prefix ralph",
-    "start": "npm start --prefix ralph",
-    "dev": "npm run dev --prefix ralph",
-    "typecheck": "npm run typecheck --prefix ralph"
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit"
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/leixusam/ralph-default-files.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "ai",
+    "autonomous",
+    "linear",
+    "developer",
+    "agent",
+    "claude"
+  ],
+  "author": "Lei Xu",
+  "license": "MIT",
+  "dependencies": {
+    "@linear/sdk": "^31.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.0"
   }
 }

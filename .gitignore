@@ -15,10 +15,10 @@ out/
 .env
 .env.local
 .env.*.local
-.ralph.env
 
-# MCP configuration (contains API keys)
-.mcp.json
+# Ralph runtime data (credentials, output, attachments)
+# All Ralph runtime data lives in .ralph/ directory
+.ralph/
 
 # IDE
 .idea/
@@ -36,14 +36,6 @@ Thumbs.db
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-
-# Ralph output logs (LLM agent output persistence)
-# Lives inside ralph/ folder since Ralph is a plugin added to projects
-ralph/.output/
-
-# Ralph downloaded attachments from Linear issues
-# Downloaded at runtime for Agent 2 to view, not needed in version control
-ralph/.attachments/
 
 # Test coverage
 coverage/
