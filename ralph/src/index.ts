@@ -6,7 +6,7 @@ import { generatePodName } from './lib/loop-instance-name.js';
 import { initLoopLogger, getCurrentOutputDir } from './lib/output-logger.js';
 import { initLoopStats, logAgentStats, finalizeLoopStats } from './lib/stats-logger.js';
 import { createProvider, ProviderResult } from './lib/provider.js';
-import { checkInitialized, runInitialization } from './init.js';
+import { checkInitialized, runInitialization, checkCodexLinearMcp } from './init.js';
 import { downloadAttachmentsFromAgent1Output } from './lib/attachment-downloader.js';
 
 // Import providers to register them
@@ -357,6 +357,17 @@ async function main(): Promise<void> {
 
   console.log('   Linear Team: ' + config.linearTeamId);
   console.log('   [RL] Statuses: ✓ configured');
+
+  // Check Codex Linear MCP if using Codex provider
+  if (config.provider === 'codex') {
+    const hasLinearMcp = checkCodexLinearMcp();
+    if (!hasLinearMcp) {
+      console.log('\n⚠️  Linear MCP not configured for Codex.');
+      console.log('   Run: codex mcp add linear --url https://mcp.linear.app/mcp');
+      process.exit(1);
+    }
+    console.log('   Codex Linear MCP: ✓ configured');
+  }
 
   // Generate pod name once at startup - persists for entire Ralph session
   const podName = generatePodName();

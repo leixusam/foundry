@@ -1,4 +1,4 @@
-import { spawn } from 'child_process';
+import { spawn, execSync } from 'child_process';
 import { getConfig } from '../config.js';
 import { logAgentOutput, logTerminalOutput } from './output-logger.js';
 import { LLMProvider, ProviderOptions, ProviderResult, registerCodexProvider, CodexReasoningEffort } from './provider.js';
@@ -323,6 +323,16 @@ class CodexProvider implements LLMProvider {
 // Factory function
 export function createCodexProvider(): LLMProvider {
   return new CodexProvider();
+}
+
+// Check if Linear MCP is configured in Codex
+export function checkCodexLinearMcpConfigured(): boolean {
+  try {
+    const result = execSync('codex mcp list', { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] });
+    return result.toLowerCase().includes('linear');
+  } catch {
+    return false;
+  }
 }
 
 // Register the Codex provider
