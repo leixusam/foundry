@@ -104,11 +104,11 @@ Use the actual status names from Step 1 to determine the appropriate stage.
 
 2. **Claim the issue**:
    - Update the status to the appropriate "In Progress" status (use the actual status name from Step 1, e.g., "Research In Progress", "Plan In Progress", "Implement In Progress", "Validate In Progress", or "Oneshot In Progress")
-   - Post a comment (include your agent name from the Agent Instance section at the top of your prompt):
+   - Post a comment (include your loop instance name from the Agent Instance section at the top of your prompt):
 ```
-Agent Claimed | {agent name} | {TIMESTAMP}
+Agent Claimed | {loop instance name} | {TIMESTAMP}
 
-**Agent**: {agent name}
+**Loop Instance**: {loop instance name}
 **Stage**: {stage}
 **Timeout**: 4 hours
 ```

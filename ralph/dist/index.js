@@ -3,16 +3,16 @@ import { spawnClaude, extractFinalOutput } from './lib/claude.js';
 import { sleep, handleRateLimit } from './lib/rate-limit.js';
 import { loadPrompt } from './lib/prompts.js';
 import { gitSafetyNetPush, getCurrentBranch } from './lib/git.js';
-import { generateAgentName } from './lib/agent-name.js';
+import { generateLoopInstanceName } from './lib/loop-instance-name.js';
 import { initLoopLogger, getCurrentOutputDir } from './lib/output-logger.js';
 async function runLoop(iteration) {
     // Generate a unique name for this loop instance
     // All agents in this loop share the same name for attribution in Linear comments
-    const agentName = generateAgentName();
+    const loopInstanceName = generateLoopInstanceName();
     // Initialize output logger for this loop iteration
-    initLoopLogger(agentName, iteration);
+    initLoopLogger(loopInstanceName, iteration);
     console.log(`\n${'='.repeat(24)} LOOP ${iteration} ${'='.repeat(24)}`);
-    console.log(`Agent Name: ${agentName}`);
+    console.log(`Loop Instance: ${loopInstanceName}`);
     console.log(`Output Dir: ${getCurrentOutputDir()}\n`);
     const loopStart = Date.now();
     // ═══════════════════════════════════════════════════════════════════════════
@@ -22,9 +22,9 @@ async function runLoop(iteration) {
     const agent1BasePrompt = await loadPrompt('agent1-linear-reader');
     const agent1Prompt = `## Agent Instance
 
-You are agent instance: **${agentName}**
+You are part of agent instance: **${loopInstanceName}**
 
-This name identifies your loop instance. Include it in any claims or comments you make to Linear so that when multiple agents work in parallel, we can tell which agent made which comment.
+This name identifies your loop instance for attribution purposes.
 
 ---
 
@@ -56,7 +56,7 @@ ${agent1BasePrompt}`;
     const workerBasePrompt = await loadPrompt('agent2-worker');
     const workerPrompt = `## Agent Instance
 
-You are part of agent instance: **${agentName}**
+You are part of agent instance: **${loopInstanceName}**
 
 This name identifies your loop instance for attribution purposes.
 
@@ -84,9 +84,9 @@ ${workerBasePrompt}`;
     const writerBasePrompt = await loadPrompt('agent3-linear-writer');
     const writerPrompt = `## Agent Instance
 
-You are part of agent instance: **${agentName}**
+You are part of agent instance: **${loopInstanceName}**
 
-**IMPORTANT**: Include this agent name in all comments you post to Linear so that when multiple agents work in parallel, we can identify which agent made which comment.
+**IMPORTANT**: Include this loop instance name in all comments you post to Linear so that when multiple instances work in parallel, we can identify which one made which comment.
 
 ---
 
@@ -104,7 +104,7 @@ ${agent2Output}
 
 ## Session Stats
 
-- Agent Name: ${agentName}
+- Loop Instance: ${loopInstanceName}
 - Agent 2 Cost: $${agent2Result.cost.toFixed(4)}
 - Agent 2 Duration: ${Math.round(agent2Result.duration / 1000)}s
 - Agent 2 Exit code: ${agent2Result.exitCode}

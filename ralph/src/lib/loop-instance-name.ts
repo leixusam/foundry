@@ -1,6 +1,6 @@
-// Agent name generator
-// Generates unique, memorable names for agent loop instances (e.g., "red-giraffe-1706223456")
-// This helps identify which agent instance made comments in Linear when multiple agents work in parallel
+// Loop instance name generator
+// Generates unique, memorable names for loop instances (e.g., "red-giraffe-1706223456")
+// This helps identify which loop instance made comments in Linear when multiple instances work in parallel
 
 // Word lists for generating memorable names
 const ADJECTIVES = [
@@ -16,14 +16,14 @@ const ANIMALS = [
 ];
 
 /**
- * Generates a unique agent name for a loop instance
+ * Generates a unique name for a loop instance
  * Format: {adjective}-{animal}-{timestamp}
  * Example: "red-giraffe-1706223456"
  *
  * The name is deterministic based on the current timestamp (Unix seconds),
  * ensuring each loop gets a unique name while being reproducible for debugging.
  */
-export function generateAgentName(): string {
+export function generateLoopInstanceName(): string {
   const timestamp = Math.floor(Date.now() / 1000);
 
   // Use timestamp to deterministically select words (but with enough variation)
@@ -38,10 +38,10 @@ export function generateAgentName(): string {
 }
 
 /**
- * Extracts the human-readable part of an agent name (without timestamp)
+ * Extracts the human-readable part of a loop instance name (without timestamp)
  * Example: "red-giraffe-1706223456" -> "red-giraffe"
  */
-export function getAgentNameDisplay(fullName: string): string {
+export function getLoopInstanceNameDisplay(fullName: string): string {
   const parts = fullName.split('-');
   if (parts.length >= 3) {
     // Return everything except the last part (timestamp)
