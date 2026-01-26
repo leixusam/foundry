@@ -1,4 +1,4 @@
-import { DispatchResult, WorkResult, LinearUpdateResult } from '../types.js';
+import { DispatchResult, WorkResult, LinearUpdateResult, SubIssueRecommendation } from '../types.js';
 
 // Parse DISPATCH_RESULT YAML block from Agent 1 output
 export function parseDispatchResult(output: string): DispatchResult | null {
@@ -229,6 +229,40 @@ export function parseWorkResult(output: string): WorkResult | null {
   } else {
     const singleLineError = yamlContent.match(/error:\s*(.+)/);
     if (singleLineError) result.error = singleLineError[1].trim();
+  }
+
+  // Parse sub_issues array (optional, for large issues that should be broken down)
+  try {
+    const subIssuesMatch = yamlContent.match(/sub_issues:\s*\n([\s\S]*?)(?=\n\s*[a-z_]+:|$)/i);
+    if (subIssuesMatch) {
+      const subIssuesContent = subIssuesMatch[1];
+      const subIssues: SubIssueRecommendation[] = [];
+
+      // Match each sub-issue block (starts with "- title:")
+      const issueBlocks = subIssuesContent.split(/\n\s*-\s+title:/).slice(1);
+      for (const block of issueBlocks) {
+        const titleMatch = block.match(/^(.+)/);
+        const descMatch = block.match(/description:\s*\|\s*\n([\s\S]*?)(?=\n\s{6}\w+:|$)/);
+        const planMatch = block.match(/plan_section:\s*["']?([^"'\n]+)["']?/);
+        const scopeMatch = block.match(/estimated_scope:\s*["']?([^"'\n]+)["']?/);
+
+        if (titleMatch) {
+          subIssues.push({
+            title: titleMatch[1].trim().replace(/^["']|["']$/g, ''),
+            description: descMatch?.[1]?.trim() || '',
+            planSection: planMatch?.[1]?.trim() || '',
+            estimatedScope: scopeMatch?.[1]?.trim() || '',
+          });
+        }
+      }
+
+      if (subIssues.length > 0) {
+        result.subIssues = subIssues;
+      }
+    }
+  } catch {
+    // Gracefully ignore sub_issues parsing errors - this is an optional field
+    console.warn('Failed to parse sub_issues from WORK_RESULT, continuing without them');
   }
 
   return result as WorkResult;

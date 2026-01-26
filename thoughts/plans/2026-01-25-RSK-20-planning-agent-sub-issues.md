@@ -3,7 +3,7 @@
 **Issue**: RSK-20
 **Date**: 2026-01-25
 **Research**: thoughts/research/2026-01-25-RSK-20-planning-agent-sub-issues.md
-**Status**: Ready for Implementation
+**Status**: Implementation Complete
 
 ## Overview
 
@@ -13,14 +13,14 @@ The key insight is that complexity is only truly understood during planning, not
 
 ## Success Criteria
 
-- [ ] `WorkResult` type includes optional `subIssues` array
-- [ ] `SubIssueRecommendation` interface defined in types.ts
-- [ ] `parseWorkResult` function parses sub_issues from YAML
-- [ ] Agent 2 plan prompt includes complexity assessment guidance
-- [ ] Agent 3 prompt includes sub-issue creation logic
-- [ ] Agent 1 prompt acknowledges sub-issues may exist
-- [ ] Type check passes: `npm run typecheck`
-- [ ] Build passes: `npm run build`
+- [x] `WorkResult` type includes optional `subIssues` array
+- [x] `SubIssueRecommendation` interface defined in types.ts
+- [x] `parseWorkResult` function parses sub_issues from YAML
+- [x] Agent 2 plan prompt includes complexity assessment guidance
+- [x] Agent 3 prompt includes sub-issue creation logic
+- [x] Agent 1 prompt acknowledges sub-issues may exist
+- [x] Type check passes: `npm run typecheck`
+- [x] Build passes: `npm run build`
 
 ## Phases
 

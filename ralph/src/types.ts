@@ -38,6 +38,15 @@ export interface WorkResult {
   nextStatus?: string;
   summary?: string;
   error?: string;
+  subIssues?: SubIssueRecommendation[];
+}
+
+// Sub-issue recommendation for breaking down large issues
+export interface SubIssueRecommendation {
+  title: string;           // Sub-issue title (e.g., "RSK-20a: Implement API layer")
+  description: string;     // Sub-issue description
+  planSection: string;     // Reference to plan section (e.g., "Phase 2: API Layer")
+  estimatedScope: string;  // Brief scope estimate (e.g., "~400 lines, 3 endpoints")
 }
 
 export interface LinearUpdateResult {

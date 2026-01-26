@@ -62,6 +62,30 @@ For each phase and for the overall implementation:
 Create a markdown file at:
 `thoughts/plans/YYYY-MM-DD-{identifier}-{slug}.md`
 
+### Step 4.5: Assess Complexity and Consider Sub-Issues
+
+After writing the plan, assess whether this issue should be broken into sub-issues.
+
+**When to recommend sub-issues:**
+- Total estimated lines of code changes exceed ~1000 LOC across all phases
+- The work contains logically separable components that could be developed independently
+- Different phases could be assigned to different agents working in parallel
+- The work spans multiple distinct areas (e.g., "backend API" + "frontend UI" + "data migration")
+
+**When NOT to create sub-issues:**
+- Tasks are internal implementation steps within a single logical feature
+- The work is sequential and each part depends on the previous
+- Total scope is under ~1000 LOC
+- The components aren't meaningful work items on their own
+
+**Important distinction**: Sub-issues are NOT the same as implementation phases/tasks. Phases are steps within a single work item. Sub-issues are separate work items that:
+- Get tracked individually in Linear
+- Could be assigned to different developers/agents
+- Have their own status tracking
+- Reference back to sections of this plan document
+
+If sub-issues are warranted, include them in your WORK_RESULT output (see output format below).
+
 The document should follow this structure:
 
 ```markdown
@@ -137,7 +161,21 @@ WORK_RESULT:
   next_status: "Needs Implement"
   summary: |
     {Description of the plan - number of phases, key decisions made}
+  sub_issues:                    # OPTIONAL - only include if complexity warrants it
+    - title: "{identifier}a: {Sub-issue title}"
+      description: |
+        {Brief description of this sub-issue}
+        See {plan section} of the implementation plan.
+      plan_section: "Phase X: {Section Name}"
+      estimated_scope: "~{N} lines, {brief scope description}"
+    - title: "{identifier}b: {Second sub-issue title}"
+      description: |
+        {Brief description}
+      plan_section: "Phase Y: {Section Name}"
+      estimated_scope: "~{N} lines, {brief scope description}"
 ```
+
+**Note**: Only include `sub_issues` if the complexity assessment (Step 4.5) determines they are needed. Most issues will NOT need sub-issues.
 
 If you encounter an error:
 
