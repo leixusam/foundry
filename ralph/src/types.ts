@@ -92,4 +92,7 @@ export interface RalphConfig {
   codexReasoningEffort: CodexReasoningEffort;
   codexAgentReasoning: CodexAgentReasoningConfig;
   maxIterations: number;
+
+  // Rate limit configuration
+  rateLimitMaxRetries: number;
 }
