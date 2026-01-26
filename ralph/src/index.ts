@@ -53,7 +53,7 @@ async function runLoop(podName: string, iteration: number): Promise<void> {
   console.log(`Provider: ${config.provider} (Agent 2 only)`);
   if (config.provider === 'codex') {
     console.log(`Codex Model: ${config.codexModel}`);
-    console.log(`Reasoning Effort: ${config.codexReasoningEffort}`);
+    console.log(`Agent Reasoning: A1=${config.codexAgentReasoning.agent1}, A2=${config.codexAgentReasoning.agent2}, A3=${config.codexAgentReasoning.agent3}`);
   } else {
     console.log(`Claude Model: ${config.claudeModel}`);
   }
@@ -317,7 +317,8 @@ async function main(): Promise<void> {
   console.log(`   Provider: ${config.provider}`);
   if (config.provider === 'codex') {
     console.log(`   Codex Model: ${config.codexModel}`);
-    console.log(`   Reasoning Effort: ${config.codexReasoningEffort}`);
+    console.log(`   Reasoning Effort (default): ${config.codexReasoningEffort}`);
+    console.log(`   Agent Reasoning: A1=${config.codexAgentReasoning.agent1}, A2=${config.codexAgentReasoning.agent2}, A3=${config.codexAgentReasoning.agent3}`);
   } else {
     console.log(`   Claude Model: ${config.claudeModel}`);
   }
