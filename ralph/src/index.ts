@@ -2,7 +2,7 @@ import { getConfig } from './config.js';
 import { sleep, handleRateLimit } from './lib/rate-limit.js';
 import { loadPrompt } from './lib/prompts.js';
 import { getCurrentBranch } from './lib/git.js';
-import { generateLoopInstanceName } from './lib/loop-instance-name.js';
+import { generatePodName } from './lib/loop-instance-name.js';
 import { initLoopLogger, getCurrentOutputDir } from './lib/output-logger.js';
 import { createProvider, ProviderResult } from './lib/provider.js';
 import { checkInitialized, runInitialization } from './init.js';
@@ -11,18 +11,15 @@ import { checkInitialized, runInitialization } from './init.js';
 import './lib/claude.js';
 import './lib/codex.js';
 
-async function runLoop(iteration: number): Promise<void> {
+async function runLoop(podName: string, iteration: number): Promise<void> {
   const config = getConfig();
 
-  // Generate a unique name for this loop instance
-  // All agents in this loop share the same name for attribution in Linear comments
-  const loopInstanceName = generateLoopInstanceName();
-
   // Initialize output logger for this loop iteration
-  initLoopLogger(loopInstanceName, iteration);
+  // Pod name persists across all loops in this Ralph session
+  initLoopLogger(podName, iteration);
 
   console.log(`\n${'='.repeat(24)} LOOP ${iteration} ${'='.repeat(24)}`);
-  console.log(`Loop Instance: ${loopInstanceName}`);
+  console.log(`Pod: ${podName}`);
   console.log(`Provider: ${config.provider} (Agent 2 only)`);
   if (config.provider === 'codex') {
     console.log(`Codex Model: ${config.codexModel}`);
@@ -42,9 +39,12 @@ async function runLoop(iteration: number): Promise<void> {
   const agent1BasePrompt = await loadPrompt('agent1-linear-reader');
   const agent1Prompt = `## Agent Instance
 
-You are part of agent instance: **${loopInstanceName}**
+You are part of pod: **${podName}** / Loop ${iteration} / Agent 1 (Linear Reader)
 
-This name identifies your loop instance for attribution purposes.
+This identifier format is: Pod Name / Loop Number / Agent Number (Role).
+- **Pod Name**: ${podName} - persists for this entire Ralph session
+- **Loop Number**: ${iteration} - increments each time Ralph processes a new ticket
+- **Agent**: Agent 1 (Linear Reader) - your role in this loop
 
 ---
 
@@ -83,9 +83,12 @@ ${agent1BasePrompt}`;
   const workerBasePrompt = await loadPrompt('agent2-worker');
   const workerPrompt = `## Agent Instance
 
-You are part of agent instance: **${loopInstanceName}**
+You are part of pod: **${podName}** / Loop ${iteration} / Agent 2 (Worker)
 
-This name identifies your loop instance for attribution purposes.
+This identifier format is: Pod Name / Loop Number / Agent Number (Role).
+- **Pod Name**: ${podName} - persists for this entire Ralph session
+- **Loop Number**: ${iteration} - increments each time Ralph processes a new ticket
+- **Agent**: Agent 2 (Worker) - your role in this loop
 
 ---
 
@@ -132,9 +135,14 @@ ${workerBasePrompt}`;
 
   const writerPrompt = `## Agent Instance
 
-You are part of agent instance: **${loopInstanceName}**
+You are part of pod: **${podName}** / Loop ${iteration} / Agent 3 (Linear Writer)
 
-**IMPORTANT**: Include this loop instance name in all comments you post to Linear so that when multiple instances work in parallel, we can identify which one made which comment.
+This identifier format is: Pod Name / Loop Number / Agent Number (Role).
+- **Pod Name**: ${podName} - persists for this entire Ralph session
+- **Loop Number**: ${iteration} - increments each time Ralph processes a new ticket
+- **Agent**: Agent 3 (Linear Writer) - your role in this loop
+
+**IMPORTANT**: Include the pod name (${podName}) in all comments you post to Linear so that when multiple pods work in parallel, we can identify which one made which comment.
 
 ---
 
@@ -152,7 +160,8 @@ ${agent2Output}
 
 ## Session Stats
 
-- Loop Instance: ${loopInstanceName}
+- Pod: ${podName}
+- Loop: ${iteration}
 
 ### Agent 1 (Linear Reader)
 - Model: opus
@@ -244,11 +253,15 @@ async function main(): Promise<void> {
   console.log('   Linear Team: ' + config.linearTeamId);
   console.log('   [RL] Statuses: ✓ configured');
 
+  // Generate pod name once at startup - persists for entire Ralph session
+  const podName = generatePodName();
+  console.log(`   Pod: ${podName}`);
+
   let iteration = 0;
 
   while (config.maxIterations === 0 || iteration < config.maxIterations) {
     try {
-      await runLoop(iteration);
+      await runLoop(podName, iteration);
       iteration++;
     } catch (error) {
       console.error(`\nLoop ${iteration} error:`, error);
