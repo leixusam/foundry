@@ -23,7 +23,7 @@ Post a comment like this:
 
 **Stage**: {stage that was completed}
 **Loop Instance**: {loop instance name from session stats}
-**Duration**: {from session stats}
+**Duration**: {loop total duration from session stats}
 **Commit**: {commit hash from Agent 2's output, e.g., `abc1234`}
 
 ## Summary
@@ -34,6 +34,13 @@ Post a comment like this:
 
 ## Next Steps
 {What should happen next}
+
+## Cost Summary
+| Agent | Model | Tokens (in/out/cached) | Cost |
+|-------|-------|----------------------|------|
+| Agent 1 | {model} | {in}/{out}/{cached} | ${cost} |
+| Agent 2 | {model} | {in}/{out}/{cached} | ${cost} |
+| **Total** | - | {totals} | **${total_cost}** |
 ```
 
 If Agent 2 failed or had errors:
@@ -43,13 +50,20 @@ If Agent 2 failed or had errors:
 
 **Stage**: {stage attempted}
 **Loop Instance**: {loop instance name from session stats}
-**Duration**: {from session stats}
+**Duration**: {loop total duration from session stats}
 
 ## Error
 {What went wrong}
 
 ## Next Steps
 Will retry on next loop iteration.
+
+## Cost Summary
+| Agent | Model | Tokens (in/out/cached) | Cost |
+|-------|-------|----------------------|------|
+| Agent 1 | {model} | {in}/{out}/{cached} | ${cost} |
+| Agent 2 | {model} | {in}/{out}/{cached} | ${cost} |
+| **Total** | - | {totals} | **${total_cost}** |
 ```
 
 ## Status Updates
