@@ -196,7 +196,7 @@ WORK_RESULT:
   branch_name: ralph/{identifier}
   artifact_path: thoughts/plans/YYYY-MM-DD-{identifier}-{slug}.md
   commit_hash: {short hash}
-  next_status: "Needs Implement"
+  next_status: "[RL] Needs Implement"
   summary: |
     {Description of the plan - number of phases, key decisions made}
   sub_issues:                    # OPTIONAL - only include if complexity warrants it

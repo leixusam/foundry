@@ -226,7 +226,7 @@ WORK_RESULT:
   artifact_path: thoughts/oneshot/YYYY-MM-DD-{identifier}-{slug}.md
   commit_hash: {merge commit hash on main}
   merge_status: success
-  next_status: "Done"
+  next_status: "[RL] Done"
   summary: |
     {Brief description of what was done}
     Files changed: {list}
