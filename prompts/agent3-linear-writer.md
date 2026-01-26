@@ -13,7 +13,7 @@ The context above contains:
 2. **Extract key data** from Agent 2's WORK_RESULT:
    - `workflow`: The workflow type (`oneshot` or `staged`) - informational
    - `commit_hash`: The git commit hash
-   - `branch_name`: The feature branch (e.g., `ralph/RSK-123`)
+   - `branch_name`: The feature branch (e.g., `foundry/RSK-123`)
    - `repo_url`: The GitHub repository URL (if provided)
    - `merge_status`: `success` or `blocked` (if merge was attempted)
    - `merge_conflict_files`: List of files with conflicts (if merge was blocked)
@@ -53,7 +53,7 @@ Post a comment like this:
 **Stage**: {stage that was completed}
 **Loop Instance**: {loop instance name from session stats}
 **Duration**: {loop total duration from session stats}
-**Branch**: {branch_name from Agent 2's output, e.g., `ralph/RSK-123`}
+**Branch**: {branch_name from Agent 2's output, e.g., `foundry/RSK-123`}
 **Commit**: {commit hash from Agent 2's output, e.g., `abc1234`}
 **Merge Status**: {success | blocked | n/a} (only for validate/oneshot stages)
 
@@ -140,12 +140,12 @@ The following files have conflicts that require human resolution:
 Update the issue status based on what happened AND the merge status:
 
 ### When merge_status is "success" (or not applicable)
-- **oneshot complete + merge success** → `[RL] Done`
-- **validate complete + merge success** → `[RL] Done`
-- **research complete** → `[RL] Needs Specification` or `[RL] Needs Plan` (based on Agent 2's next_status)
-- **specification complete** → `[RL] Needs Plan`
-- **plan complete** → `[RL] Needs Implement`
-- **implement complete** → `[RL] Needs Validate`
+- **oneshot complete + merge success** → `∞ Done`
+- **validate complete + merge success** → `∞ Done`
+- **research complete** → `∞ Needs Specification` or `∞ Needs Plan` (based on Agent 2's next_status)
+- **specification complete** → `∞ Needs Plan`
+- **plan complete** → `∞ Needs Implement`
+- **implement complete** → `∞ Needs Validate`
 - **any failure** → Keep current status (don't change)
 
 ### When merge_status is "blocked"
@@ -160,7 +160,7 @@ Use `mcp__linear__update_issue` to change the status:
 ```
 mcp__linear__update_issue({
   id: "{issue_id}",
-  state: "{status_name}"  // e.g., "[RL] Done", "Blocked", "[RL] Needs Validate"
+  state: "{status_name}"  // e.g., "∞ Done", "Blocked", "∞ Needs Validate"
 })
 ```
 
@@ -183,7 +183,7 @@ If Agent 2's WORK_RESULT contains a `sub_issues` array, create each sub-issue in
    - `description`: Use the description from the sub-issue
    - `team`: Same team as the parent issue (extract team from issue identifier, e.g., "RSK" from "RSK-20")
    - `parentId`: The issue ID from Agent 1's output (this links it as a sub-issue)
-   - `state`: `[RL] Needs Implement` (since the plan already covers their implementation)
+   - `state`: `∞ Needs Implement` (since the plan already covers their implementation)
    - `labels`: Copy any relevant labels from the parent issue
 
 3. **Report creation** in your comment:
@@ -205,7 +205,7 @@ mcp__linear__create_issue({
   description: "Implement parser updates for sub-issue support.\nSee Phase 2 of the implementation plan.",
   team: "RSK",
   parentId: "48ec45b4-5058-48d0-9b99-9d9824d2b9a5",
-  state: "[RL] Needs Implement"
+  state: "∞ Needs Implement"
 })
 ```
 

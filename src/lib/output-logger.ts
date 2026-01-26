@@ -8,17 +8,17 @@ let currentPodName: string | null = null;
 let currentLoopNumber: number | null = null;
 
 /**
- * Gets the base output directory path (.ralph/output/ in the working directory)
- * Output lives inside the .ralph folder which contains all Ralph runtime data.
+ * Gets the base output directory path (.foundry/output/ in the working directory)
+ * Output lives inside the .foundry folder which contains all Foundry runtime data.
  */
 function getOutputDir(): string {
   const config = getConfig();
-  return join(config.workingDirectory, '.ralph', 'output');
+  return join(config.workingDirectory, '.foundry', 'output');
 }
 
 /**
  * Gets the log file path for a specific agent (raw LLM JSON output)
- * Structure: .ralph/output/{pod-name}/loop-{n}/agent-{n}.log
+ * Structure: .foundry/output/{pod-name}/loop-{n}/agent-{n}.log
  */
 function getAgentLogPath(agentNumber: number): string | null {
   if (!currentPodName || currentLoopNumber === null) {
@@ -37,7 +37,7 @@ function getAgentLogPath(agentNumber: number): string | null {
 
 /**
  * Gets the terminal log file path for a specific agent (formatted shell output)
- * Structure: .ralph/output/{pod-name}/loop-{n}/agent-{n}-terminal.log
+ * Structure: .foundry/output/{pod-name}/loop-{n}/agent-{n}-terminal.log
  */
 function getAgentTerminalLogPath(agentNumber: number): string | null {
   if (!currentPodName || currentLoopNumber === null) {

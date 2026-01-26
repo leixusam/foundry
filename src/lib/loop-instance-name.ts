@@ -55,7 +55,7 @@ function formatTimestamp(date: Date): string {
  *
  * The name is deterministic based on the current timestamp (Unix seconds),
  * ensuring each pod gets a unique name while being reproducible for debugging.
- * This name persists for the entire Ralph session (across all loops).
+ * This name persists for the entire Foundry session (across all loops).
  */
 export function generatePodName(): string {
   const now = new Date();

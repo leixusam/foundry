@@ -16,9 +16,9 @@ out/
 .env.local
 .env.*.local
 
-# Ralph runtime data (credentials, output, attachments)
-# All Ralph runtime data lives in .ralph/ directory
-.ralph/
+# Foundry runtime data (credentials, output, attachments)
+# All Foundry runtime data lives in .foundry/ directory
+.foundry/
 
 # IDE
 .idea/

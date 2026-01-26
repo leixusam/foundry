@@ -1,7 +1,7 @@
 import { execSync } from 'child_process';
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
-import { RalphConfig, ProviderName, ClaudeModel, CodexReasoningEffort, CodexAgentReasoningConfig } from './types.js';
+import { FoundryConfig, ProviderName, ClaudeModel, CodexReasoningEffort, CodexAgentReasoningConfig } from './types.js';
 import { parseArgs } from 'util';
 
 // Get the git repo root directory
@@ -14,9 +14,9 @@ export function getRepoRoot(): string {
   }
 }
 
-// Load .ralph/env file if it exists
-function loadRalphEnv(): void {
-  const envPath = join(getRepoRoot(), '.ralph', 'env');
+// Load .foundry/env file if it exists
+function loadFoundryEnv(): void {
+  const envPath = join(getRepoRoot(), '.foundry', 'env');
   if (!existsSync(envPath)) {
     return;
   }
@@ -45,8 +45,8 @@ function loadRalphEnv(): void {
   }
 }
 
-// Load .ralph/env before reading config
-loadRalphEnv();
+// Load .foundry/env before reading config
+loadFoundryEnv();
 
 // Parse CLI arguments
 interface CLIArgs {
@@ -76,7 +76,7 @@ function parseCLIArgs(): CLIArgs {
     // Show help if requested
     if (values.help) {
       console.log(`
-Ralph v2 - Linear-orchestrated autonomous agent system
+Foundry - Linear-orchestrated autonomous agent system
 
 Usage:
   npm start [options]
@@ -87,11 +87,11 @@ Options:
   -h, --help             Show this help message
 
 Environment Variables:
-  RALPH_PROVIDER             Provider: claude (default) or codex
-  RALPH_CLAUDE_MODEL         Claude model: opus (default), sonnet, or haiku
-  RALPH_MAX_ITERATIONS       Limit iterations (0 = unlimited)
-  RALPH_RATE_LIMIT_MAX_RETRIES  Max retries on rate limit (default: 3)
-  RALPH_GCP_AUTO_STOP        Auto-stop GCP VM when no work (true/false)
+  FOUNDRY_PROVIDER             Provider: claude (default) or codex
+  FOUNDRY_CLAUDE_MODEL         Claude model: opus (default), sonnet, or haiku
+  FOUNDRY_MAX_ITERATIONS       Limit iterations (0 = unlimited)
+  FOUNDRY_RATE_LIMIT_MAX_RETRIES  Max retries on rate limit (default: 3)
+  FOUNDRY_GCP_AUTO_STOP        Auto-stop GCP VM when no work (true/false)
   CODEX_MODEL                Codex model name
   CODEX_REASONING_EFFORT     Global default: low, medium, high (default), extra_high
   CODEX_AGENT1_REASONING     Agent 1 reasoning: low, medium, high (default), extra_high
@@ -136,14 +136,14 @@ const cliArgs = parseCLIArgs();
 function getProvider(): ProviderName {
   // CLI args take precedence over env vars
   if (cliArgs.provider) return cliArgs.provider;
-  const envProvider = process.env.RALPH_PROVIDER?.toLowerCase();
+  const envProvider = process.env.FOUNDRY_PROVIDER?.toLowerCase();
   if (envProvider === 'codex') return 'codex';
   return 'claude'; // Default
 }
 
 // Parse Claude model from environment variable
 function getClaudeModel(): ClaudeModel {
-  const envModel = process.env.RALPH_CLAUDE_MODEL?.toLowerCase();
+  const envModel = process.env.FOUNDRY_CLAUDE_MODEL?.toLowerCase();
   if (envModel === 'sonnet') return 'sonnet';
   if (envModel === 'haiku') return 'haiku';
   return 'opus'; // Default
@@ -160,7 +160,7 @@ function getCodexReasoningEffort(): CodexReasoningEffort {
 
 // Parse max iterations from environment variable
 function getMaxIterations(): number {
-  const envMax = process.env.RALPH_MAX_ITERATIONS;
+  const envMax = process.env.FOUNDRY_MAX_ITERATIONS;
   if (envMax) {
     const parsed = parseInt(envMax, 10);
     if (!isNaN(parsed) && parsed >= 0) {
@@ -172,7 +172,7 @@ function getMaxIterations(): number {
 
 // Parse rate limit max retries from environment variable
 function getRateLimitMaxRetries(): number {
-  const envMax = process.env.RALPH_RATE_LIMIT_MAX_RETRIES;
+  const envMax = process.env.FOUNDRY_RATE_LIMIT_MAX_RETRIES;
   if (envMax) {
     const parsed = parseInt(envMax, 10);
     if (!isNaN(parsed) && parsed >= 0) {
@@ -186,7 +186,7 @@ function getRateLimitMaxRetries(): number {
 function getGcpAutoStop(): boolean {
   // CLI args take precedence over env vars
   if (cliArgs.gcpAutoStop) return true;
-  const envVal = process.env.RALPH_GCP_AUTO_STOP?.toLowerCase();
+  const envVal = process.env.FOUNDRY_GCP_AUTO_STOP?.toLowerCase();
   return envVal === 'true' || envVal === '1';
 }
 
@@ -214,7 +214,7 @@ function getCodexAgentReasoning(): CodexAgentReasoningConfig {
 
 // Configuration loaded from environment variables and CLI args
 // CLI args take precedence over env vars
-export const config: RalphConfig = {
+export const config: FoundryConfig = {
   workingDirectory: getRepoRoot(),
   linearApiKey: process.env.LINEAR_API_KEY,
   linearTeamId: process.env.LINEAR_TEAM_KEY,
@@ -238,6 +238,6 @@ export const config: RalphConfig = {
   gcpAutoStop: getGcpAutoStop(),
 };
 
-export function getConfig(): RalphConfig {
+export function getConfig(): FoundryConfig {
   return config;
 }

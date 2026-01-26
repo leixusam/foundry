@@ -75,7 +75,7 @@ let currentLoopStartTime: Date | null = null;
 
 /**
  * Gets the stats file path for the current pod
- * Structure: .ralph/output/{pod-name}/stats.json
+ * Structure: .foundry/output/{pod-name}/stats.json
  */
 function getStatsFilePath(): string | null {
   if (!currentPodName) {
@@ -83,7 +83,7 @@ function getStatsFilePath(): string | null {
   }
 
   const config = getConfig();
-  const outputDir = join(config.workingDirectory, '.ralph', 'output');
+  const outputDir = join(config.workingDirectory, '.foundry', 'output');
 
   return join(outputDir, currentPodName, 'stats.json');
 }

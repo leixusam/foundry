@@ -1,11 +1,11 @@
 {
-  "name": "@leixusam/ralph",
-  "version": "2.0.0",
+  "name": "@leixusam/foundry",
+  "version": "0.1.0",
   "description": "Linear-orchestrated autonomous agent system",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "ralph": "./dist/cli.js"
+    "foundry": "./dist/cli.js"
   },
   "files": [
     "dist/**/*",
@@ -23,7 +23,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/leixusam/ralph-default-files.git"
+    "url": "git+https://github.com/leixusam/foundry.git"
   },
   "publishConfig": {
     "access": "public"
@@ -34,7 +34,8 @@
     "linear",
     "developer",
     "agent",
-    "claude"
+    "claude",
+    "foundry"
   ],
   "author": "Lei Xu",
   "license": "MIT",
