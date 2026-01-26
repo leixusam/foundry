@@ -1,11 +1,15 @@
 import { getConfig } from './config.js';
-import { spawnClaude, extractFinalOutput } from './lib/claude.js';
 import { sleep, handleRateLimit } from './lib/rate-limit.js';
 import { loadPrompt } from './lib/prompts.js';
 import { gitSafetyNetPush, getCurrentBranch } from './lib/git.js';
 import { generateLoopInstanceName } from './lib/loop-instance-name.js';
 import { initLoopLogger, getCurrentOutputDir } from './lib/output-logger.js';
+import { createProvider } from './lib/provider.js';
+// Import providers to register them
+import './lib/claude.js';
+import './lib/codex.js';
 async function runLoop(iteration) {
+    const config = getConfig();
     // Generate a unique name for this loop instance
     // All agents in this loop share the same name for attribution in Linear comments
     const loopInstanceName = generateLoopInstanceName();
@@ -13,12 +17,21 @@ async function runLoop(iteration) {
     initLoopLogger(loopInstanceName, iteration);
     console.log(`\n${'='.repeat(24)} LOOP ${iteration} ${'='.repeat(24)}`);
     console.log(`Loop Instance: ${loopInstanceName}`);
+    console.log(`Provider: ${config.provider} (Agent 2 only)`);
+    if (config.provider === 'codex') {
+        console.log(`Codex Model: ${config.codexModel}`);
+        console.log(`Reasoning Effort: ${config.codexReasoningEffort}`);
+    }
+    else {
+        console.log(`Claude Model: ${config.claudeModel}`);
+    }
     console.log(`Output Dir: ${getCurrentOutputDir()}\n`);
     const loopStart = Date.now();
     // ═══════════════════════════════════════════════════════════════════════════
-    // AGENT 1: Linear Reader
+    // AGENT 1: Linear Reader (always Claude for cost efficiency)
     // ═══════════════════════════════════════════════════════════════════════════
     console.log('Agent 1: Linear Reader starting...');
+    const agent1Provider = createProvider('claude');
     const agent1BasePrompt = await loadPrompt('agent1-linear-reader');
     const agent1Prompt = `## Agent Instance
 
@@ -29,9 +42,9 @@ This name identifies your loop instance for attribution purposes.
 ---
 
 ${agent1BasePrompt}`;
-    const agent1Result = await spawnClaude({
+    const agent1Result = await agent1Provider.spawn({
         prompt: agent1Prompt,
-        model: 'opus',
+        model: 'haiku', // Use haiku for cost efficiency on Linear operations
         allowedTools: ['mcp__linear__*'],
     }, 1);
     if (agent1Result.rateLimited) {
@@ -39,19 +52,20 @@ ${agent1BasePrompt}`;
         return;
     }
     // Extract the text output from agent 1
-    const agent1Output = extractFinalOutput(agent1Result.output);
+    const agent1Output = agent1Result.finalOutput;
     // Check if there's no work (look for the signal in the output)
     if (agent1Output.includes('no_work: true') || agent1Output.includes('NO_WORK')) {
-        const config = getConfig();
         console.log('No work available.');
         console.log(`Sleeping ${config.noWorkSleepMinutes} minutes...`);
         await sleep(config.noWorkSleepMinutes * 60 * 1000);
         return;
     }
     // ═══════════════════════════════════════════════════════════════════════════
-    // AGENT 2: Worker
+    // AGENT 2: Worker (uses configured provider - Claude or Codex)
     // ═══════════════════════════════════════════════════════════════════════════
     console.log('\nAgent 2: Worker starting...');
+    // Use configured provider for Agent 2
+    const agent2Provider = createProvider(config.provider);
     // Build worker prompt by combining the base prompt with agent 1's output
     const workerBasePrompt = await loadPrompt('agent2-worker');
     const workerPrompt = `## Agent Instance
@@ -69,19 +83,34 @@ ${agent1Output}
 ---
 
 ${workerBasePrompt}`;
-    const agent2Result = await spawnClaude({
-        prompt: workerPrompt,
-        model: 'opus',
-    }, 2);
+    let agent2Result;
+    if (config.provider === 'codex') {
+        agent2Result = await agent2Provider.spawn({
+            prompt: workerPrompt,
+            model: config.codexModel,
+            reasoningEffort: config.codexReasoningEffort,
+        }, 2);
+    }
+    else {
+        agent2Result = await agent2Provider.spawn({
+            prompt: workerPrompt,
+            model: config.claudeModel,
+        }, 2);
+    }
     if (agent2Result.rateLimited) {
         console.log('Agent 2 was rate limited. Will continue to Agent 3 to log status.');
     }
-    const agent2Output = extractFinalOutput(agent2Result.output);
+    const agent2Output = agent2Result.finalOutput;
     // ═══════════════════════════════════════════════════════════════════════════
-    // AGENT 3: Linear Writer
+    // AGENT 3: Linear Writer (always Claude for cost efficiency)
     // ═══════════════════════════════════════════════════════════════════════════
     console.log('\nAgent 3: Linear Writer starting...');
+    const agent3Provider = createProvider('claude');
     const writerBasePrompt = await loadPrompt('agent3-linear-writer');
+    // Format cost string with estimated marker for Codex
+    const costStr = agent2Result.costEstimated
+        ? `~$${agent2Result.cost.toFixed(4)} (estimated)`
+        : `$${agent2Result.cost.toFixed(4)}`;
     const writerPrompt = `## Agent Instance
 
 You are part of agent instance: **${loopInstanceName}**
@@ -105,17 +134,19 @@ ${agent2Output}
 ## Session Stats
 
 - Loop Instance: ${loopInstanceName}
-- Agent 2 Cost: $${agent2Result.cost.toFixed(4)}
+- Agent 2 Provider: ${config.provider}
+- Agent 2 Cost: ${costStr}
 - Agent 2 Duration: ${Math.round(agent2Result.duration / 1000)}s
 - Agent 2 Exit code: ${agent2Result.exitCode}
 - Agent 2 Rate limited: ${agent2Result.rateLimited}
+- Agent 2 Tokens: in=${agent2Result.tokenUsage.input.toLocaleString()} out=${agent2Result.tokenUsage.output.toLocaleString()} cached=${agent2Result.tokenUsage.cached.toLocaleString()}
 
 ---
 
 ${writerBasePrompt}`;
-    const agent3Result = await spawnClaude({
+    const agent3Result = await agent3Provider.spawn({
         prompt: writerPrompt,
-        model: 'haiku',
+        model: 'haiku', // Use haiku for cost efficiency on Linear operations
         allowedTools: ['mcp__linear__*'],
     }, 3);
     if (agent3Result.rateLimited) {
@@ -141,8 +172,19 @@ async function main() {
     console.log('Ralph v2 starting...');
     console.log(`   Working directory: ${config.workingDirectory}`);
     console.log(`   Branch: ${getCurrentBranch()}`);
+    console.log(`   Provider: ${config.provider}`);
+    if (config.provider === 'codex') {
+        console.log(`   Codex Model: ${config.codexModel}`);
+        console.log(`   Reasoning Effort: ${config.codexReasoningEffort}`);
+    }
+    else {
+        console.log(`   Claude Model: ${config.claudeModel}`);
+    }
+    if (config.maxIterations > 0) {
+        console.log(`   Max Iterations: ${config.maxIterations}`);
+    }
     let iteration = 0;
-    while (true) {
+    while (config.maxIterations === 0 || iteration < config.maxIterations) {
         try {
             await runLoop(iteration);
             iteration++;
@@ -152,6 +194,9 @@ async function main() {
             console.log(`Sleeping ${config.errorSleepMinutes} minute(s) before retry...`);
             await sleep(config.errorSleepMinutes * 60 * 1000);
         }
+    }
+    if (config.maxIterations > 0) {
+        console.log(`\nReached max iterations: ${config.maxIterations}`);
     }
 }
 main().catch(console.error);

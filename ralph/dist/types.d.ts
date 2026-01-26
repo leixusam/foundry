@@ -1,3 +1,6 @@
+export type ProviderName = 'claude' | 'codex';
+export type ClaudeModel = 'opus' | 'sonnet' | 'haiku';
+export type CodexReasoningEffort = 'low' | 'medium' | 'high' | 'extra_high';
 export interface DispatchResult {
     noWork?: boolean;
     reason?: string;
@@ -61,5 +64,10 @@ export interface RalphConfig {
     staleTimeoutHours: number;
     noWorkSleepMinutes: number;
     errorSleepMinutes: number;
+    provider: ProviderName;
+    claudeModel: ClaudeModel;
+    codexModel: string;
+    codexReasoningEffort: CodexReasoningEffort;
+    maxIterations: number;
 }
 //# sourceMappingURL=types.d.ts.map
