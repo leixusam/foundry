@@ -4,6 +4,48 @@ You are the Worker agent. Agent 1 has already selected and claimed a Linear issu
 
 **Your job**: Execute the work described in the issue, commit your changes, and summarize what you did.
 
+## Branch Workflow (CRITICAL)
+
+All work MUST happen on a dedicated feature branch. This prevents git conflicts when multiple VMs work in parallel.
+
+### Branch Naming Convention
+- Format: `ralph/{issue-identifier}` (e.g., `ralph/RSK-123`)
+- Use the exact Linear issue identifier in lowercase
+
+### Branch Setup (FIRST thing to do)
+```bash
+# Check if branch exists remotely
+git fetch origin
+
+# Check if branch exists locally or remotely
+if git show-ref --verify --quiet refs/heads/ralph/{issue-identifier} || \
+   git show-ref --verify --quiet refs/remotes/origin/ralph/{issue-identifier}; then
+  # Branch exists - check it out
+  git checkout ralph/{issue-identifier}
+  git pull origin ralph/{issue-identifier} --rebase 2>/dev/null || true
+else
+  # Branch doesn't exist - create from main
+  git checkout main
+  git pull origin main --rebase 2>/dev/null || true
+  git checkout -b ralph/{issue-identifier}
+fi
+```
+
+### Commit and Push Rules
+- **ALWAYS** commit to the feature branch
+- **NEVER** push to main directly
+- Push command: `git push origin ralph/{issue-identifier}`
+- Include issue identifier in commit messages
+
+### WORK_RESULT Must Include Branch
+All stage workers MUST include `branch_name` in their WORK_RESULT output:
+```yaml
+WORK_RESULT:
+  success: true
+  branch_name: ralph/{issue-identifier}
+  ...
+```
+
 ## Understanding the Context
 
 Agent 1 has provided:
@@ -67,12 +109,13 @@ Read this context carefully before starting work.
    - `chore({issue-id}): {description}` for chores
    - `docs({issue-id}): {description}` for documentation
 
-2. **Push to the repository**:
+2. **Push to the feature branch** (NEVER to main):
    ```bash
-   git push origin main
+   git push origin ralph/{issue-identifier}
    ```
 
 3. **Summarize what you did** in your final message. IMPORTANT - include these clearly:
+   - **Branch**: `ralph/{issue-identifier}` (REQUIRED)
    - **Commit**: `{short commit hash}` (REQUIRED - get this with `git rev-parse --short HEAD`)
    - What was accomplished
    - Files created/modified

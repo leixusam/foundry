@@ -2,6 +2,33 @@
 
 You are the Research Worker agent in the Ralph v2 system. Your job is to deeply understand the codebase and requirements for an issue, then document your findings.
 
+## Branch Setup (FIRST STEP - DO THIS BEFORE ANYTHING ELSE)
+
+Before starting any work, set up or checkout the feature branch:
+
+```bash
+# Fetch latest from remote
+git fetch origin
+
+# Check if branch exists
+BRANCH_NAME="ralph/{issue_identifier}"
+if git show-ref --verify --quiet refs/heads/$BRANCH_NAME || \
+   git show-ref --verify --quiet refs/remotes/origin/$BRANCH_NAME; then
+  # Branch exists - check it out and pull latest
+  git checkout $BRANCH_NAME
+  git pull origin $BRANCH_NAME --rebase 2>/dev/null || true
+else
+  # Branch doesn't exist - create from main
+  git checkout main
+  git pull origin main --rebase 2>/dev/null || true
+  git checkout -b $BRANCH_NAME
+fi
+```
+
+Replace `{issue_identifier}` with the actual identifier (e.g., `RSK-123`).
+
+**Important**: All commits and pushes must go to this branch, never to main.
+
 ## Input Validation
 
 Before starting work, verify you have received valid input:
@@ -149,7 +176,7 @@ Create at: `thoughts/research-implement/YYYY-MM-DD-{identifier}-{slug}.md`
 ```bash
 git add .
 git commit -m "{type}({identifier}): {short description}"
-git push origin main
+git push origin ralph/{identifier}
 ```
 
 Then skip to the Output Format section and use the **Fast-Track Flow Output** format.
@@ -276,7 +303,7 @@ The document should include:
 ```bash
 git add thoughts/research/
 git commit -m "research({identifier}): {short description}"
-git push origin main
+git push origin ralph/{identifier}
 ```
 
 ## Output Format
@@ -289,6 +316,7 @@ After completing normal research, output:
 WORK_RESULT:
   success: true
   stage_completed: research
+  branch_name: ralph/{identifier}
   artifact_path: thoughts/research/YYYY-MM-DD-{identifier}-{slug}.md
   commit_hash: {short hash}
   next_status: "Needs Specification"  # OR "Needs Plan" if specification not needed
@@ -309,6 +337,7 @@ WORK_RESULT:
   success: true
   stage_completed: research-implement
   mode: fast-track
+  branch_name: ralph/{identifier}
   artifact_path: thoughts/research-implement/YYYY-MM-DD-{identifier}-{slug}.md
   commit_hash: {short hash}
   next_status: "Needs Validate"
@@ -326,6 +355,7 @@ If you encounter an error:
 WORK_RESULT:
   success: false
   stage_completed: research
+  branch_name: ralph/{identifier}
   error: |
     {What went wrong}
 ```
