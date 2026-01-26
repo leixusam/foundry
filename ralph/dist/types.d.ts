@@ -32,6 +32,13 @@ export interface WorkResult {
     nextStatus?: string;
     summary?: string;
     error?: string;
+    subIssues?: SubIssueRecommendation[];
+}
+export interface SubIssueRecommendation {
+    title: string;
+    description: string;
+    planSection: string;
+    estimatedScope: string;
 }
 export interface LinearUpdateResult {
     commentPosted: boolean;

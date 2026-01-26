@@ -73,7 +73,7 @@ Use `mcp__linear__get_issue` with `includeRelations: true`.
 
 Also gather:
 - **Parent Issue**: Read parent to understand broader goal
-- **Sub-Issues**: List children to understand scope
+- **Sub-Issues**: List children to understand scope. Note: Some sub-issues may have been created during the planning stage and already have plans. These will typically be in "Needs Implement" status.
 - **Project**: Note project context
 - **Blocking/Blocked**: Check dependency relationships
 - **Comments**: Read all comments for previous work and clarifications

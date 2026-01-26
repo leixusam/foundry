@@ -65,6 +65,43 @@ Update the issue status based on what happened:
 
 Use `mcp__linear__update_issue` to change the status.
 
+## Creating Sub-Issues
+
+If Agent 2's WORK_RESULT contains a `sub_issues` array, create each sub-issue in Linear:
+
+1. **Parse sub-issues** from Agent 2's output (look for `sub_issues:` block in WORK_RESULT)
+
+2. **For each sub-issue**, use `mcp__linear__create_issue`:
+   - `title`: Use the title from the sub-issue
+   - `description`: Use the description from the sub-issue
+   - `team`: Same team as the parent issue (extract team from issue identifier, e.g., "RSK" from "RSK-20")
+   - `parentId`: The issue ID from Agent 1's output (this links it as a sub-issue)
+   - `state`: "Needs Implement" (since the plan already covers their implementation)
+   - `labels`: Copy any relevant labels from the parent issue
+
+3. **Report creation** in your comment:
+   ```
+   ## Sub-Issues Created
+   - {sub-issue identifier}: {title}
+   - {sub-issue identifier}: {title}
+   ```
+
+4. **Error handling**: If sub-issue creation fails:
+   - Log the error but don't fail the entire update
+   - Report which sub-issues could not be created
+   - The main issue status should still be updated
+
+Example sub-issue creation:
+```
+mcp__linear__create_issue({
+  title: "RSK-20a: Implement parser changes",
+  description: "Implement parser updates for sub-issue support.\nSee Phase 2 of the implementation plan.",
+  team: "RSK",
+  parentId: "48ec45b4-5058-48d0-9b99-9d9824d2b9a5",
+  state: "Needs Implement"
+})
+```
+
 ## Reminders
 
 - Extract the issue ID from Agent 1's output
