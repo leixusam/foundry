@@ -2,7 +2,6 @@ import { writeFile, readFile, mkdir } from 'fs/promises';
 import { existsSync } from 'fs';
 import { join } from 'path';
 import { getConfig } from '../config.js';
-import { getLoopInstanceNameDisplay } from './loop-instance-name.js';
 
 /**
  * Stats for a single agent run
@@ -32,7 +31,7 @@ export interface AgentStats {
  */
 export interface LoopStats {
   loopNumber: number;
-  loopInstanceName: string;
+  podName: string;
   startedAt: string;
   completedAt?: string;
   agents: AgentStats[];
@@ -70,24 +69,23 @@ export interface PodStats {
 }
 
 // Track current context
-let currentLoopName: string | null = null;
+let currentPodName: string | null = null;
 let currentLoopNumber: number | null = null;
 let currentLoopStartTime: Date | null = null;
 
 /**
  * Gets the stats file path for the current pod
- * Structure: ralph/.output/{loop-name}/stats.json
+ * Structure: ralph/.output/{pod-name}/stats.json
  */
 function getStatsFilePath(): string | null {
-  if (!currentLoopName) {
+  if (!currentPodName) {
     return null;
   }
 
   const config = getConfig();
   const outputDir = join(config.workingDirectory, 'ralph', '.output');
-  const loopNameDisplay = getLoopInstanceNameDisplay(currentLoopName);
 
-  return join(outputDir, loopNameDisplay, 'stats.json');
+  return join(outputDir, currentPodName, 'stats.json');
 }
 
 /**
@@ -105,11 +103,9 @@ async function ensureDir(filePath: string): Promise<void> {
  */
 async function readOrCreateStats(): Promise<PodStats | null> {
   const statsPath = getStatsFilePath();
-  if (!statsPath || !currentLoopName) {
+  if (!statsPath || !currentPodName) {
     return null;
   }
-
-  const loopNameDisplay = getLoopInstanceNameDisplay(currentLoopName);
 
   try {
     if (existsSync(statsPath)) {
@@ -122,7 +118,7 @@ async function readOrCreateStats(): Promise<PodStats | null> {
 
   // Create initial stats structure
   return {
-    podName: loopNameDisplay,
+    podName: currentPodName,
     startedAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     loops: [],
@@ -158,9 +154,11 @@ async function writeStats(stats: PodStats): Promise<void> {
 /**
  * Initializes stats tracking for a new loop iteration
  * Should be called at the start of each loop
+ * @param podName - The pod name (e.g., "calm-pegasus")
+ * @param loopNumber - The loop iteration number (0, 1, 2, ...)
  */
-export function initLoopStats(loopInstanceName: string, loopNumber: number): void {
-  currentLoopName = loopInstanceName;
+export function initLoopStats(podName: string, loopNumber: number): void {
+  currentPodName = podName;
   currentLoopNumber = loopNumber;
   currentLoopStartTime = new Date();
 }
@@ -169,7 +167,7 @@ export function initLoopStats(loopInstanceName: string, loopNumber: number): voi
  * Gets the current loop from stats, creating it if needed
  */
 function getOrCreateCurrentLoop(stats: PodStats): LoopStats {
-  if (currentLoopNumber === null || !currentLoopName || !currentLoopStartTime) {
+  if (currentLoopNumber === null || !currentPodName || !currentLoopStartTime) {
     throw new Error('Loop stats not initialized');
   }
 
@@ -177,7 +175,7 @@ function getOrCreateCurrentLoop(stats: PodStats): LoopStats {
   if (!loop) {
     loop = {
       loopNumber: currentLoopNumber,
-      loopInstanceName: currentLoopName,
+      podName: currentPodName,
       startedAt: currentLoopStartTime.toISOString(),
       agents: [],
       totals: {
