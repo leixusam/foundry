@@ -1,6 +1,7 @@
 import { spawn } from 'child_process';
 import { parseRateLimitReset, isRateLimitError } from './rate-limit.js';
 import { getConfig } from '../config.js';
+import { logAgentOutput } from './output-logger.js';
 // ANSI color codes
 const BOLD = '\x1b[1m';
 const DIM = '\x1b[2m';
@@ -154,7 +155,7 @@ function processJsonLine(json) {
     }
     return null;
 }
-export async function spawnClaude(options) {
+export async function spawnClaude(options, agentNumber) {
     // Clear subagent map for new session
     subagentMap.clear();
     return new Promise((resolve, reject) => {
@@ -190,6 +191,12 @@ export async function spawnClaude(options) {
             for (const line of text.split('\n')) {
                 if (!line.trim())
                     continue;
+                // Persist raw line to output log file if agent number provided
+                if (agentNumber !== undefined) {
+                    logAgentOutput(agentNumber, line).catch(() => {
+                        // Silently ignore logging errors
+                    });
+                }
                 try {
                     const json = JSON.parse(line);
                     // Check for rate limits

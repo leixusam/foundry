@@ -4,12 +4,16 @@ import { sleep, handleRateLimit } from './lib/rate-limit.js';
 import { loadPrompt } from './lib/prompts.js';
 import { gitSafetyNetPush, getCurrentBranch } from './lib/git.js';
 import { generateAgentName } from './lib/agent-name.js';
+import { initLoopLogger, getCurrentOutputDir } from './lib/output-logger.js';
 async function runLoop(iteration) {
     // Generate a unique name for this loop instance
     // All agents in this loop share the same name for attribution in Linear comments
     const agentName = generateAgentName();
+    // Initialize output logger for this loop iteration
+    initLoopLogger(agentName, iteration);
     console.log(`\n${'='.repeat(24)} LOOP ${iteration} ${'='.repeat(24)}`);
-    console.log(`Agent Name: ${agentName}\n`);
+    console.log(`Agent Name: ${agentName}`);
+    console.log(`Output Dir: ${getCurrentOutputDir()}\n`);
     const loopStart = Date.now();
     // ═══════════════════════════════════════════════════════════════════════════
     // AGENT 1: Linear Reader
@@ -29,7 +33,7 @@ ${agent1BasePrompt}`;
         prompt: agent1Prompt,
         model: 'opus',
         allowedTools: ['mcp__linear__*'],
-    });
+    }, 1);
     if (agent1Result.rateLimited) {
         await handleRateLimit(agent1Result.retryAfterMs || 5 * 60 * 1000);
         return;
@@ -68,7 +72,7 @@ ${workerBasePrompt}`;
     const agent2Result = await spawnClaude({
         prompt: workerPrompt,
         model: 'opus',
-    });
+    }, 2);
     if (agent2Result.rateLimited) {
         console.log('Agent 2 was rate limited. Will continue to Agent 3 to log status.');
     }
@@ -113,7 +117,7 @@ ${writerBasePrompt}`;
         prompt: writerPrompt,
         model: 'haiku',
         allowedTools: ['mcp__linear__*'],
-    });
+    }, 3);
     if (agent3Result.rateLimited) {
         console.log('Agent 3 was rate limited.');
     }
