@@ -12,6 +12,12 @@ import {
 import { prompt, confirm } from './lib/readline.js';
 import { InitResult } from './types.js';
 import { getRepoRoot } from './config.js';
+import { checkCodexLinearMcpConfigured } from './lib/codex.js';
+
+// Check if Codex Linear MCP is configured
+export function checkCodexLinearMcp(): boolean {
+  return checkCodexLinearMcpConfigured();
+}
 
 // Check if initialization is needed (no Ralph statuses exist)
 export async function checkInitialized(apiKey: string, teamKey: string): Promise<boolean> {
