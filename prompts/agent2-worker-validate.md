@@ -1,6 +1,6 @@
 # Agent 2: Validate Worker
 
-You are the Validate Worker agent in the Ralph v2 system. Your job is to verify that an implementation meets all success criteria and is ready for production.
+You are the Validate Worker agent in the Foundry system. Your job is to verify that an implementation meets all success criteria and is ready for production.
 
 ## Branch Setup (FIRST STEP - DO THIS BEFORE ANYTHING ELSE)
 
@@ -10,15 +10,15 @@ Before starting any work, find and checkout the correct feature branch:
 # Fetch latest from remote
 git fetch origin
 
-# List available ralph branches to find the one for this issue
-git branch -a | grep "ralph/"
+# List available foundry branches to find the one for this issue
+git branch -a | grep "foundry/"
 
 # Find and checkout the branch matching this issue identifier
-# Look for: ralph/{issue_identifier} (e.g., ralph/RSK-123)
-git checkout ralph/{issue_identifier}
+# Look for: foundry/{issue_identifier} (e.g., foundry/RSK-123)
+git checkout foundry/{issue_identifier}
 
 # Pull latest changes from remote
-git pull origin ralph/{issue_identifier} --rebase
+git pull origin foundry/{issue_identifier} --rebase
 
 # Verify you're on the correct branch
 git branch --show-current
@@ -27,7 +27,7 @@ git branch --show-current
 Replace `{issue_identifier}` with the actual identifier from the issue context (e.g., `RSK-123`).
 
 **Important**:
-- After checkout, verify `git branch --show-current` shows `ralph/{issue_identifier}`. If not, stop and output an error.
+- After checkout, verify `git branch --show-current` shows `foundry/{issue_identifier}`. If not, stop and output an error.
 - If `git pull --rebase` fails with conflicts, stop and output an error. Do not proceed with stale code.
 - All commits and pushes must go to this branch, never to main.
 
@@ -154,7 +154,7 @@ or
 ```bash
 git add thoughts/validation/
 git commit -m "validate({identifier}): {PASSED|FAILED}"
-git push origin ralph/{identifier}
+git push origin foundry/{identifier}
 ```
 
 ### Step 7: Merge to Main (Only if Validation PASSED)
@@ -167,7 +167,7 @@ git checkout main
 git pull origin main
 
 # Attempt merge with no-ff to preserve branch history
-git merge ralph/{identifier} --no-ff -m "Merge ralph/{identifier}: {issue_title}"
+git merge foundry/{identifier} --no-ff -m "Merge foundry/{identifier}: {issue_title}"
 ```
 
 **Handle the merge result:**
@@ -175,8 +175,8 @@ git merge ralph/{identifier} --no-ff -m "Merge ralph/{identifier}: {issue_title}
 1. **Clean merge (no conflicts)**: Push to main, delete feature branch
    ```bash
    git push origin main
-   git branch -d ralph/{identifier}
-   git push origin --delete ralph/{identifier}
+   git branch -d foundry/{identifier}
+   git push origin --delete foundry/{identifier}
    ```
    Set `merge_status: success` in WORK_RESULT.
 
@@ -188,10 +188,10 @@ git merge ralph/{identifier} --no-ff -m "Merge ralph/{identifier}: {issue_title}
    After resolving:
    ```bash
    git add .
-   git commit -m "Merge ralph/{identifier}: {issue_title}"
+   git commit -m "Merge foundry/{identifier}: {issue_title}"
    git push origin main
-   git branch -d ralph/{identifier}
-   git push origin --delete ralph/{identifier}
+   git branch -d foundry/{identifier}
+   git push origin --delete foundry/{identifier}
    ```
    Set `merge_status: success` in WORK_RESULT.
 
@@ -202,7 +202,7 @@ git merge ralph/{identifier} --no-ff -m "Merge ralph/{identifier}: {issue_title}
 
    ```bash
    git merge --abort
-   git checkout ralph/{identifier}
+   git checkout foundry/{identifier}
    ```
    Set `merge_status: blocked` and `merge_conflict_files: [list of files]` in WORK_RESULT.
 
@@ -224,12 +224,12 @@ If validation passes and merge succeeds:
 WORK_RESULT:
   success: true
   stage_completed: validate
-  branch_name: ralph/{identifier}
+  branch_name: foundry/{identifier}
   repo_url: {git remote URL, e.g., https://github.com/owner/repo.git}
   artifact_path: thoughts/validation/YYYY-MM-DD-{identifier}-{slug}.md
   commit_hash: {merge commit hash on main}
   merge_status: success
-  next_status: "[RL] Done"
+  next_status: "∞ Done"
   summary: |
     Validation PASSED. Merged to main.
     - All {N} success criteria verified
@@ -245,7 +245,7 @@ If validation passes but merge is blocked:
 WORK_RESULT:
   success: true
   stage_completed: validate
-  branch_name: ralph/{identifier}
+  branch_name: foundry/{identifier}
   repo_url: {git remote URL, e.g., https://github.com/owner/repo.git}
   artifact_path: thoughts/validation/YYYY-MM-DD-{identifier}-{slug}.md
   commit_hash: {short hash on feature branch}
@@ -265,11 +265,11 @@ If validation fails:
 WORK_RESULT:
   success: false
   stage_completed: validate
-  branch_name: ralph/{identifier}
+  branch_name: foundry/{identifier}
   repo_url: {git remote URL, e.g., https://github.com/owner/repo.git}
   artifact_path: thoughts/validation/YYYY-MM-DD-{identifier}-{slug}.md
   commit_hash: {short hash}
-  next_status: "[RL] Needs Implement"
+  next_status: "∞ Needs Implement"
   error: |
     Validation FAILED.
     - {N} success criteria failed
@@ -280,6 +280,6 @@ WORK_RESULT:
 ## Important Notes
 
 - Be thorough - this is the last check before production
-- If validation fails, the issue goes back to `[RL] Needs Implement`
+- If validation fails, the issue goes back to `∞ Needs Implement`
 - Document everything - the validation report is the audit trail
 - Always commit and push before outputting WORK_RESULT

@@ -32,8 +32,8 @@ export interface WorkflowState {
   position: number;
 }
 
-// Ralph status definition for creating workflow states
-export interface RalphStatusDefinition {
+// Foundry status definition for creating workflow states
+export interface FoundryStatusDefinition {
   name: string;
   type: LinearStateType;
 }
@@ -76,7 +76,7 @@ export interface CodexAgentReasoningConfig {
 
 // Config types
 
-export interface RalphConfig {
+export interface FoundryConfig {
   workingDirectory: string;
   linearApiKey?: string;
   linearTeamId?: string;

@@ -1,6 +1,6 @@
 # Agent 2: Oneshot Worker
 
-You are the Oneshot Worker agent in the Ralph v2 system. Your job is to quickly complete small, well-defined tasks in a single session without the full research/plan/implement/validate cycle.
+You are the Oneshot Worker agent in the Foundry system. Your job is to quickly complete small, well-defined tasks in a single session without the full research/plan/implement/validate cycle.
 
 ## Branch Setup (FIRST STEP - DO THIS BEFORE ANYTHING ELSE)
 
@@ -10,21 +10,21 @@ Before starting any work, find or create the feature branch:
 # Fetch latest from remote
 git fetch origin
 
-# List existing ralph branches to see what's available
-git branch -a | grep "ralph/"
+# List existing foundry branches to see what's available
+git branch -a | grep "foundry/"
 
 # Check if branch for this issue already exists
-# Look for: ralph/{issue_identifier} (e.g., ralph/RSK-123)
-if git show-ref --verify --quiet refs/heads/ralph/{issue_identifier} || \
-   git show-ref --verify --quiet refs/remotes/origin/ralph/{issue_identifier}; then
+# Look for: foundry/{issue_identifier} (e.g., foundry/RSK-123)
+if git show-ref --verify --quiet refs/heads/foundry/{issue_identifier} || \
+   git show-ref --verify --quiet refs/remotes/origin/foundry/{issue_identifier}; then
   # Branch exists - check it out and pull latest
-  git checkout ralph/{issue_identifier}
-  git pull origin ralph/{issue_identifier} --rebase
+  git checkout foundry/{issue_identifier}
+  git pull origin foundry/{issue_identifier} --rebase
 else
   # Branch doesn't exist - create from main
   git checkout main
   git pull origin main --rebase
-  git checkout -b ralph/{issue_identifier}
+  git checkout -b foundry/{issue_identifier}
 fi
 
 # Verify you're on the correct branch
@@ -34,7 +34,7 @@ git branch --show-current
 Replace `{issue_identifier}` with the actual identifier from the issue context (e.g., `RSK-123`).
 
 **Important**:
-- After checkout, verify `git branch --show-current` shows `ralph/{issue_identifier}`. If not, stop and output an error.
+- After checkout, verify `git branch --show-current` shows `foundry/{issue_identifier}`. If not, stop and output an error.
 - If `git pull --rebase` fails with conflicts, stop and output an error. Do not proceed with stale code.
 - All commits and pushes must go to this branch, never to main.
 
@@ -151,7 +151,7 @@ git add .
 git commit -m "fix({identifier}): {short description}"
 # or "chore({identifier}): ..." for chores
 # or "feat({identifier}): ..." for small features
-git push origin ralph/{identifier}
+git push origin foundry/{identifier}
 ```
 
 ### Step 7: Get Repository URL
@@ -174,7 +174,7 @@ git checkout main
 git pull origin main
 
 # Attempt merge with no-ff to preserve branch history
-git merge ralph/{identifier} --no-ff -m "Merge ralph/{identifier}: {issue_title}"
+git merge foundry/{identifier} --no-ff -m "Merge foundry/{identifier}: {issue_title}"
 ```
 
 **Handle the merge result:**
@@ -182,8 +182,8 @@ git merge ralph/{identifier} --no-ff -m "Merge ralph/{identifier}: {issue_title}
 1. **Clean merge (no conflicts)**: Push to main, delete feature branch
    ```bash
    git push origin main
-   git branch -d ralph/{identifier}
-   git push origin --delete ralph/{identifier}
+   git branch -d foundry/{identifier}
+   git push origin --delete foundry/{identifier}
    ```
    Set `merge_status: success` in WORK_RESULT.
 
@@ -195,10 +195,10 @@ git merge ralph/{identifier} --no-ff -m "Merge ralph/{identifier}: {issue_title}
    After resolving:
    ```bash
    git add .
-   git commit -m "Merge ralph/{identifier}: {issue_title}"
+   git commit -m "Merge foundry/{identifier}: {issue_title}"
    git push origin main
-   git branch -d ralph/{identifier}
-   git push origin --delete ralph/{identifier}
+   git branch -d foundry/{identifier}
+   git push origin --delete foundry/{identifier}
    ```
    Set `merge_status: success` in WORK_RESULT.
 
@@ -209,7 +209,7 @@ git merge ralph/{identifier} --no-ff -m "Merge ralph/{identifier}: {issue_title}
 
    ```bash
    git merge --abort
-   git checkout ralph/{identifier}
+   git checkout foundry/{identifier}
    ```
    Set `merge_status: blocked` and `merge_conflict_files: [list of files]` in WORK_RESULT.
 
@@ -222,12 +222,12 @@ WORK_RESULT:
   success: true
   stage_completed: oneshot
   workflow: oneshot
-  branch_name: ralph/{identifier}
+  branch_name: foundry/{identifier}
   repo_url: {git remote URL, e.g., https://github.com/owner/repo.git}
   artifact_path: thoughts/oneshot/YYYY-MM-DD-{identifier}-{slug}.md
   commit_hash: {merge commit hash on main}
   merge_status: success
-  next_status: "[RL] Done"
+  next_status: "∞ Done"
   summary: |
     {Brief description of what was done}
     Files changed: {list}
@@ -241,7 +241,7 @@ WORK_RESULT:
   success: true
   stage_completed: oneshot
   workflow: oneshot
-  branch_name: ralph/{identifier}
+  branch_name: foundry/{identifier}
   repo_url: {git remote URL, e.g., https://github.com/owner/repo.git}
   artifact_path: thoughts/oneshot/YYYY-MM-DD-{identifier}-{slug}.md
   commit_hash: {short hash on feature branch}
@@ -261,7 +261,7 @@ WORK_RESULT:
   success: false
   stage_completed: oneshot
   workflow: oneshot
-  branch_name: ralph/{identifier}
+  branch_name: foundry/{identifier}
   repo_url: {git remote URL, e.g., https://github.com/owner/repo.git}
   error: |
     {What went wrong and why it couldn't be fixed}

@@ -1,10 +1,10 @@
 import { LinearClient, WorkflowState as LinearWorkflowState } from '@linear/sdk';
-import { WorkflowState, RalphStatusDefinition, InitResult, LinearStateType } from '../types.js';
+import { WorkflowState, FoundryStatusDefinition, InitResult, LinearStateType } from '../types.js';
 
-// Ralph status prefix to avoid conflicts with user's existing statuses
-export const RALPH_STATUS_PREFIX = '[RL]';
+// Foundry status prefix to avoid conflicts with user's existing statuses
+export const FOUNDRY_STATUS_PREFIX = '∞';
 
-// Color scheme for Ralph statuses (Linear requires hex colors)
+// Color scheme for Foundry statuses (Linear requires hex colors)
 const STATE_COLORS: Record<LinearStateType, string> = {
   backlog: '#95a2b3',    // Gray - backlog
   unstarted: '#e2e2e2',  // Light gray - ready/unstarted
@@ -14,26 +14,26 @@ const STATE_COLORS: Record<LinearStateType, string> = {
 };
 
 // Extended status definition with color for creation
-interface RalphStatusWithColor extends RalphStatusDefinition {
+interface FoundryStatusWithColor extends FoundryStatusDefinition {
   color: string;
 }
 
-// All Ralph statuses that need to exist in Linear
-export const RALPH_STATUS_DEFINITIONS: RalphStatusWithColor[] = [
-  { name: `${RALPH_STATUS_PREFIX} Backlog`, type: 'backlog', color: STATE_COLORS.backlog },
-  { name: `${RALPH_STATUS_PREFIX} Needs Research`, type: 'unstarted', color: STATE_COLORS.unstarted },
-  { name: `${RALPH_STATUS_PREFIX} Needs Specification`, type: 'unstarted', color: STATE_COLORS.unstarted },
-  { name: `${RALPH_STATUS_PREFIX} Needs Plan`, type: 'unstarted', color: STATE_COLORS.unstarted },
-  { name: `${RALPH_STATUS_PREFIX} Needs Implement`, type: 'unstarted', color: STATE_COLORS.unstarted },
-  { name: `${RALPH_STATUS_PREFIX} Needs Validate`, type: 'unstarted', color: STATE_COLORS.unstarted },
-  { name: `${RALPH_STATUS_PREFIX} Research In Progress`, type: 'started', color: STATE_COLORS.started },
-  { name: `${RALPH_STATUS_PREFIX} Specification In Progress`, type: 'started', color: STATE_COLORS.started },
-  { name: `${RALPH_STATUS_PREFIX} Plan In Progress`, type: 'started', color: STATE_COLORS.started },
-  { name: `${RALPH_STATUS_PREFIX} Implement In Progress`, type: 'started', color: STATE_COLORS.started },
-  { name: `${RALPH_STATUS_PREFIX} Validate In Progress`, type: 'started', color: STATE_COLORS.started },
-  { name: `${RALPH_STATUS_PREFIX} Oneshot In Progress`, type: 'started', color: STATE_COLORS.started },
-  { name: `${RALPH_STATUS_PREFIX} Done`, type: 'completed', color: STATE_COLORS.completed },
-  { name: `${RALPH_STATUS_PREFIX} Canceled`, type: 'canceled', color: STATE_COLORS.canceled },
+// All Foundry statuses that need to exist in Linear
+export const FOUNDRY_STATUS_DEFINITIONS: FoundryStatusWithColor[] = [
+  { name: `${FOUNDRY_STATUS_PREFIX} Backlog`, type: 'backlog', color: STATE_COLORS.backlog },
+  { name: `${FOUNDRY_STATUS_PREFIX} Needs Research`, type: 'unstarted', color: STATE_COLORS.unstarted },
+  { name: `${FOUNDRY_STATUS_PREFIX} Needs Specification`, type: 'unstarted', color: STATE_COLORS.unstarted },
+  { name: `${FOUNDRY_STATUS_PREFIX} Needs Plan`, type: 'unstarted', color: STATE_COLORS.unstarted },
+  { name: `${FOUNDRY_STATUS_PREFIX} Needs Implement`, type: 'unstarted', color: STATE_COLORS.unstarted },
+  { name: `${FOUNDRY_STATUS_PREFIX} Needs Validate`, type: 'unstarted', color: STATE_COLORS.unstarted },
+  { name: `${FOUNDRY_STATUS_PREFIX} Research In Progress`, type: 'started', color: STATE_COLORS.started },
+  { name: `${FOUNDRY_STATUS_PREFIX} Specification In Progress`, type: 'started', color: STATE_COLORS.started },
+  { name: `${FOUNDRY_STATUS_PREFIX} Plan In Progress`, type: 'started', color: STATE_COLORS.started },
+  { name: `${FOUNDRY_STATUS_PREFIX} Implement In Progress`, type: 'started', color: STATE_COLORS.started },
+  { name: `${FOUNDRY_STATUS_PREFIX} Validate In Progress`, type: 'started', color: STATE_COLORS.started },
+  { name: `${FOUNDRY_STATUS_PREFIX} Oneshot In Progress`, type: 'started', color: STATE_COLORS.started },
+  { name: `${FOUNDRY_STATUS_PREFIX} Done`, type: 'completed', color: STATE_COLORS.completed },
+  { name: `${FOUNDRY_STATUS_PREFIX} Canceled`, type: 'canceled', color: STATE_COLORS.canceled },
 ];
 
 // Create Linear client with API key
@@ -59,7 +59,7 @@ export async function listWorkflowStates(client: LinearClient, teamId: string): 
 export async function createWorkflowState(
   client: LinearClient,
   teamId: string,
-  state: RalphStatusWithColor
+  state: FoundryStatusWithColor
 ): Promise<WorkflowState> {
   // Use workflowStateCreate mutation via the client
   const payload = await client.createWorkflowState({
@@ -82,22 +82,22 @@ export async function createWorkflowState(
   };
 }
 
-// Get all Ralph status names
-export function getRalphStatusNames(): string[] {
-  return RALPH_STATUS_DEFINITIONS.map((s) => s.name);
+// Get all Foundry status names
+export function getFoundryStatusNames(): string[] {
+  return FOUNDRY_STATUS_DEFINITIONS.map((s) => s.name);
 }
 
-// Check if all Ralph statuses exist in the team
-export async function checkRalphStatusesExist(client: LinearClient, teamId: string): Promise<boolean> {
+// Check if all Foundry statuses exist in the team
+export async function checkFoundryStatusesExist(client: LinearClient, teamId: string): Promise<boolean> {
   const existingStates = await listWorkflowStates(client, teamId);
   const existingNames = new Set(existingStates.map((s) => s.name));
-  const ralphNames = getRalphStatusNames();
+  const foundryNames = getFoundryStatusNames();
 
-  return ralphNames.every((name) => existingNames.has(name));
+  return foundryNames.every((name) => existingNames.has(name));
 }
 
-// Ensure all Ralph statuses exist, creating any that are missing
-export async function ensureRalphStatuses(client: LinearClient, teamId: string): Promise<InitResult> {
+// Ensure all Foundry statuses exist, creating any that are missing
+export async function ensureFoundryStatuses(client: LinearClient, teamId: string): Promise<InitResult> {
   const result: InitResult = {
     success: true,
     created: [],
@@ -109,8 +109,8 @@ export async function ensureRalphStatuses(client: LinearClient, teamId: string):
   const existingStates = await listWorkflowStates(client, teamId);
   const existingNames = new Set(existingStates.map((s) => s.name));
 
-  // Check each Ralph status
-  for (const statusDef of RALPH_STATUS_DEFINITIONS) {
+  // Check each Foundry status
+  for (const statusDef of FOUNDRY_STATUS_DEFINITIONS) {
     if (existingNames.has(statusDef.name)) {
       result.existing.push(statusDef.name);
     } else {

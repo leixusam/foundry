@@ -8,19 +8,19 @@ Agent 1 has specified which stage to execute. **Read the detailed instructions f
 
 | Stage | Instructions File |
 |-------|-------------------|
-| oneshot | `ralph/prompts/agent2-worker-oneshot.md` |
-| research | `ralph/prompts/agent2-worker-research.md` |
-| specification | `ralph/prompts/agent2-worker-specification.md` |
-| plan | `ralph/prompts/agent2-worker-plan.md` |
-| implement | `ralph/prompts/agent2-worker-implement.md` |
-| validate | `ralph/prompts/agent2-worker-validate.md` |
+| oneshot | `foundry/prompts/agent2-worker-oneshot.md` |
+| research | `foundry/prompts/agent2-worker-research.md` |
+| specification | `foundry/prompts/agent2-worker-specification.md` |
+| plan | `foundry/prompts/agent2-worker-plan.md` |
+| implement | `foundry/prompts/agent2-worker-implement.md` |
+| validate | `foundry/prompts/agent2-worker-validate.md` |
 
 **Read the file for your stage now, then follow those instructions exactly.**
 
 ## Quick Reference (details in stage-specific file)
 
 ### Branch Workflow
-- All work happens on branch `ralph/{issue-identifier}`
+- All work happens on branch `foundry/{issue-identifier}`
 - Never push directly to main
 - Validate and oneshot stages merge to main after success
 

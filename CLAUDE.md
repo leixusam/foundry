@@ -1,6 +1,6 @@
-# Ralph - Autonomous Product Development System
+# Foundry - Autonomous Product Development System
 
-This is the core Ralph autonomous development loop. Ralph orchestrates multiple AI agents
+This is the core Foundry autonomous development loop. Foundry orchestrates multiple AI agents
 to work on Linear tickets autonomously.
 
 ## Build & Run
@@ -33,20 +33,20 @@ to work on Linear tickets autonomously.
 
 ## Environment Variables
 
-- `RALPH_PROVIDER` - "claude" (default) or "codex"
-- `RALPH_CLAUDE_MODEL` - "opus" (default), "sonnet", or "haiku"
-- `RALPH_MAX_ITERATIONS` - Limit iterations (0 = unlimited)
+- `FOUNDRY_PROVIDER` - "claude" (default) or "codex"
+- `FOUNDRY_CLAUDE_MODEL` - "opus" (default), "sonnet", or "haiku"
+- `FOUNDRY_MAX_ITERATIONS` - Limit iterations (0 = unlimited)
 - `CODEX_MODEL` - Codex model name
 - `CODEX_REASONING_EFFORT` - "low", "medium", "high" (default), "extra_high"
 
 ## Output
 
-Runtime logs are written to `.ralph/output/` (gitignored). Output folder names are prefixed with
+Runtime logs are written to `.foundry/output/` (gitignored). Output folder names are prefixed with
 timestamps for easy sorting (e.g., `20250126-051600-swift-wyvern/`).
 
 ## Project Artifacts
 
-The `thoughts/` directory at project root stores Ralph's work artifacts:
+The `thoughts/` directory at project root stores Foundry's work artifacts:
 - `thoughts/research/` - Research documents for tickets
 - `thoughts/plans/` - Implementation plans
 - `thoughts/validation/` - Validation reports

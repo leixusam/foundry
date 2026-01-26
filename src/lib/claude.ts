@@ -199,8 +199,8 @@ export async function spawnClaude(options: ClaudeOptions, agentNumber?: number):
       '--verbose',
     ];
 
-    // Add MCP config if it exists in .ralph/mcp.json
-    const mcpConfigPath = join(getRepoRoot(), '.ralph', 'mcp.json');
+    // Add MCP config if it exists in .foundry/mcp.json
+    const mcpConfigPath = join(getRepoRoot(), '.foundry', 'mcp.json');
     if (existsSync(mcpConfigPath)) {
       args.push('--mcp-config', mcpConfigPath);
     }

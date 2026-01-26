@@ -25,7 +25,7 @@ function extractIssueIdentifier(agent1Output: string): string | null {
     /\*\*Issue Identifier\*\*:\s*([A-Z]+-\d+)/i,
     /Issue ID[^:]*:\s*[^\n]*\n[^*]*\*\*Identifier\*\*:\s*([A-Z]+-\d+)/i,
     /Identifier:\s*([A-Z]+-\d+)/i,
-    /Branch:\s*ralph\/([A-Z]+-\d+)/i,
+    /Branch:\s*foundry\/([A-Z]+-\d+)/i,
     /\b([A-Z]+-\d+)\b/,  // Fallback: any ticket-like pattern
   ];
 
@@ -43,7 +43,7 @@ async function runLoop(podName: string, iteration: number): Promise<void> {
   const config = getConfig();
 
   // Initialize output logger for this loop iteration
-  // Pod name persists across all loops in this Ralph session
+  // Pod name persists across all loops in this Foundry session
   initLoopLogger(podName, iteration);
 
   // Initialize stats tracking for this loop iteration
@@ -73,8 +73,8 @@ async function runLoop(podName: string, iteration: number): Promise<void> {
 You are part of pod: **${podName}** / Loop ${iteration} / Agent 1 (Linear Reader)
 
 This identifier format is: Pod Name / Loop Number / Agent Number (Role).
-- **Pod Name**: ${podName} - persists for this entire Ralph session
-- **Loop Number**: ${iteration} - increments each time Ralph processes a new ticket
+- **Pod Name**: ${podName} - persists for this entire Foundry session
+- **Loop Number**: ${iteration} - increments each time Foundry processes a new ticket
 - **Agent**: Agent 1 (Linear Reader) - your role in this loop
 
 ---
@@ -200,8 +200,8 @@ ${attachmentPaths.map(p => `- ${p}`).join('\n')}
 You are part of pod: **${podName}** / Loop ${iteration} / Agent 2 (Worker)
 
 This identifier format is: Pod Name / Loop Number / Agent Number (Role).
-- **Pod Name**: ${podName} - persists for this entire Ralph session
-- **Loop Number**: ${iteration} - increments each time Ralph processes a new ticket
+- **Pod Name**: ${podName} - persists for this entire Foundry session
+- **Loop Number**: ${iteration} - increments each time Foundry processes a new ticket
 - **Agent**: Agent 2 (Worker) - your role in this loop
 
 ---
@@ -277,8 +277,8 @@ ${workerBasePrompt}`;
 You are part of pod: **${podName}** / Loop ${iteration} / Agent 3 (Linear Writer)
 
 This identifier format is: Pod Name / Loop Number / Agent Number (Role).
-- **Pod Name**: ${podName} - persists for this entire Ralph session
-- **Loop Number**: ${iteration} - increments each time Ralph processes a new ticket
+- **Pod Name**: ${podName} - persists for this entire Foundry session
+- **Loop Number**: ${iteration} - increments each time Foundry processes a new ticket
 - **Agent**: Agent 3 (Linear Writer) - your role in this loop
 
 **IMPORTANT**: Include the pod name (${podName}) in all comments you post to Linear so that when multiple pods work in parallel, we can identify which one made which comment.
@@ -368,7 +368,7 @@ ${writerBasePrompt}`;
 export async function main(): Promise<void> {
   const config = getConfig();
 
-  console.log('Ralph v2 starting...');
+  console.log('Foundry starting...');
   console.log(`   Working directory: ${config.workingDirectory}`);
   console.log(`   Branch: ${getCurrentBranch()}`);
   console.log(`   Provider: ${config.provider}`);
@@ -394,7 +394,7 @@ export async function main(): Promise<void> {
 
     const result = await runInitialization();
     if (!result || !result.success) {
-      console.log('\nCannot start Ralph without Linear configuration.');
+      console.log('\nCannot start Foundry without Linear configuration.');
       process.exit(1);
     }
 
@@ -405,25 +405,25 @@ export async function main(): Promise<void> {
 
   // Verify config has values before proceeding
   if (!config.linearApiKey || !config.linearTeamId) {
-    console.log('\nCannot start Ralph without Linear configuration.');
+    console.log('\nCannot start Foundry without Linear configuration.');
     process.exit(1);
   }
 
-  // Check if Ralph statuses exist in Linear
+  // Check if Foundry statuses exist in Linear
   const isInitialized = await checkInitialized(config.linearApiKey, config.linearTeamId);
   if (!isInitialized) {
-    console.log('\n⚠️  [RL] statuses not found in Linear.');
+    console.log('\n⚠️  ∞ statuses not found in Linear.');
     console.log('   Running initialization wizard...\n');
 
     const result = await runInitialization();
     if (!result || !result.success) {
-      console.log('\nFailed to create [RL] statuses. Please check Linear permissions.');
+      console.log('\nFailed to create ∞ statuses. Please check Linear permissions.');
       process.exit(1);
     }
   }
 
   console.log('   Linear Team: ' + config.linearTeamId);
-  console.log('   [RL] Statuses: ✓ configured');
+  console.log('   ∞ Statuses: ✓ configured');
 
   // Check Codex Linear MCP if using Codex provider
   if (config.provider === 'codex') {
@@ -436,7 +436,7 @@ export async function main(): Promise<void> {
     console.log('   Codex Linear MCP: ✓ configured');
   }
 
-  // Generate pod name once at startup - persists for entire Ralph session
+  // Generate pod name once at startup - persists for entire Foundry session
   const podName = generatePodName();
   console.log(`   Pod: ${podName}`);
 

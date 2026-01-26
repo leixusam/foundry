@@ -75,7 +75,7 @@ export function parseAgent1Attachments(agent1Output: string): AttachmentInfo[] {
  * Ensures the attachment directory exists for a given issue
  */
 export function ensureAttachmentDir(issueIdentifier: string): string {
-  const attachmentsDir = path.join(getRepoRoot(), '.ralph', 'attachments', issueIdentifier);
+  const attachmentsDir = path.join(getRepoRoot(), '.foundry', 'attachments', issueIdentifier);
 
   if (!fs.existsSync(attachmentsDir)) {
     fs.mkdirSync(attachmentsDir, { recursive: true });

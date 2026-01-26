@@ -1,34 +1,34 @@
-# Ralph - Autonomous Product Development Agent
+# Foundry - Autonomous Product Development Agent
 
-Ralph is an AI-powered autonomous development system that works on Linear tickets without human intervention. It orchestrates multiple AI agents to research, plan, implement, and validate code changes, all while keeping Linear updated with progress.
+Foundry is an AI-powered autonomous development system that works on Linear tickets without human intervention. It orchestrates multiple AI agents to research, plan, implement, and validate code changes, all while keeping Linear updated with progress.
 
 ## Installation
 
 ### Global Installation (Recommended)
 
 ```bash
-npm install -g @leixusam/ralph
+npm install -g @leixusam/foundry
 ```
 
-Then initialize Ralph in your project:
+Then initialize Foundry in your project:
 
 ```bash
 cd your-project
-ralph init
+foundry init
 ```
 
 ### Local Project Installation
 
 ```bash
-npm install --save-dev @leixusam/ralph
-npx ralph init
+npm install --save-dev @leixusam/foundry
+npx foundry init
 ```
 
 ## Quick Start
 
-1. **Install Ralph** (see above)
+1. **Install Foundry** (see above)
 
-2. **Initialize** - Run `ralph init` to:
+2. **Initialize** - Run `foundry init` to:
    - Configure Linear API credentials
    - Set up MCP for Claude Code
    - Install Claude Code slash commands
@@ -36,21 +36,21 @@ npx ralph init
 
 3. **Create a ticket** in Linear in your team's backlog
 
-4. **Start Ralph**:
+4. **Start Foundry**:
    ```bash
-   ralph              # Global install
-   npx ralph          # Local install
+   foundry              # Global install
+   npx foundry          # Local install
    ```
 
-Ralph will claim the ticket, work on it autonomously, and update Linear with progress.
+Foundry will claim the ticket, work on it autonomously, and update Linear with progress.
 
 ## How It Works
 
-Ralph runs a continuous loop, processing Linear tickets through a three-agent pipeline:
+Foundry runs a continuous loop, processing Linear tickets through a three-agent pipeline:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                           Ralph Loop                                     │
+│                           Foundry Loop                                   │
 ├─────────────────────────────────────────────────────────────────────────┤
 │                                                                          │
 │   ┌──────────────┐     ┌──────────────┐     ┌──────────────┐            │
@@ -79,11 +79,11 @@ Ralph runs a continuous loop, processing Linear tickets through a three-agent pi
 
 ## Directory Structure
 
-After `ralph init`, your project will have:
+After `foundry init`, your project will have:
 
 ```
 your-project/
-├── .ralph/                # Runtime data (gitignored)
+├── .foundry/              # Runtime data (gitignored)
 │   ├── env                # Configuration and credentials
 │   ├── mcp.json           # MCP configuration for Claude Code
 │   ├── output/            # Runtime logs
@@ -100,19 +100,19 @@ your-project/
 
 ### Environment Variables
 
-Set these in `.ralph/env` or export them:
+Set these in `.foundry/env` or export them:
 
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `LINEAR_API_KEY` | Your Linear API key | (required) |
 | `LINEAR_TEAM_KEY` | Linear team identifier (e.g., "RSK") | (required) |
-| `RALPH_PROVIDER` | AI provider: "claude" or "codex" | "claude" |
-| `RALPH_CLAUDE_MODEL` | Claude model: "opus", "sonnet", "haiku" | "opus" |
-| `RALPH_MAX_ITERATIONS` | Stop after N iterations (0 = unlimited) | 0 |
+| `FOUNDRY_PROVIDER` | AI provider: "claude" or "codex" | "claude" |
+| `FOUNDRY_CLAUDE_MODEL` | Claude model: "opus", "sonnet", "haiku" | "opus" |
+| `FOUNDRY_MAX_ITERATIONS` | Stop after N iterations (0 = unlimited) | 0 |
 
 ### Using Codex CLI as Provider
 
-When using Codex (`RALPH_PROVIDER=codex`), configure Linear MCP in Codex:
+When using Codex (`FOUNDRY_PROVIDER=codex`), configure Linear MCP in Codex:
 
 ```bash
 codex mcp add linear --url https://mcp.linear.app/mcp
@@ -121,35 +121,35 @@ codex mcp add linear --url https://mcp.linear.app/mcp
 ## CLI Commands
 
 ```bash
-ralph              # Run the main development loop
-ralph init         # Initialize Ralph in current project
-ralph --help       # Show help
-ralph --version    # Show version
+foundry              # Run the main development loop
+foundry init         # Initialize Foundry in current project
+foundry --help       # Show help
+foundry --version    # Show version
 ```
 
 ## Linear Workflow Statuses
 
-Ralph creates these statuses in Linear:
+Foundry creates these statuses in Linear:
 
-**Ready statuses** (waiting for Ralph):
-- `[RL] Needs Research`
-- `[RL] Needs Plan`
-- `[RL] Needs Implement`
-- `[RL] Needs Validate`
+**Ready statuses** (waiting for Foundry):
+- `∞ Needs Research`
+- `∞ Needs Plan`
+- `∞ Needs Implement`
+- `∞ Needs Validate`
 
-**In Progress statuses** (Ralph is working):
-- `[RL] Research In Progress`
-- `[RL] Plan In Progress`
-- `[RL] Implement In Progress`
-- `[RL] Validate In Progress`
+**In Progress statuses** (Foundry is working):
+- `∞ Research In Progress`
+- `∞ Plan In Progress`
+- `∞ Implement In Progress`
+- `∞ Validate In Progress`
 
 **Terminal statuses**:
-- `[RL] Done`
-- `[RL] Canceled`
+- `∞ Done`
+- `∞ Canceled`
 
 ## Writing Good Tickets
 
-Ralph works best with clear, specific tickets:
+Foundry works best with clear, specific tickets:
 
 **Good ticket**:
 > Add a dark mode toggle to the settings page. Should save preference to localStorage and apply a .dark-theme class to the body.
@@ -160,14 +160,14 @@ Ralph works best with clear, specific tickets:
 - Specify any constraints or requirements
 - Link related issues if dependencies exist
 
-## Developing Ralph
+## Developing Foundry
 
-If you want to contribute or modify Ralph:
+If you want to contribute or modify Foundry:
 
 ```bash
 # Clone the repo
-git clone https://github.com/leixusam/ralph-default-files
-cd ralph-default-files
+git clone https://github.com/leixusam/foundry
+cd foundry
 
 # Install dependencies
 npm install
