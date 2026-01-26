@@ -11,6 +11,7 @@ The context above contains:
 
 1. **Find the issue ID** from Agent 1's output
 2. **Extract key data** from Agent 2's WORK_RESULT:
+   - `workflow`: The workflow type (`oneshot` or `staged`) - informational
    - `commit_hash`: The git commit hash
    - `branch_name`: The feature branch (e.g., `ralph/RSK-123`)
    - `repo_url`: The GitHub repository URL (if provided)
@@ -133,6 +134,8 @@ The following files have conflicts that require human resolution:
 ```
 
 ## Status Updates
+
+**Note**: Agent 2's `workflow` field indicates whether the task followed oneshot or staged flow. Status routing is determined by `next_status` from Agent 2, not the `workflow` field directly. The `workflow` field is primarily for logging and tracking purposes.
 
 Update the issue status based on what happened AND the merge status:
 
