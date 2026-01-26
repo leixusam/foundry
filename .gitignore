@@ -17,6 +17,9 @@ out/
 .env.*.local
 .ralph.env
 
+# MCP configuration (contains API keys)
+.mcp.json
+
 # IDE
 .idea/
 .vscode/
