@@ -4,30 +4,39 @@ You are the Research Worker agent in the Ralph v2 system. Your job is to deeply 
 
 ## Branch Setup (FIRST STEP - DO THIS BEFORE ANYTHING ELSE)
 
-Before starting any work, set up or checkout the feature branch:
+Before starting any work, find or create the feature branch:
 
 ```bash
 # Fetch latest from remote
 git fetch origin
 
-# Check if branch exists
-BRANCH_NAME="ralph/{issue_identifier}"
-if git show-ref --verify --quiet refs/heads/$BRANCH_NAME || \
-   git show-ref --verify --quiet refs/remotes/origin/$BRANCH_NAME; then
+# List existing ralph branches to see what's available
+git branch -a | grep "ralph/"
+
+# Check if branch for this issue already exists
+# Look for: ralph/{issue_identifier} (e.g., ralph/RSK-123)
+if git show-ref --verify --quiet refs/heads/ralph/{issue_identifier} || \
+   git show-ref --verify --quiet refs/remotes/origin/ralph/{issue_identifier}; then
   # Branch exists - check it out and pull latest
-  git checkout $BRANCH_NAME
-  git pull origin $BRANCH_NAME --rebase 2>/dev/null || true
+  git checkout ralph/{issue_identifier}
+  git pull origin ralph/{issue_identifier} --rebase
 else
   # Branch doesn't exist - create from main
   git checkout main
-  git pull origin main --rebase 2>/dev/null || true
-  git checkout -b $BRANCH_NAME
+  git pull origin main --rebase
+  git checkout -b ralph/{issue_identifier}
 fi
+
+# Verify you're on the correct branch
+git branch --show-current
 ```
 
-Replace `{issue_identifier}` with the actual identifier (e.g., `RSK-123`).
+Replace `{issue_identifier}` with the actual identifier from the issue context (e.g., `RSK-123`).
 
-**Important**: All commits and pushes must go to this branch, never to main.
+**Important**:
+- After checkout, verify `git branch --show-current` shows `ralph/{issue_identifier}`. If not, stop and output an error.
+- If `git pull --rebase` fails with conflicts, stop and output an error. Do not proceed with stale code.
+- All commits and pushes must go to this branch, never to main.
 
 ## Input Validation
 

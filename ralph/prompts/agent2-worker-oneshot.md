@@ -4,30 +4,39 @@ You are the Oneshot Worker agent in the Ralph v2 system. Your job is to quickly 
 
 ## Branch Setup (FIRST STEP - DO THIS BEFORE ANYTHING ELSE)
 
-Before starting any work, set up or checkout the feature branch:
+Before starting any work, find or create the feature branch:
 
 ```bash
 # Fetch latest from remote
 git fetch origin
 
-# Check if branch exists
-BRANCH_NAME="ralph/{issue_identifier}"
-if git show-ref --verify --quiet refs/heads/$BRANCH_NAME || \
-   git show-ref --verify --quiet refs/remotes/origin/$BRANCH_NAME; then
+# List existing ralph branches to see what's available
+git branch -a | grep "ralph/"
+
+# Check if branch for this issue already exists
+# Look for: ralph/{issue_identifier} (e.g., ralph/RSK-123)
+if git show-ref --verify --quiet refs/heads/ralph/{issue_identifier} || \
+   git show-ref --verify --quiet refs/remotes/origin/ralph/{issue_identifier}; then
   # Branch exists - check it out and pull latest
-  git checkout $BRANCH_NAME
-  git pull origin $BRANCH_NAME --rebase 2>/dev/null || true
+  git checkout ralph/{issue_identifier}
+  git pull origin ralph/{issue_identifier} --rebase
 else
   # Branch doesn't exist - create from main
   git checkout main
-  git pull origin main --rebase 2>/dev/null || true
-  git checkout -b $BRANCH_NAME
+  git pull origin main --rebase
+  git checkout -b ralph/{issue_identifier}
 fi
+
+# Verify you're on the correct branch
+git branch --show-current
 ```
 
-Replace `{issue_identifier}` with the actual identifier (e.g., `RSK-123`).
+Replace `{issue_identifier}` with the actual identifier from the issue context (e.g., `RSK-123`).
 
-**Important**: All commits and pushes must go to this branch, never to main.
+**Important**:
+- After checkout, verify `git branch --show-current` shows `ralph/{issue_identifier}`. If not, stop and output an error.
+- If `git pull --rebase` fails with conflicts, stop and output an error. Do not proceed with stale code.
+- All commits and pushes must go to this branch, never to main.
 
 ## Input Validation
 
@@ -145,9 +154,58 @@ git commit -m "fix({identifier}): {short description}"
 git push origin ralph/{identifier}
 ```
 
+### Step 7: Merge to Main
+
+After all checks pass, merge the feature branch to main:
+
+```bash
+# Switch to main and update
+git checkout main
+git pull origin main
+
+# Attempt merge with no-ff to preserve branch history
+git merge ralph/{identifier} --no-ff -m "Merge ralph/{identifier}: {issue_title}"
+```
+
+**Handle the merge result:**
+
+1. **Clean merge (no conflicts)**: Push to main, delete feature branch
+   ```bash
+   git push origin main
+   git branch -d ralph/{identifier}
+   git push origin --delete ralph/{identifier}
+   ```
+   Set `merge_status: success` in WORK_RESULT.
+
+2. **Simple conflicts** (imports, whitespace, non-overlapping): Resolve them if obvious
+   - Conflicts are purely mechanical (imports, formatting)
+   - Changes don't overlap in business logic
+   - Resolution is obvious and doesn't require product decisions
+
+   After resolving:
+   ```bash
+   git add .
+   git commit -m "Merge ralph/{identifier}: {issue_title}"
+   git push origin main
+   git branch -d ralph/{identifier}
+   git push origin --delete ralph/{identifier}
+   ```
+   Set `merge_status: success` in WORK_RESULT.
+
+3. **Complex conflicts** (business logic, requires judgment): Abort and mark blocked
+   - Conflicts touch core business logic
+   - Multiple approaches are possible
+   - Resolution requires broader context
+
+   ```bash
+   git merge --abort
+   git checkout ralph/{identifier}
+   ```
+   Set `merge_status: blocked` and `merge_conflict_files: [list of files]` in WORK_RESULT.
+
 ## Output Format
 
-After completing your work:
+After completing your work and merge succeeds:
 
 ```
 WORK_RESULT:
@@ -155,12 +213,31 @@ WORK_RESULT:
   stage_completed: oneshot
   branch_name: ralph/{identifier}
   artifact_path: thoughts/oneshot/YYYY-MM-DD-{identifier}-{slug}.md
-  commit_hash: {short hash}
+  commit_hash: {merge commit hash on main}
+  merge_status: success
   next_status: "Done"
   summary: |
     {Brief description of what was done}
     Files changed: {list}
-    All checks pass.
+    All checks pass. Merged to main.
+```
+
+If work completes but merge is blocked:
+
+```
+WORK_RESULT:
+  success: true
+  stage_completed: oneshot
+  branch_name: ralph/{identifier}
+  artifact_path: thoughts/oneshot/YYYY-MM-DD-{identifier}-{slug}.md
+  commit_hash: {short hash on feature branch}
+  merge_status: blocked
+  merge_conflict_files: [file1.ts, file2.ts]
+  next_status: "Blocked"
+  summary: |
+    {Brief description of what was done}
+    Merge conflicts require human resolution.
+    Conflicts in: {list of files}
 ```
 
 If you encounter an error:
