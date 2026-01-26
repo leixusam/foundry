@@ -3,7 +3,7 @@
 // This helps identify which loop instance made comments in Linear when multiple instances work in parallel
 
 // Word lists for generating memorable names
-// Expanded lists provide more unique combinations (60 adjectives x 60 animals = 3,600 combinations)
+// Expanded lists provide more unique combinations (64 adjectives x 64 animals = 4,096 combinations)
 const ADJECTIVES = [
   // Colors
   'red', 'blue', 'green', 'purple', 'orange', 'yellow', 'silver', 'golden',
