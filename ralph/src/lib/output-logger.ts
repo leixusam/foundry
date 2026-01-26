@@ -17,7 +17,7 @@ function getOutputDir(): string {
 }
 
 /**
- * Gets the log file path for a specific agent
+ * Gets the log file path for a specific agent (raw LLM JSON output)
  * Structure: .ralph/output/{loop-name}/{loop-number}/agent-{n}.log
  */
 function getAgentLogPath(agentNumber: number): string | null {
@@ -34,6 +34,26 @@ function getAgentLogPath(agentNumber: number): string | null {
     loopNameDisplay,
     `loop-${currentLoopNumber}`,
     `agent-${agentNumber}.log`
+  );
+}
+
+/**
+ * Gets the terminal log file path for a specific agent (formatted shell output)
+ * Structure: .ralph/output/{loop-name}/{loop-number}/agent-{n}-terminal.log
+ */
+function getAgentTerminalLogPath(agentNumber: number): string | null {
+  if (!currentLoopName || currentLoopNumber === null) {
+    return null;
+  }
+
+  const outputDir = getOutputDir();
+  const loopNameDisplay = getAgentNameDisplay(currentLoopName);
+
+  return join(
+    outputDir,
+    loopNameDisplay,
+    `loop-${currentLoopNumber}`,
+    `agent-${agentNumber}-terminal.log`
   );
 }
 
@@ -58,7 +78,7 @@ export function initLoopLogger(agentName: string, loopNumber: number): void {
 }
 
 /**
- * Logs a line of output for a specific agent
+ * Logs a line of output for a specific agent (raw LLM JSON)
  * @param agentNumber - The agent number (1, 2, or 3)
  * @param line - The raw line of output to log (typically JSON from Claude)
  */
@@ -74,7 +94,26 @@ export async function logAgentOutput(agentNumber: number, line: string): Promise
     await appendFile(logPath, line + '\n', 'utf-8');
   } catch (error) {
     // Silently fail - logging should not interrupt the main process
-    // Console warnings can be added later if desired
+  }
+}
+
+/**
+ * Logs terminal output for a specific agent (formatted shell output)
+ * @param agentNumber - The agent number (1, 2, or 3)
+ * @param text - The formatted text that was printed to the terminal
+ */
+export async function logTerminalOutput(agentNumber: number, text: string): Promise<void> {
+  const logPath = getAgentTerminalLogPath(agentNumber);
+  if (!logPath) {
+    // Logger not initialized, skip logging
+    return;
+  }
+
+  try {
+    await ensureDir(logPath);
+    await appendFile(logPath, text + '\n', 'utf-8');
+  } catch (error) {
+    // Silently fail - logging should not interrupt the main process
   }
 }
 

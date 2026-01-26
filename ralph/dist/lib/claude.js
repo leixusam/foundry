@@ -1,7 +1,7 @@
 import { spawn } from 'child_process';
 import { parseRateLimitReset, isRateLimitError } from './rate-limit.js';
 import { getConfig } from '../config.js';
-import { logAgentOutput } from './output-logger.js';
+import { logAgentOutput, logTerminalOutput } from './output-logger.js';
 // ANSI color codes
 const BOLD = '\x1b[1m';
 const DIM = '\x1b[2m';
@@ -171,8 +171,15 @@ export async function spawnClaude(options, agentNumber) {
             args.push('--allowedTools', options.allowedTools.join(','));
         }
         const config = getConfig();
-        console.log(`${BOLD}Spawning: claude ${args.join(' ')}${RESET}`);
-        console.log(`${DIM}   Working directory: ${config.workingDirectory}${RESET}`);
+        const spawnMsg = `${BOLD}Spawning: claude ${args.join(' ')}${RESET}`;
+        const cwdMsg = `${DIM}   Working directory: ${config.workingDirectory}${RESET}`;
+        console.log(spawnMsg);
+        console.log(cwdMsg);
+        // Log spawn info to terminal log
+        if (agentNumber !== undefined) {
+            logTerminalOutput(agentNumber, spawnMsg).catch(() => { });
+            logTerminalOutput(agentNumber, cwdMsg).catch(() => { });
+        }
         const proc = spawn('claude', args, {
             stdio: ['pipe', 'pipe', 'pipe'],
             cwd: config.workingDirectory,
@@ -220,6 +227,12 @@ export async function spawnClaude(options, agentNumber) {
                     const formatted = processJsonLine(json);
                     if (formatted) {
                         console.log(formatted);
+                        // Persist formatted terminal output to separate log file
+                        if (agentNumber !== undefined) {
+                            logTerminalOutput(agentNumber, formatted).catch(() => {
+                                // Silently ignore logging errors
+                            });
+                        }
                     }
                 }
                 catch {
@@ -230,7 +243,12 @@ export async function spawnClaude(options, agentNumber) {
         proc.stderr.on('data', (chunk) => {
             const text = chunk.toString().trim();
             if (text) {
-                console.error(`${DIM}stderr: ${text}${RESET}`);
+                const stderrMsg = `${DIM}stderr: ${text}${RESET}`;
+                console.error(stderrMsg);
+                // Log stderr to terminal log
+                if (agentNumber !== undefined) {
+                    logTerminalOutput(agentNumber, stderrMsg).catch(() => { });
+                }
             }
         });
         proc.on('close', (code) => {
