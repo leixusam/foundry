@@ -7,10 +7,36 @@ import { initLoopLogger, getCurrentOutputDir } from './lib/output-logger.js';
 import { initLoopStats, logAgentStats, finalizeLoopStats } from './lib/stats-logger.js';
 import { createProvider, ProviderResult } from './lib/provider.js';
 import { checkInitialized, runInitialization } from './init.js';
+import { downloadAttachmentsFromAgent1Output } from './lib/attachment-downloader.js';
 
 // Import providers to register them
 import './lib/claude.js';
 import './lib/codex.js';
+
+/**
+ * Extracts the issue identifier (e.g., RSK-39) from Agent 1's output.
+ * Agent 1 outputs this in the format "**Identifier**: RSK-39" or similar.
+ */
+function extractIssueIdentifier(agent1Output: string): string | null {
+  // Try various patterns Agent 1 might use
+  const patterns = [
+    /\*\*Identifier\*\*:\s*([A-Z]+-\d+)/i,
+    /\*\*Issue Identifier\*\*:\s*([A-Z]+-\d+)/i,
+    /Issue ID[^:]*:\s*[^\n]*\n[^*]*\*\*Identifier\*\*:\s*([A-Z]+-\d+)/i,
+    /Identifier:\s*([A-Z]+-\d+)/i,
+    /Branch:\s*ralph\/([A-Z]+-\d+)/i,
+    /\b([A-Z]+-\d+)\b/,  // Fallback: any ticket-like pattern
+  ];
+
+  for (const pattern of patterns) {
+    const match = agent1Output.match(pattern);
+    if (match) {
+      return match[1];
+    }
+  }
+
+  return null;
+}
 
 async function runLoop(podName: string, iteration: number): Promise<void> {
   const config = getConfig();
@@ -87,12 +113,49 @@ ${agent1BasePrompt}`;
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
+  // ATTACHMENT DOWNLOAD: Download any attached images/files from the Linear issue
+  // ═══════════════════════════════════════════════════════════════════════════
+  let attachmentPaths: string[] = [];
+  const issueIdentifier = extractIssueIdentifier(agent1Output);
+
+  if (issueIdentifier && config.linearApiKey) {
+    console.log('\nDownloading attachments from Linear...');
+    try {
+      attachmentPaths = await downloadAttachmentsFromAgent1Output(
+        config.linearApiKey,
+        agent1Output,
+        issueIdentifier
+      );
+      if (attachmentPaths.length > 0) {
+        console.log(`Downloaded ${attachmentPaths.length} attachment(s)`);
+      } else {
+        console.log('No attachments found in issue');
+      }
+    } catch (error) {
+      console.log('Failed to download attachments (continuing without them):', error);
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
   // AGENT 2: Worker (uses configured provider - Claude or Codex)
   // ═══════════════════════════════════════════════════════════════════════════
   console.log('\nAgent 2: Worker starting...');
 
   // Use configured provider for Agent 2
   const agent2Provider = createProvider(config.provider);
+
+  // Build attachment context section if we have downloaded files
+  const attachmentSection = attachmentPaths.length > 0
+    ? `
+
+## Downloaded Attachments
+
+The following files have been downloaded locally from the Linear issue. You can read/view these files using the Read tool:
+
+${attachmentPaths.map(p => `- ${p}`).join('\n')}
+
+`
+    : '';
 
   // Build worker prompt by combining the base prompt with agent 1's output
   const workerBasePrompt = await loadPrompt('agent2-worker');
@@ -110,7 +173,7 @@ This identifier format is: Pod Name / Loop Number / Agent Number (Role).
 ## Context from Linear (gathered by Agent 1)
 
 ${agent1Output}
-
+${attachmentSection}
 ---
 
 ${workerBasePrompt}`;
