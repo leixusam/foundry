@@ -152,12 +152,26 @@ ${agent2Output}
 ## Session Stats
 
 - Loop Instance: ${loopInstanceName}
-- Agent 2 Provider: ${config.provider}
-- Agent 2 Cost: ${costStr}
-- Agent 2 Duration: ${Math.round(agent2Result.duration / 1000)}s
-- Agent 2 Exit code: ${agent2Result.exitCode}
-- Agent 2 Rate limited: ${agent2Result.rateLimited}
-- Agent 2 Tokens: in=${agent2Result.tokenUsage.input.toLocaleString()} out=${agent2Result.tokenUsage.output.toLocaleString()} cached=${agent2Result.tokenUsage.cached.toLocaleString()}
+
+### Agent 1 (Linear Reader)
+- Model: haiku
+- Cost: $${agent1Result.cost.toFixed(4)}
+- Duration: ${Math.round(agent1Result.duration / 1000)}s
+- Tokens: in=${agent1Result.tokenUsage.input.toLocaleString()} out=${agent1Result.tokenUsage.output.toLocaleString()} cached=${agent1Result.tokenUsage.cached.toLocaleString()}
+
+### Agent 2 (Worker)
+- Provider: ${config.provider}
+- Model: ${config.provider === 'codex' ? config.codexModel : config.claudeModel}
+- Cost: ${costStr}
+- Duration: ${Math.round(agent2Result.duration / 1000)}s
+- Tokens: in=${agent2Result.tokenUsage.input.toLocaleString()} out=${agent2Result.tokenUsage.output.toLocaleString()} cached=${agent2Result.tokenUsage.cached.toLocaleString()}
+- Exit code: ${agent2Result.exitCode}
+- Rate limited: ${agent2Result.rateLimited}
+
+### Loop Totals (Agent 1 + Agent 2)
+- Total Cost: $${(agent1Result.cost + agent2Result.cost).toFixed(4)}${agent2Result.costEstimated ? ' (includes estimate)' : ''}
+- Total Duration: ${Math.round((agent1Result.duration + agent2Result.duration) / 1000)}s
+- Total Tokens: in=${(agent1Result.tokenUsage.input + agent2Result.tokenUsage.input).toLocaleString()} out=${(agent1Result.tokenUsage.output + agent2Result.tokenUsage.output).toLocaleString()} cached=${(agent1Result.tokenUsage.cached + agent2Result.tokenUsage.cached).toLocaleString()}
 
 ---
 
