@@ -8,6 +8,7 @@ import { initLoopStats, logAgentStats, finalizeLoopStats } from './lib/stats-log
 import { createProvider, ProviderResult } from './lib/provider.js';
 import { checkInitialized, runInitialization, checkCodexLinearMcp } from './init.js';
 import { downloadAttachmentsFromAgent1Output } from './lib/attachment-downloader.js';
+import { isRunningOnGcp, stopGcpInstance } from './lib/gcp.js';
 
 // Import providers to register them
 import './lib/claude.js';
@@ -121,6 +122,27 @@ ${agent1BasePrompt}`;
   // Check if there's no work (look for the signal in the output)
   if (agent1Output.includes('no_work: true') || agent1Output.includes('NO_WORK')) {
     console.log('No work available.');
+
+    // If GCP auto-stop is enabled, check if we're on GCP and stop the instance
+    if (config.gcpAutoStop) {
+      console.log('GCP auto-stop is enabled. Checking if running on GCP...');
+      const onGcp = await isRunningOnGcp();
+      if (onGcp) {
+        console.log('Running on GCP VM. Initiating instance stop...');
+        const stopped = await stopGcpInstance();
+        if (stopped) {
+          console.log('Instance stop command issued. VM will shut down shortly.');
+          // Give the stop command time to take effect
+          await sleep(10000);
+          process.exit(0);
+        } else {
+          console.log('Failed to stop GCP instance. Falling back to sleep.');
+        }
+      } else {
+        console.log('Not running on GCP VM. Falling back to sleep.');
+      }
+    }
+
     console.log(`Sleeping ${config.noWorkSleepMinutes} minutes...`);
     await sleep(config.noWorkSleepMinutes * 60 * 1000);
     return;
@@ -359,6 +381,9 @@ async function main(): Promise<void> {
   }
   if (config.maxIterations > 0) {
     console.log(`   Max Iterations: ${config.maxIterations}`);
+  }
+  if (config.gcpAutoStop) {
+    console.log(`   GCP Auto-Stop: enabled`);
   }
 
   // Check if Linear is configured and initialized
