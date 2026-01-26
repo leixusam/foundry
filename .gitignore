@@ -38,6 +38,10 @@ yarn-error.log*
 # Lives inside ralph/ folder since Ralph is a plugin added to projects
 ralph/.output/
 
+# Ralph downloaded attachments from Linear issues
+# Downloaded at runtime for Agent 2 to view, not needed in version control
+ralph/.attachments/
+
 # Test coverage
 coverage/
 
