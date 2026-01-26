@@ -206,6 +206,16 @@ git merge ralph/{identifier} --no-ff -m "Merge ralph/{identifier}: {issue_title}
    ```
    Set `merge_status: blocked` and `merge_conflict_files: [list of files]` in WORK_RESULT.
 
+### Step 7.5: Get Repository URL
+
+Before outputting WORK_RESULT, get the repository URL for Agent 3:
+
+```bash
+git remote get-url origin
+```
+
+Include this as `repo_url` in WORK_RESULT.
+
 ## Output Format
 
 If validation passes and merge succeeds:
@@ -215,6 +225,7 @@ WORK_RESULT:
   success: true
   stage_completed: validate
   branch_name: ralph/{identifier}
+  repo_url: {git remote URL, e.g., https://github.com/owner/repo.git}
   artifact_path: thoughts/validation/YYYY-MM-DD-{identifier}-{slug}.md
   commit_hash: {merge commit hash on main}
   merge_status: success
@@ -235,6 +246,7 @@ WORK_RESULT:
   success: true
   stage_completed: validate
   branch_name: ralph/{identifier}
+  repo_url: {git remote URL, e.g., https://github.com/owner/repo.git}
   artifact_path: thoughts/validation/YYYY-MM-DD-{identifier}-{slug}.md
   commit_hash: {short hash on feature branch}
   merge_status: blocked
@@ -254,6 +266,7 @@ WORK_RESULT:
   success: false
   stage_completed: validate
   branch_name: ralph/{identifier}
+  repo_url: {git remote URL, e.g., https://github.com/owner/repo.git}
   artifact_path: thoughts/validation/YYYY-MM-DD-{identifier}-{slug}.md
   commit_hash: {short hash}
   next_status: "Needs Implement"

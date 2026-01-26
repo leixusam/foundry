@@ -10,9 +10,37 @@ The context above contains:
 ## Your Task
 
 1. **Find the issue ID** from Agent 1's output
-2. **Extract the commit hash** from Agent 2's output (look for git commit hashes like `abc1234` or full hashes)
-3. **Post a comment** summarizing Agent 2's work, including the commit hash
-4. **Update the status** based on what happened
+2. **Extract key data** from Agent 2's WORK_RESULT:
+   - `commit_hash`: The git commit hash
+   - `branch_name`: The feature branch (e.g., `ralph/RSK-123`)
+   - `repo_url`: The GitHub repository URL (if provided)
+   - `merge_status`: `success` or `blocked` (if merge was attempted)
+   - `merge_conflict_files`: List of files with conflicts (if merge was blocked)
+3. **Attach branch link** to the issue (if branch_name provided)
+4. **Post a comment** summarizing Agent 2's work, including commit and branch info
+5. **Update the status** based on what happened and merge_status
+
+## Branch Linking
+
+When Agent 2 provides `branch_name` in WORK_RESULT, attach a link to the Linear issue:
+
+1. **Construct the branch URL**:
+   - If `repo_url` is provided: `{repo_url}/tree/{branch_name}`
+   - If `repo_url` is not provided: Use the issue identifier to derive: `https://github.com/{owner}/{repo}/tree/{branch_name}`
+   - Note: You may need to ask the human to configure the repo URL if not available
+
+2. **Attach link using `mcp__linear__update_issue`**:
+   ```
+   mcp__linear__update_issue({
+     id: "{issue_id}",
+     links: [{
+       url: "{branch_url}",
+       title: "Branch: {branch_name}"
+     }]
+   })
+   ```
+
+**Important**: Only attach the branch link once. Check if link already exists in issue before adding.
 
 ## Comment Format
 
@@ -24,7 +52,9 @@ Post a comment like this:
 **Stage**: {stage that was completed}
 **Loop Instance**: {loop instance name from session stats}
 **Duration**: {loop total duration from session stats}
+**Branch**: {branch_name from Agent 2's output, e.g., `ralph/RSK-123`}
 **Commit**: {commit hash from Agent 2's output, e.g., `abc1234`}
+**Merge Status**: {success | blocked | n/a} (only for validate/oneshot stages)
 
 ## Summary
 {Summary of what Agent 2 accomplished}
@@ -66,19 +96,78 @@ Will retry on next loop iteration.
 | **Total** | - | {totals} | **${total_cost}** |
 ```
 
+If merge was blocked (Agent 2 outputs `merge_status: blocked`):
+
+```
+**Merge Blocked** | {loop instance name} | {current timestamp}
+
+**Stage**: {stage completed (validate or oneshot)}
+**Loop Instance**: {loop instance name from session stats}
+**Duration**: {loop total duration from session stats}
+**Branch**: {branch_name}
+**Commit**: {commit hash on feature branch}
+
+## Status
+Work completed successfully, but merge to main was blocked due to conflicts.
+
+## Merge Conflicts
+The following files have conflicts that require human resolution:
+- `{file1.ts}`
+- `{file2.ts}`
+- ...
+
+## Resolution Steps
+1. Checkout the branch: `git checkout {branch_name}`
+2. Merge main into the branch: `git merge main`
+3. Resolve conflicts in the listed files
+4. Commit the merge: `git commit -m "Merge main into {branch_name}"`
+5. Push: `git push origin {branch_name}`
+6. Re-run validation or merge manually
+
+## Cost Summary
+| Agent | Model | Tokens (in/out/cached) | Cost |
+|-------|-------|----------------------|------|
+| Agent 1 | {model} | {in}/{out}/{cached} | ${cost} |
+| Agent 2 | {model} | {in}/{out}/{cached} | ${cost} |
+| **Total** | - | {totals} | **${total_cost}** |
+```
+
 ## Status Updates
 
-Update the issue status based on what happened:
+Update the issue status based on what happened AND the merge status:
 
-- **oneshot complete** → "Done"
+### When merge_status is "success" (or not applicable)
+- **oneshot complete + merge success** → "Done"
+- **validate complete + merge success** → "Done"
 - **research complete** → "Needs Specification" or "Needs Plan" (based on Agent 2's next_status)
 - **specification complete** → "Needs Plan"
 - **plan complete** → "Needs Implement"
 - **implement complete** → "Needs Validate"
-- **validate complete** → "Done"
 - **any failure** → Keep current status (don't change)
 
-Use `mcp__linear__update_issue` to change the status.
+### When merge_status is "blocked"
+- **oneshot/validate complete + merge blocked** → "Blocked"
+  - Use status ID: `723acd28-e8a4-4083-a0ff-85986b42c2c2`
+  - This indicates the work is done but needs human intervention for merge conflicts
+
+### Status Update Command
+
+Use `mcp__linear__update_issue` to change the status:
+
+```
+mcp__linear__update_issue({
+  id: "{issue_id}",
+  state: "{status_name}"  // e.g., "Done", "Blocked", "Needs Validate"
+})
+```
+
+For "Blocked" status specifically, you can use the status ID directly:
+```
+mcp__linear__update_issue({
+  id: "{issue_id}",
+  state: "723acd28-e8a4-4083-a0ff-85986b42c2c2"  // Blocked status ID
+})
+```
 
 ## Creating Sub-Issues
 
