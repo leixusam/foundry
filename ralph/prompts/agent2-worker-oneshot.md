@@ -221,6 +221,7 @@ After completing your work and merge succeeds:
 WORK_RESULT:
   success: true
   stage_completed: oneshot
+  workflow: oneshot
   branch_name: ralph/{identifier}
   repo_url: {git remote URL, e.g., https://github.com/owner/repo.git}
   artifact_path: thoughts/oneshot/YYYY-MM-DD-{identifier}-{slug}.md
@@ -239,6 +240,7 @@ If work completes but merge is blocked:
 WORK_RESULT:
   success: true
   stage_completed: oneshot
+  workflow: oneshot
   branch_name: ralph/{identifier}
   repo_url: {git remote URL, e.g., https://github.com/owner/repo.git}
   artifact_path: thoughts/oneshot/YYYY-MM-DD-{identifier}-{slug}.md
@@ -258,6 +260,7 @@ If you encounter an error:
 WORK_RESULT:
   success: false
   stage_completed: oneshot
+  workflow: oneshot
   branch_name: ralph/{identifier}
   repo_url: {git remote URL, e.g., https://github.com/owner/repo.git}
   error: |
