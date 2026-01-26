@@ -46,6 +46,27 @@ export interface InitResult {
   errors: string[];
 }
 
+// Attachment types
+
+export interface AttachmentInfo {
+  id: string;
+  url: string;
+  filename: string;
+  source: 'attachment' | 'embedded';
+}
+
+export interface DownloadResult {
+  success: boolean;
+  attachments: DownloadedAttachment[];
+  errors: string[];
+}
+
+export interface DownloadedAttachment {
+  originalUrl: string;
+  localPath: string;
+  filename: string;
+}
+
 // Config types
 
 export interface RalphConfig {
