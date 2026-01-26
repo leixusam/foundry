@@ -2,10 +2,9 @@ import { mkdir, appendFile } from 'fs/promises';
 import { existsSync } from 'fs';
 import { join } from 'path';
 import { getConfig } from '../config.js';
-import { getLoopInstanceNameDisplay } from './loop-instance-name.js';
 
 // Track current logging context
-let currentLoopName: string | null = null;
+let currentPodName: string | null = null;
 let currentLoopNumber: number | null = null;
 
 /**
@@ -20,20 +19,18 @@ function getOutputDir(): string {
 
 /**
  * Gets the log file path for a specific agent (raw LLM JSON output)
- * Structure: ralph/.output/{loop-name}/{loop-number}/agent-{n}.log
+ * Structure: ralph/.output/{pod-name}/loop-{n}/agent-{n}.log
  */
 function getAgentLogPath(agentNumber: number): string | null {
-  if (!currentLoopName || currentLoopNumber === null) {
+  if (!currentPodName || currentLoopNumber === null) {
     return null;
   }
 
   const outputDir = getOutputDir();
-  // Use the human-readable part of the agent name (e.g., "arctic-lynx" from "arctic-lynx-1234567")
-  const loopNameDisplay = getLoopInstanceNameDisplay(currentLoopName);
 
   return join(
     outputDir,
-    loopNameDisplay,
+    currentPodName,
     `loop-${currentLoopNumber}`,
     `agent-${agentNumber}.log`
   );
@@ -41,19 +38,18 @@ function getAgentLogPath(agentNumber: number): string | null {
 
 /**
  * Gets the terminal log file path for a specific agent (formatted shell output)
- * Structure: ralph/.output/{loop-name}/{loop-number}/agent-{n}-terminal.log
+ * Structure: ralph/.output/{pod-name}/loop-{n}/agent-{n}-terminal.log
  */
 function getAgentTerminalLogPath(agentNumber: number): string | null {
-  if (!currentLoopName || currentLoopNumber === null) {
+  if (!currentPodName || currentLoopNumber === null) {
     return null;
   }
 
   const outputDir = getOutputDir();
-  const loopNameDisplay = getLoopInstanceNameDisplay(currentLoopName);
 
   return join(
     outputDir,
-    loopNameDisplay,
+    currentPodName,
     `loop-${currentLoopNumber}`,
     `agent-${agentNumber}-terminal.log`
   );
@@ -71,11 +67,11 @@ async function ensureDir(filePath: string): Promise<void> {
 
 /**
  * Initializes the output logger for a new loop iteration
- * @param loopInstanceName - The full loop instance name (e.g., "arctic-lynx-1234567")
+ * @param podName - The pod name (e.g., "arctic-lynx") - persists for entire session
  * @param loopNumber - The loop iteration number (0, 1, 2, ...)
  */
-export function initLoopLogger(loopInstanceName: string, loopNumber: number): void {
-  currentLoopName = loopInstanceName;
+export function initLoopLogger(podName: string, loopNumber: number): void {
+  currentPodName = podName;
   currentLoopNumber = loopNumber;
 }
 
@@ -123,12 +119,11 @@ export async function logTerminalOutput(agentNumber: number, text: string): Prom
  * Gets the current output directory for diagnostics
  */
 export function getCurrentOutputDir(): string | null {
-  if (!currentLoopName || currentLoopNumber === null) {
+  if (!currentPodName || currentLoopNumber === null) {
     return null;
   }
 
   const outputDir = getOutputDir();
-  const loopNameDisplay = getLoopInstanceNameDisplay(currentLoopName);
 
-  return join(outputDir, loopNameDisplay, `loop-${currentLoopNumber}`);
+  return join(outputDir, currentPodName, `loop-${currentLoopNumber}`);
 }

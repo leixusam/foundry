@@ -50,18 +50,16 @@ function formatTimestamp(date: Date): string {
 }
 
 /**
- * Generates a unique name for a loop instance
- * Format: {YYYYMMDD-HHMMSS}-{adjective}-{animal}
- * Example: "20250125-143052-calm-pegasus"
+ * Generates a unique pod name (adjective-animal combination)
+ * Example: "calm-pegasus"
  *
- * The timestamp prefix enables easy chronological sorting in file explorers.
  * The name is deterministic based on the current timestamp (Unix seconds),
- * ensuring each loop gets a unique name while being reproducible for debugging.
+ * ensuring each pod gets a unique name while being reproducible for debugging.
+ * This name persists for the entire Ralph session (across all loops).
  */
-export function generateLoopInstanceName(): string {
+export function generatePodName(): string {
   const now = new Date();
   const timestamp = Math.floor(now.getTime() / 1000);
-  const humanTimestamp = formatTimestamp(now);
 
   // Use Unix timestamp to deterministically select words (but with enough variation)
   // This ensures the same second always produces the same name
@@ -71,7 +69,26 @@ export function generateLoopInstanceName(): string {
   const adjective = ADJECTIVES[adjIndex];
   const animal = ANIMALS[animalIndex];
 
-  return `${humanTimestamp}-${adjective}-${animal}`;
+  return `${adjective}-${animal}`;
+}
+
+/**
+ * Generates a unique name for a loop instance (legacy format, kept for compatibility)
+ * Format: {YYYYMMDD-HHMMSS}-{adjective}-{animal}
+ * Example: "20250125-143052-calm-pegasus"
+ *
+ * The timestamp prefix enables easy chronological sorting in file explorers.
+ * The name is deterministic based on the current timestamp (Unix seconds),
+ * ensuring each loop gets a unique name while being reproducible for debugging.
+ *
+ * @deprecated Use generatePodName() for persistent pod names across loops
+ */
+export function generateLoopInstanceName(): string {
+  const now = new Date();
+  const humanTimestamp = formatTimestamp(now);
+  const podName = generatePodName();
+
+  return `${humanTimestamp}-${podName}`;
 }
 
 /**
