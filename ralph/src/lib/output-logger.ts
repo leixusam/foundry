@@ -9,16 +9,18 @@ let currentLoopName: string | null = null;
 let currentLoopNumber: number | null = null;
 
 /**
- * Gets the base output directory path (.ralph/output/ in the working directory)
+ * Gets the base output directory path (ralph/.output/ in the working directory)
+ * Output lives inside the ralph folder since Ralph is designed as a plugin
+ * that gets added to project folders - keeps parent project root clean.
  */
 function getOutputDir(): string {
   const config = getConfig();
-  return join(config.workingDirectory, '.ralph', 'output');
+  return join(config.workingDirectory, 'ralph', '.output');
 }
 
 /**
  * Gets the log file path for a specific agent (raw LLM JSON output)
- * Structure: .ralph/output/{loop-name}/{loop-number}/agent-{n}.log
+ * Structure: ralph/.output/{loop-name}/{loop-number}/agent-{n}.log
  */
 function getAgentLogPath(agentNumber: number): string | null {
   if (!currentLoopName || currentLoopNumber === null) {
@@ -39,7 +41,7 @@ function getAgentLogPath(agentNumber: number): string | null {
 
 /**
  * Gets the terminal log file path for a specific agent (formatted shell output)
- * Structure: .ralph/output/{loop-name}/{loop-number}/agent-{n}-terminal.log
+ * Structure: ralph/.output/{loop-name}/{loop-number}/agent-{n}-terminal.log
  */
 function getAgentTerminalLogPath(agentNumber: number): string | null {
   if (!currentLoopName || currentLoopNumber === null) {
