@@ -8,7 +8,7 @@ You are the Worker agent. Agent 1 has already selected and claimed a Linear issu
 
 Agent 1 has provided:
 - Issue ID, title, and description
-- The stage to execute (research, plan, implement, validate, or oneshot)
+- The stage to execute (research, specification, plan, implement, validate, or oneshot)
 - Any parent/child/blocking relationships
 - Previous comments and artifacts
 
@@ -27,8 +27,17 @@ Read this context carefully before starting work.
 - Explore the codebase to understand the current state
 - Assess if task is straightforward enough for fast-track (see criteria in research prompt)
 - **If straightforward**: research + plan + implement in one session, output to `thoughts/research-implement/`, set next_status to "Needs Validate"
-- **If complex**: document findings in `thoughts/research/YYYY-MM-DD-{issue-id}-{slug}.md`, set next_status to "Needs Plan"
+- **If complex with UX impact**: document findings in `thoughts/research/YYYY-MM-DD-{issue-id}-{slug}.md`, set next_status to "Needs Specification"
+- **If complex without UX impact**: document findings in `thoughts/research/YYYY-MM-DD-{issue-id}-{slug}.md`, set next_status to "Needs Plan"
 - **IMPORTANT**: Validation is ALWAYS a separate stage (never skipped or combined)
+- Commit and push
+
+### For SPECIFICATION stage
+- Read the existing research document
+- Focus on user experience: simplicity, delight, polish
+- Think like a PM/designer, not an engineer
+- Document the UX specification in `thoughts/specifications/YYYY-MM-DD-{issue-id}-{slug}.md`
+- next_status: "Needs Plan"
 - Commit and push
 
 ### For PLAN stage
