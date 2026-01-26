@@ -229,7 +229,7 @@ WORK_RESULT:
   artifact_path: thoughts/validation/YYYY-MM-DD-{identifier}-{slug}.md
   commit_hash: {merge commit hash on main}
   merge_status: success
-  next_status: "Done"
+  next_status: "[RL] Done"
   summary: |
     Validation PASSED. Merged to main.
     - All {N} success criteria verified
@@ -269,7 +269,7 @@ WORK_RESULT:
   repo_url: {git remote URL, e.g., https://github.com/owner/repo.git}
   artifact_path: thoughts/validation/YYYY-MM-DD-{identifier}-{slug}.md
   commit_hash: {short hash}
-  next_status: "Needs Implement"
+  next_status: "[RL] Needs Implement"
   error: |
     Validation FAILED.
     - {N} success criteria failed
@@ -280,6 +280,6 @@ WORK_RESULT:
 ## Important Notes
 
 - Be thorough - this is the last check before production
-- If validation fails, the issue goes back to "Needs Implement"
+- If validation fails, the issue goes back to `[RL] Needs Implement`
 - Document everything - the validation report is the audit trail
 - Always commit and push before outputting WORK_RESULT
