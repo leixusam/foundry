@@ -85,6 +85,7 @@ Environment Variables:
   RALPH_PROVIDER             Provider: claude (default) or codex
   RALPH_CLAUDE_MODEL         Claude model: opus (default), sonnet, or haiku
   RALPH_MAX_ITERATIONS       Limit iterations (0 = unlimited)
+  RALPH_RATE_LIMIT_MAX_RETRIES  Max retries on rate limit (default: 3)
   CODEX_MODEL                Codex model name
   CODEX_REASONING_EFFORT     Global default: low, medium, high (default), extra_high
   CODEX_AGENT1_REASONING     Agent 1 reasoning: low, medium, high (default), extra_high
@@ -158,6 +159,18 @@ function getMaxIterations(): number {
   return 0; // Default: unlimited (0 means no limit)
 }
 
+// Parse rate limit max retries from environment variable
+function getRateLimitMaxRetries(): number {
+  const envMax = process.env.RALPH_RATE_LIMIT_MAX_RETRIES;
+  if (envMax) {
+    const parsed = parseInt(envMax, 10);
+    if (!isNaN(parsed) && parsed >= 0) {
+      return parsed;
+    }
+  }
+  return 3; // Default: 3 retries
+}
+
 // Parse per-agent reasoning effort from environment variables
 // Agent 1 and 2 default to 'high', Agent 3 defaults to 'medium' (as specified in ticket RSK-40)
 function getCodexAgentReasoning(): CodexAgentReasoningConfig {
@@ -198,6 +211,9 @@ export const config: RalphConfig = {
   codexReasoningEffort: getCodexReasoningEffort(),
   codexAgentReasoning: getCodexAgentReasoning(),
   maxIterations: getMaxIterations(),
+
+  // Rate limit configuration
+  rateLimitMaxRetries: getRateLimitMaxRetries(),
 };
 
 export function getConfig(): RalphConfig {

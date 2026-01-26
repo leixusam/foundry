@@ -1,5 +1,5 @@
 import { getConfig } from './config.js';
-import { sleep, executeWithRateLimitRetry, RateLimitRetryConfig, DEFAULT_RETRY_CONFIG } from './lib/rate-limit.js';
+import { sleep, executeWithRateLimitRetry, RateLimitRetryConfig } from './lib/rate-limit.js';
 import { loadPrompt } from './lib/prompts.js';
 import { getCurrentBranch } from './lib/git.js';
 import { generatePodName } from './lib/loop-instance-name.js';
@@ -83,8 +83,8 @@ ${agent1BasePrompt}`;
   // Select model based on provider
   const agent1Model = config.provider === 'codex' ? config.codexModel : 'opus';
 
-  // Rate limit retry config - uses default (will be configurable in Phase 4)
-  const retryConfig: RateLimitRetryConfig = DEFAULT_RETRY_CONFIG;
+  // Rate limit retry config - uses configured max retries
+  const retryConfig: RateLimitRetryConfig = { maxRetries: config.rateLimitMaxRetries };
 
   // Agent 1 with rate limit retry
   const agent1Result = await executeWithRateLimitRetry(
