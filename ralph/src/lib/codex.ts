@@ -1,4 +1,4 @@
-import { spawn } from 'child_process';
+import { spawn, execSync } from 'child_process';
 import { getConfig } from '../config.js';
 import { logAgentOutput, logTerminalOutput } from './output-logger.js';
 import { LLMProvider, ProviderOptions, ProviderResult, registerCodexProvider, CodexReasoningEffort } from './provider.js';
@@ -175,6 +175,12 @@ class CodexProvider implements LLMProvider {
     const model = options.model || config.codexModel;
     const reasoningEffort: CodexReasoningEffort = options.reasoningEffort || config.codexReasoningEffort;
 
+    // Warn if allowedTools is specified (Codex doesn't support per-session tool restriction)
+    if (options.allowedTools && options.allowedTools.length > 0) {
+      console.warn(`${YELLOW}⚠️  Warning: allowedTools option is ignored by Codex CLI.${RESET}`);
+      console.warn(`${YELLOW}   Codex uses global MCP configuration from ~/.codex/config.toml${RESET}`);
+    }
+
     return new Promise((resolve, reject) => {
       const args = [
         'exec',
@@ -317,6 +323,16 @@ class CodexProvider implements LLMProvider {
 // Factory function
 export function createCodexProvider(): LLMProvider {
   return new CodexProvider();
+}
+
+// Check if Linear MCP is configured in Codex
+export function checkCodexLinearMcpConfigured(): boolean {
+  try {
+    const result = execSync('codex mcp list', { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] });
+    return result.toLowerCase().includes('linear');
+  } catch {
+    return false;
+  }
 }
 
 // Register the Codex provider
