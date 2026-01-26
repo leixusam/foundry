@@ -95,4 +95,7 @@ export interface RalphConfig {
 
   // Rate limit configuration
   rateLimitMaxRetries: number;
+
+  // GCP configuration
+  gcpAutoStop: boolean;
 }
