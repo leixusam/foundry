@@ -44,7 +44,7 @@ This name identifies your loop instance for attribution purposes.
 ${agent1BasePrompt}`;
     const agent1Result = await agent1Provider.spawn({
         prompt: agent1Prompt,
-        model: 'haiku', // Use haiku for cost efficiency on Linear operations
+        model: 'opus', // Use opus for best reasoning on issue selection and prioritization
         allowedTools: ['mcp__linear__*'],
     }, 1);
     if (agent1Result.rateLimited) {
@@ -136,7 +136,7 @@ ${agent2Output}
 - Loop Instance: ${loopInstanceName}
 
 ### Agent 1 (Linear Reader)
-- Model: haiku
+- Model: opus
 - Cost: $${agent1Result.cost.toFixed(4)}
 - Duration: ${Math.round(agent1Result.duration / 1000)}s
 - Tokens: in=${agent1Result.tokenUsage.input.toLocaleString()} out=${agent1Result.tokenUsage.output.toLocaleString()} cached=${agent1Result.tokenUsage.cached.toLocaleString()}
