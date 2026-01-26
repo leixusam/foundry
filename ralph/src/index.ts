@@ -224,7 +224,7 @@ async function main(): Promise<void> {
       process.exit(1);
     }
 
-    console.log('\nRestart Ralph with the environment variables set to continue.\n');
+    console.log('\nRestart Ralph to continue.\n');
     process.exit(0);
   }
 

@@ -15,6 +15,7 @@ out/
 .env
 .env.local
 .env.*.local
+.ralph.env
 
 # IDE
 .idea/
