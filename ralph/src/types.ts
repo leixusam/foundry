@@ -1,3 +1,9 @@
+// Provider types
+
+export type ProviderName = 'claude' | 'codex';
+export type ClaudeModel = 'opus' | 'sonnet' | 'haiku';
+export type CodexReasoningEffort = 'low' | 'medium' | 'high' | 'extra_high';
+
 // Agent output types
 
 export interface DispatchResult {
@@ -75,4 +81,11 @@ export interface RalphConfig {
   staleTimeoutHours: number;
   noWorkSleepMinutes: number;
   errorSleepMinutes: number;
+
+  // Provider configuration
+  provider: ProviderName;
+  claudeModel: ClaudeModel;
+  codexModel: string;
+  codexReasoningEffort: CodexReasoningEffort;
+  maxIterations: number;
 }
