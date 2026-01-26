@@ -1,7 +1,7 @@
 import { getConfig } from './config.js';
 import { sleep, handleRateLimit } from './lib/rate-limit.js';
 import { loadPrompt } from './lib/prompts.js';
-import { gitSafetyNetPush, getCurrentBranch } from './lib/git.js';
+import { getCurrentBranch } from './lib/git.js';
 import { generateLoopInstanceName } from './lib/loop-instance-name.js';
 import { initLoopLogger, getCurrentOutputDir } from './lib/output-logger.js';
 import { createProvider } from './lib/provider.js';
@@ -165,15 +165,6 @@ ${writerBasePrompt}`;
     }, 3);
     if (agent3Result.rateLimited) {
         console.log('Agent 3 was rate limited.');
-    }
-    // ═══════════════════════════════════════════════════════════════════════════
-    // NODE.JS: Safety Net
-    // ═══════════════════════════════════════════════════════════════════════════
-    const safetyNetResult = await gitSafetyNetPush(iteration);
-    if (safetyNetResult.pushed) {
-        console.log(`\nSAFETY NET: Pushed uncommitted changes`);
-        console.log(`   Commit: ${safetyNetResult.commitHash}`);
-        console.log(`   This should be rare - investigate if it happens frequently`);
     }
     // Loop stats
     const duration = Math.round((Date.now() - loopStart) / 1000);
