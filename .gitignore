@@ -32,6 +32,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Ralph output logs (LLM agent output persistence)
+.ralph/output/
+
 # Test coverage
 coverage/
 
