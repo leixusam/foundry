@@ -34,7 +34,8 @@ yarn-debug.log*
 yarn-error.log*
 
 # Ralph output logs (LLM agent output persistence)
-.ralph/output/
+# Lives inside ralph/ folder since Ralph is a plugin added to projects
+ralph/.output/
 
 # Test coverage
 coverage/

@@ -41,7 +41,8 @@ to work on Linear tickets autonomously.
 
 ## Output
 
-Runtime logs are written to `.ralph/output/` in the project root (gitignored).
+Runtime logs are written to `ralph/.output/` (gitignored). Output folder names are prefixed with
+timestamps for easy sorting (e.g., `20250126-051600-swift-wyvern/`).
 
 ## Project Artifacts
 
