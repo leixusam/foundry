@@ -50,7 +50,7 @@ async function runLoop(podName: string, iteration: number): Promise<void> {
 
   console.log(`\n${'='.repeat(24)} LOOP ${iteration} ${'='.repeat(24)}`);
   console.log(`Pod: ${podName}`);
-  console.log(`Provider: ${config.provider} (Agent 2 only)`);
+  console.log(`Provider: ${config.provider}`);
   if (config.provider === 'codex') {
     console.log(`Codex Model: ${config.codexModel}`);
     console.log(`Agent Reasoning: A1=${config.codexAgentReasoning.agent1}, A2=${config.codexAgentReasoning.agent2}, A3=${config.codexAgentReasoning.agent3}`);
@@ -61,11 +61,11 @@ async function runLoop(podName: string, iteration: number): Promise<void> {
   const loopStart = Date.now();
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // AGENT 1: Linear Reader (always Claude for cost efficiency)
+  // AGENT 1: Linear Reader (uses configured provider)
   // ═══════════════════════════════════════════════════════════════════════════
   console.log('Agent 1: Linear Reader starting...');
 
-  const agent1Provider = createProvider('claude');
+  const agent1Provider = createProvider(config.provider);
   const agent1BasePrompt = await loadPrompt('agent1-linear-reader');
   const agent1Prompt = `## Agent Instance
 
@@ -79,10 +79,14 @@ This identifier format is: Pod Name / Loop Number / Agent Number (Role).
 ---
 
 ${agent1BasePrompt}`;
+
+  // Select model based on provider
+  const agent1Model = config.provider === 'codex' ? config.codexModel : 'opus';
   const agent1Result = await agent1Provider.spawn({
     prompt: agent1Prompt,
-    model: 'opus', // Use opus for best reasoning on issue selection and prioritization
+    model: agent1Model,
     allowedTools: ['mcp__linear__*'],
+    reasoningEffort: config.provider === 'codex' ? config.codexAgentReasoning.agent1 : undefined,
   }, 1);
 
   if (agent1Result.rateLimited) {
@@ -91,7 +95,7 @@ ${agent1BasePrompt}`;
   }
 
   // Log Agent 1 stats
-  await logAgentStats(1, 'claude', 'opus', {
+  await logAgentStats(1, config.provider, agent1Model, {
     tokenUsage: agent1Result.tokenUsage,
     cost: agent1Result.cost,
     costEstimated: agent1Result.costEstimated,
@@ -211,15 +215,18 @@ ${workerBasePrompt}`;
   const agent2Output = agent2Result.finalOutput;
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // AGENT 3: Linear Writer (always Claude for cost efficiency)
+  // AGENT 3: Linear Writer (uses configured provider)
   // ═══════════════════════════════════════════════════════════════════════════
   console.log('\nAgent 3: Linear Writer starting...');
 
-  const agent3Provider = createProvider('claude');
+  const agent3Provider = createProvider(config.provider);
   const writerBasePrompt = await loadPrompt('agent3-linear-writer');
 
-  // Format cost string with estimated marker for Codex
-  const costStr = agent2Result.costEstimated
+  // Format cost strings with estimated marker for Codex
+  const agent1CostStr = agent1Result.costEstimated
+    ? `~$${agent1Result.cost.toFixed(4)} (estimated)`
+    : `$${agent1Result.cost.toFixed(4)}`;
+  const agent2CostStr = agent2Result.costEstimated
     ? `~$${agent2Result.cost.toFixed(4)} (estimated)`
     : `$${agent2Result.cost.toFixed(4)}`;
 
@@ -254,22 +261,23 @@ ${agent2Output}
 - Loop: ${iteration}
 
 ### Agent 1 (Linear Reader)
-- Model: opus
-- Cost: $${agent1Result.cost.toFixed(4)}
+- Provider: ${config.provider}
+- Model: ${agent1Model}
+- Cost: ${agent1CostStr}
 - Duration: ${Math.round(agent1Result.duration / 1000)}s
 - Tokens: in=${agent1Result.tokenUsage.input.toLocaleString()} out=${agent1Result.tokenUsage.output.toLocaleString()} cached=${agent1Result.tokenUsage.cached.toLocaleString()}
 
 ### Agent 2 (Worker)
 - Provider: ${config.provider}
-- Model: ${config.provider === 'codex' ? config.codexModel : config.claudeModel}
-- Cost: ${costStr}
+- Model: ${agent2Model}
+- Cost: ${agent2CostStr}
 - Duration: ${Math.round(agent2Result.duration / 1000)}s
 - Tokens: in=${agent2Result.tokenUsage.input.toLocaleString()} out=${agent2Result.tokenUsage.output.toLocaleString()} cached=${agent2Result.tokenUsage.cached.toLocaleString()}
 - Exit code: ${agent2Result.exitCode}
 - Rate limited: ${agent2Result.rateLimited}
 
 ### Loop Totals (Agent 1 + Agent 2)
-- Total Cost: $${(agent1Result.cost + agent2Result.cost).toFixed(4)}${agent2Result.costEstimated ? ' (includes estimate)' : ''}
+- Total Cost: $${(agent1Result.cost + agent2Result.cost).toFixed(4)}${(agent1Result.costEstimated || agent2Result.costEstimated) ? ' (includes estimate)' : ''}
 - Total Duration: ${Math.round((agent1Result.duration + agent2Result.duration) / 1000)}s
 - Total Tokens: in=${(agent1Result.tokenUsage.input + agent2Result.tokenUsage.input).toLocaleString()} out=${(agent1Result.tokenUsage.output + agent2Result.tokenUsage.output).toLocaleString()} cached=${(agent1Result.tokenUsage.cached + agent2Result.tokenUsage.cached).toLocaleString()}
 
@@ -277,10 +285,13 @@ ${agent2Output}
 
 ${writerBasePrompt}`;
 
+  // Select model based on provider
+  const agent3Model = config.provider === 'codex' ? config.codexModel : 'sonnet';
   const agent3Result = await agent3Provider.spawn({
     prompt: writerPrompt,
-    model: 'sonnet', // Use sonnet for better quality Linear updates
+    model: agent3Model,
     allowedTools: ['mcp__linear__*'],
+    reasoningEffort: config.provider === 'codex' ? config.codexAgentReasoning.agent3 : undefined,
   }, 3);
 
   if (agent3Result.rateLimited) {
@@ -288,7 +299,7 @@ ${writerBasePrompt}`;
   }
 
   // Log Agent 3 stats
-  await logAgentStats(3, 'claude', 'sonnet', {
+  await logAgentStats(3, config.provider, agent3Model, {
     tokenUsage: agent3Result.tokenUsage,
     cost: agent3Result.cost,
     costEstimated: agent3Result.costEstimated,
