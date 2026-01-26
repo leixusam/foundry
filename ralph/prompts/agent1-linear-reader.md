@@ -95,19 +95,18 @@ Also gather:
 
 ### Step 6: Decide Stage
 
-**ONESHOT** if:
-- Labels include: chore, bug, small, quick-fix, trivial, hotfix
-- Estimate is XS or S
-
-**STAGED** otherwise - map the issue's current status to the appropriate stage:
+Map the issue's current status to the appropriate stage:
 - Backlog status (type "backlog") → research
 - "Needs Research" or similar unstarted status → research
 - "Needs Specification" → specification
 - "Needs Plan" → plan
 - "Needs Implement" → implement
 - "Needs Validate" → validate
+- "Oneshot In Progress" → oneshot (for issues already classified by Agent 2)
 
 Use the actual status names from Step 1 to determine the appropriate stage.
+
+**Note**: Agent 1 no longer decides whether a ticket is oneshot or staged. Agent 2 makes this determination during the research stage based on actual complexity assessment.
 
 ### Step 7: Claim the Issue
 
@@ -141,7 +140,7 @@ Write out all the information Agent 2 needs to do the work:
 - Issue ID and identifier (e.g., RSK-6)
 - Issue title
 - Full description
-- Stage to execute (oneshot/research/plan/implement/validate)
+- Stage to execute (research/specification/plan/implement/validate, or oneshot if status is "Oneshot In Progress")
 - Priority
 - Labels
 - Parent issue details (if any)
