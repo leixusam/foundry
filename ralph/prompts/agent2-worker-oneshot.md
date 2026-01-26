@@ -154,7 +154,17 @@ git commit -m "fix({identifier}): {short description}"
 git push origin ralph/{identifier}
 ```
 
-### Step 7: Merge to Main
+### Step 7: Get Repository URL
+
+Before merging, get the repository URL for Agent 3:
+
+```bash
+git remote get-url origin
+```
+
+Include this as `repo_url` in WORK_RESULT.
+
+### Step 8: Merge to Main
 
 After all checks pass, merge the feature branch to main:
 
@@ -212,6 +222,7 @@ WORK_RESULT:
   success: true
   stage_completed: oneshot
   branch_name: ralph/{identifier}
+  repo_url: {git remote URL, e.g., https://github.com/owner/repo.git}
   artifact_path: thoughts/oneshot/YYYY-MM-DD-{identifier}-{slug}.md
   commit_hash: {merge commit hash on main}
   merge_status: success
@@ -229,6 +240,7 @@ WORK_RESULT:
   success: true
   stage_completed: oneshot
   branch_name: ralph/{identifier}
+  repo_url: {git remote URL, e.g., https://github.com/owner/repo.git}
   artifact_path: thoughts/oneshot/YYYY-MM-DD-{identifier}-{slug}.md
   commit_hash: {short hash on feature branch}
   merge_status: blocked
@@ -247,6 +259,7 @@ WORK_RESULT:
   success: false
   stage_completed: oneshot
   branch_name: ralph/{identifier}
+  repo_url: {git remote URL, e.g., https://github.com/owner/repo.git}
   error: |
     {What went wrong and why it couldn't be fixed}
 ```
