@@ -1,5 +1,6 @@
-import { writeFileSync, readFileSync, existsSync, mkdirSync } from 'fs';
-import { join } from 'path';
+import { writeFileSync, readFileSync, existsSync, mkdirSync, readdirSync, copyFileSync } from 'fs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
 import {
   createLinearClient,
   validateApiKey,
@@ -13,6 +14,11 @@ import { prompt, confirm } from './lib/readline.js';
 import { InitResult } from './types.js';
 import { getRepoRoot } from './config.js';
 import { checkCodexLinearMcpConfigured } from './lib/codex.js';
+
+// Get the package directory (where Foundry is installed)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const PACKAGE_ROOT = join(__dirname, '..');
 
 // Check if Codex Linear MCP is configured
 export function checkCodexLinearMcp(): boolean {
@@ -37,7 +43,7 @@ export async function checkInitialized(apiKey: string, teamKey: string): Promise
   }
 }
 
-// Prompt user for Linear API key
+// Prompt user for Linear API key (required - cannot skip)
 async function promptForApiKey(): Promise<string | undefined> {
   console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log('                    Foundry Initialization Wizard');
@@ -46,54 +52,80 @@ async function promptForApiKey(): Promise<string | undefined> {
   console.log('Foundry needs a Linear API key to manage workflow statuses.');
   console.log('');
   console.log('To get your API key:');
-  console.log('  1. Go to Linear Settings → API');
-  console.log('  2. Click "Create key"');
-  console.log('  3. Copy the generated key');
+  console.log('  1. Go to: https://linear.app/settings/account/security/api-keys/new');
+  console.log('  2. Enter a label (e.g., "Foundry")');
+  console.log('  3. Click "Create key"');
+  console.log('  4. Copy the generated key');
   console.log('');
 
-  const apiKey = await prompt('Enter your Linear API key (or press Enter to skip): ');
+  // Loop until valid API key provided
+  while (true) {
+    const apiKey = await prompt('Enter your Linear API key: ');
 
-  if (!apiKey) {
-    console.log('\nSkipping initialization. Set LINEAR_API_KEY environment variable to configure later.');
-    return undefined;
+    if (!apiKey) {
+      console.log('\nLinear API key is required. Foundry cannot operate without it.');
+      continue;
+    }
+
+    // Validate the API key
+    console.log('\nValidating API key...');
+    const client = createLinearClient(apiKey);
+    const isValid = await validateApiKey(client);
+
+    if (!isValid) {
+      console.log('Invalid API key. Please check and try again.\n');
+      continue;
+    }
+
+    console.log('API key is valid.');
+    return apiKey;
   }
-
-  // Validate the API key
-  console.log('\nValidating API key...');
-  const client = createLinearClient(apiKey);
-  const isValid = await validateApiKey(client);
-
-  if (!isValid) {
-    console.log('Invalid API key. Please check and try again.');
-    return undefined;
-  }
-
-  console.log('API key is valid.');
-  return apiKey;
 }
 
-// Prompt user for team key
+// Get team info for display
+interface TeamInfo {
+  id: string;
+  key: string;
+  name: string;
+}
+
+// Prompt user for team key with smart default selection
 async function promptForTeamKey(apiKey: string): Promise<string | undefined> {
   const client = createLinearClient(apiKey);
 
   // List available teams
-  const teams = await client.teams();
-  if (teams.nodes.length === 0) {
+  console.log('\nFetching teams...');
+  const teamsResult = await client.teams();
+  const teams: TeamInfo[] = teamsResult.nodes.map((t) => ({
+    id: t.id,
+    key: t.key,
+    name: t.name,
+  }));
+
+  if (teams.length === 0) {
     console.log('No teams found in your Linear workspace.');
     return undefined;
   }
 
+  // If only one team, auto-select it
+  if (teams.length === 1) {
+    const team = teams[0];
+    console.log(`\nFound team: ${team.name} (${team.key})`);
+    console.log(`Auto-selecting as it's the only team.`);
+    return team.key;
+  }
+
+  // Multiple teams - show list with first one as default
+  const defaultTeam = teams[0];
+
   console.log('\nAvailable teams:');
-  teams.nodes.forEach((team) => {
-    console.log(`  - ${team.key}: ${team.name}`);
+  teams.forEach((team, index) => {
+    const defaultMarker = index === 0 ? ' (default)' : '';
+    console.log(`  - ${team.key}: ${team.name}${defaultMarker}`);
   });
 
-  const teamKey = await prompt('\nEnter team key (e.g., RSK): ');
-
-  if (!teamKey) {
-    console.log('No team selected.');
-    return undefined;
-  }
+  const teamKeyInput = await prompt(`\nEnter team key or press Enter for default [${defaultTeam.key}]: `);
+  const teamKey = teamKeyInput.trim() || defaultTeam.key;
 
   // Verify team exists
   const team = await getTeamByKeyOrId(client, teamKey);
@@ -126,6 +158,67 @@ function getFoundryDir(): string {
     mkdirSync(foundryDir, { recursive: true });
   }
   return foundryDir;
+}
+
+// Copy prompts from the installed package to .foundry/prompts/
+// Always overwrites to ensure prompts are up-to-date with installed version
+export function copyPromptsToProject(): void {
+  const sourceDir = join(PACKAGE_ROOT, 'prompts');
+  const destDir = join(getFoundryDir(), 'prompts');
+
+  // Ensure destination directory exists
+  if (!existsSync(destDir)) {
+    mkdirSync(destDir, { recursive: true });
+  }
+
+  // Check if source prompts exist
+  if (!existsSync(sourceDir)) {
+    console.log('Warning: Prompts directory not found in package.');
+    return;
+  }
+
+  // Copy all .md files from source to destination
+  const files = readdirSync(sourceDir).filter(f => f.endsWith('.md'));
+  let copied = 0;
+
+  for (const file of files) {
+    const sourcePath = join(sourceDir, file);
+    const destPath = join(destDir, file);
+    copyFileSync(sourcePath, destPath);
+    copied++;
+  }
+
+  console.log(`Prompts synced to .foundry/prompts/ (${copied} files)`);
+}
+
+// Add .foundry/ to .gitignore if not already present
+function ensureGitignore(): void {
+  const gitignorePath = join(getRepoRoot(), '.gitignore');
+  const entry = '.foundry/';
+
+  // Read existing .gitignore or start with empty
+  let content = '';
+  if (existsSync(gitignorePath)) {
+    content = readFileSync(gitignorePath, 'utf-8');
+  }
+
+  // Check if .foundry/ is already ignored
+  const lines = content.split('\n');
+  const alreadyIgnored = lines.some(
+    (line) => line.trim() === entry || line.trim() === '.foundry'
+  );
+
+  if (alreadyIgnored) {
+    return;
+  }
+
+  // Append .foundry/ to .gitignore
+  const newContent = content.endsWith('\n') || content === ''
+    ? content + entry + '\n'
+    : content + '\n' + entry + '\n';
+
+  writeFileSync(gitignorePath, newContent, 'utf-8');
+  console.log('Added .foundry/ to .gitignore');
 }
 
 // Save or update MCP configuration with Linear API key
@@ -162,18 +255,48 @@ function saveMcpConfig(apiKey: string): void {
   console.log('Linear MCP server configured in .foundry/mcp.json');
 }
 
+// Provider type for selection
+type ProviderChoice = 'claude' | 'codex';
+
+// Prompt user for provider selection (Claude or Codex)
+async function promptForProvider(): Promise<ProviderChoice> {
+  console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('                    Provider Selection');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+
+  console.log('Foundry supports two AI providers:');
+  console.log('  1. Claude (default) - Anthropic\'s Claude via Claude Code CLI');
+  console.log('  2. Codex - OpenAI\'s Codex via Codex CLI');
+  console.log('');
+
+  const input = await prompt('Select provider [1=Claude (default), 2=Codex]: ');
+  const choice = input.trim();
+
+  if (choice === '2' || choice.toLowerCase() === 'codex') {
+    console.log('Selected provider: Codex');
+    return 'codex';
+  }
+
+  console.log('Selected provider: Claude');
+  return 'claude';
+}
+
 // Save credentials to .foundry/env file and configure MCP
-function saveCredentials(apiKey: string, teamKey: string): void {
+function saveCredentials(apiKey: string, teamKey: string, provider: ProviderChoice): void {
   const envPath = join(getFoundryDir(), 'env');
   const content = `# Foundry configuration (auto-generated by wizard)
 LINEAR_API_KEY=${apiKey}
 LINEAR_TEAM_KEY=${teamKey}
+FOUNDRY_PROVIDER=${provider}
 `;
   writeFileSync(envPath, content, 'utf-8');
   console.log(`\nCredentials saved to .foundry/env`);
 
   // Also configure MCP with the same API key
   saveMcpConfig(apiKey);
+
+  // Ensure .foundry/ is in .gitignore (contains secrets)
+  ensureGitignore();
 }
 
 // Show status preview
@@ -223,10 +346,24 @@ export async function runInitialization(): Promise<InitResult | undefined> {
     needsSave = true;
   }
 
+  // Get provider from environment or prompt (only if we're collecting new credentials)
+  let provider: ProviderChoice = (process.env.FOUNDRY_PROVIDER as ProviderChoice) || 'claude';
+  if (needsSave) {
+    provider = await promptForProvider();
+  }
+
   // Save credentials to .foundry/env if we collected new ones
   if (needsSave) {
-    saveCredentials(apiKey, teamKey);
+    saveCredentials(apiKey, teamKey, provider);
+
+    // Update process.env so the config picks up the new values
+    process.env.LINEAR_API_KEY = apiKey;
+    process.env.LINEAR_TEAM_KEY = teamKey;
+    process.env.FOUNDRY_PROVIDER = provider;
   }
+
+  // Always copy/update prompts to .foundry/prompts/
+  copyPromptsToProject();
 
   // Find the team
   const client = createLinearClient(apiKey);

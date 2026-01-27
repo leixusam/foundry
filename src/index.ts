@@ -1,4 +1,4 @@
-import { getConfig } from './config.js';
+import { getConfig, isGitRepository } from './config.js';
 import { sleep, executeWithRateLimitRetry, RateLimitRetryConfig } from './lib/rate-limit.js';
 import { loadPrompt } from './lib/prompts.js';
 import { getCurrentBranch } from './lib/git.js';
@@ -6,9 +6,11 @@ import { generatePodName } from './lib/loop-instance-name.js';
 import { initLoopLogger, getCurrentOutputDir } from './lib/output-logger.js';
 import { initLoopStats, logAgentStats, finalizeLoopStats } from './lib/stats-logger.js';
 import { createProvider, ProviderResult } from './lib/provider.js';
-import { checkInitialized, runInitialization, checkCodexLinearMcp } from './init.js';
+import { checkInitialized, runInitialization, checkCodexLinearMcp, copyPromptsToProject } from './init.js';
 import { downloadAttachmentsFromAgent1Output } from './lib/attachment-downloader.js';
 import { isRunningOnGcp, stopGcpInstance } from './lib/gcp.js';
+import { getVersion } from './lib/version.js';
+import { checkForUpdates, displayUpdateNotification } from './lib/update-checker.js';
 
 // Import providers to register them
 import './lib/claude.js';
@@ -370,6 +372,7 @@ ${writerBasePrompt}`;
  * Futuristic/sci-fi themed, ~10 lines.
  */
 function displayBanner(): void {
+  const version = getVersion();
   const banner = `
 ╔═══════════════════════════════════════════════════════════════╗
 ║   ███████╗ ██████╗ ██╗   ██╗███╗   ██╗██████╗ ██████╗ ██╗   ██║
@@ -380,14 +383,37 @@ function displayBanner(): void {
 ║   ╚═╝      ╚═════╝  ╚═════╝ ╚═╝  ╚═══╝╚═════╝ ╚═╝  ╚═╝   ╚═╝   ║
 ║                                                               ║
 ║       ⚡ Autonomous Product Development System ⚡               ║
+║                         v${version.padEnd(42)}║
 ╚═══════════════════════════════════════════════════════════════╝`;
   console.log(banner);
 }
 
 export async function main(): Promise<void> {
-  const config = getConfig();
-
   displayBanner();
+
+  // Check for updates (non-blocking, cached for 24 hours)
+  const updateResult = await checkForUpdates();
+  displayUpdateNotification(updateResult);
+
+  // Check for git repository first - Foundry requires git
+  if (!isGitRepository()) {
+    console.log('\n❌ Error: Not a git repository');
+    console.log('');
+    console.log('   Foundry requires a git repository to operate. It uses git for:');
+    console.log('   - Creating feature branches');
+    console.log('   - Committing changes');
+    console.log('   - Creating pull requests');
+    console.log('');
+    console.log('   To initialize a git repository, run:');
+    console.log('     git init');
+    console.log('');
+    process.exit(1);
+  }
+
+  // Sync prompts from package to .foundry/prompts/ (ensures they're always up-to-date)
+  copyPromptsToProject();
+
+  const config = getConfig();
   console.log(`   Working directory: ${config.workingDirectory}`);
   console.log(`   Branch: ${getCurrentBranch()}`);
   console.log(`   Provider: ${config.provider}`);
@@ -418,14 +444,15 @@ export async function main(): Promise<void> {
     }
 
     // Reload config values from process.env (set by runInitialization)
+    // The init wizard updates process.env, so we need to refresh our config
     config.linearApiKey = process.env.LINEAR_API_KEY;
     config.linearTeamId = process.env.LINEAR_TEAM_KEY;
-  }
 
-  // Verify config has values before proceeding
-  if (!config.linearApiKey || !config.linearTeamId) {
-    console.log('\nCannot start Foundry without Linear configuration.');
-    process.exit(1);
+    // Verify config has values after initialization
+    if (!config.linearApiKey || !config.linearTeamId) {
+      console.log('\nCannot start Foundry without Linear configuration.');
+      process.exit(1);
+    }
   }
 
   // Check if Foundry statuses exist in Linear

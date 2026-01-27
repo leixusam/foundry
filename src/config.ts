@@ -14,6 +14,16 @@ export function getRepoRoot(): string {
   }
 }
 
+// Check if current directory is inside a git repository
+export function isGitRepository(): boolean {
+  try {
+    execSync('git rev-parse --is-inside-work-tree', { encoding: 'utf-8', stdio: 'pipe' });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 // Load .foundry/env file if it exists
 function loadFoundryEnv(): void {
   const envPath = join(getRepoRoot(), '.foundry', 'env');
