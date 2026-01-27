@@ -8,12 +8,12 @@ Agent 1 has specified which stage to execute. **Read the detailed instructions f
 
 | Stage | Instructions File |
 |-------|-------------------|
-| oneshot | `foundry/prompts/agent2-worker-oneshot.md` |
-| research | `foundry/prompts/agent2-worker-research.md` |
-| specification | `foundry/prompts/agent2-worker-specification.md` |
-| plan | `foundry/prompts/agent2-worker-plan.md` |
-| implement | `foundry/prompts/agent2-worker-implement.md` |
-| validate | `foundry/prompts/agent2-worker-validate.md` |
+| oneshot | `.foundry/prompts/agent2-worker-oneshot.md` |
+| research | `.foundry/prompts/agent2-worker-research.md` |
+| specification | `.foundry/prompts/agent2-worker-specification.md` |
+| plan | `.foundry/prompts/agent2-worker-plan.md` |
+| implement | `.foundry/prompts/agent2-worker-implement.md` |
+| validate | `.foundry/prompts/agent2-worker-validate.md` |
 
 **Read the file for your stage now, then follow those instructions exactly.**
 

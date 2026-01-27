@@ -157,3 +157,59 @@ export async function validateApiKey(client: LinearClient): Promise<boolean> {
     return false;
   }
 }
+
+// Result of attempting to delete Foundry statuses
+export interface DeleteStatusesResult {
+  deleted: string[];
+  skipped: { name: string; issueCount: number }[];
+  errors: string[];
+}
+
+// Get issue count for a workflow state
+async function getIssueCountForState(client: LinearClient, stateId: string): Promise<number> {
+  const state = await client.workflowState(stateId);
+  const issues = await state.issues();
+  return issues.nodes.length;
+}
+
+// Delete Foundry workflow statuses that have no issues
+export async function deleteFoundryStatuses(
+  client: LinearClient,
+  teamId: string
+): Promise<DeleteStatusesResult> {
+  const result: DeleteStatusesResult = {
+    deleted: [],
+    skipped: [],
+    errors: [],
+  };
+
+  // Get existing states
+  const existingStates = await listWorkflowStates(client, teamId);
+  const foundryStatusNames = getFoundryStatusNames();
+
+  // Find Foundry statuses in the team
+  const foundryStates = existingStates.filter((s) =>
+    foundryStatusNames.includes(s.name)
+  );
+
+  for (const state of foundryStates) {
+    try {
+      // Check if any issues are using this status
+      const issueCount = await getIssueCountForState(client, state.id);
+
+      if (issueCount > 0) {
+        result.skipped.push({ name: state.name, issueCount });
+        continue;
+      }
+
+      // No issues - safe to archive (Linear archives rather than deletes)
+      await client.archiveWorkflowState(state.id);
+      result.deleted.push(state.name);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      result.errors.push(`${state.name}: ${errorMessage}`);
+    }
+  }
+
+  return result;
+}

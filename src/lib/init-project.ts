@@ -6,12 +6,20 @@ import {
   appendFileSync,
   readFileSync,
   writeFileSync,
+  rmSync,
 } from 'fs';
 import { execSync } from 'child_process';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import { createInterface } from 'readline';
 import { getRepoRoot } from '../config.js';
+import {
+  createLinearClient,
+  validateApiKey,
+  getTeamByKeyOrId,
+  deleteFoundryStatuses,
+  FOUNDRY_STATUS_PREFIX,
+} from './linear-api.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -235,5 +243,208 @@ FOUNDRY_MAX_ITERATIONS=${maxIterations}
   console.log('║  Next steps:                           ║');
   console.log('║  1. Run `foundry` to start the loop    ║');
   console.log('║  2. Or open Claude Code in this dir    ║');
+  console.log('╚════════════════════════════════════════╝');
+}
+
+// Prompt for yes/no confirmation
+async function promptConfirm(
+  rl: ReturnType<typeof createInterface>,
+  question: string,
+): Promise<boolean> {
+  return new Promise((resolve) => {
+    rl.question(`${question} (y/n): `, (answer) => {
+      resolve(answer.trim().toLowerCase() === 'y' || answer.trim().toLowerCase() === 'yes');
+    });
+  });
+}
+
+// Remove .foundry/ entry from .gitignore
+function removeFromGitignore(projectRoot: string): boolean {
+  const gitignorePath = join(projectRoot, '.gitignore');
+
+  if (!existsSync(gitignorePath)) {
+    return false;
+  }
+
+  const content = readFileSync(gitignorePath, 'utf-8');
+  const lines = content.split('\n');
+
+  // Filter out .foundry/ related lines
+  const filteredLines = lines.filter((line) => {
+    const trimmed = line.trim();
+    return trimmed !== '.foundry/' && trimmed !== '.foundry' && trimmed !== '# Foundry runtime data';
+  });
+
+  // Only write if we actually removed something
+  if (filteredLines.length < lines.length) {
+    // Clean up any double newlines that might result
+    const newContent = filteredLines.join('\n').replace(/\n{3,}/g, '\n\n');
+    writeFileSync(gitignorePath, newContent);
+    return true;
+  }
+
+  return false;
+}
+
+export async function uninstallProject(): Promise<void> {
+  const projectRoot = getRepoRoot();
+  const foundryDir = join(projectRoot, '.foundry');
+
+  console.log('');
+  console.log('╔════════════════════════════════════════╗');
+  console.log('║     Foundry - Uninstall Wizard         ║');
+  console.log('╚════════════════════════════════════════╝');
+  console.log('');
+  console.log(`Project: ${projectRoot}`);
+  console.log('');
+
+  // Check if Foundry is even installed
+  if (!existsSync(foundryDir)) {
+    console.log('Foundry is not installed in this project.');
+    console.log('(No .foundry/ directory found)');
+    process.exit(0);
+  }
+
+  // Show what will be removed
+  console.log('This will remove:');
+  console.log('');
+  console.log('  1. .foundry/ directory containing:');
+  console.log('     - env (Linear API key and configuration)');
+  console.log('     - mcp.json (MCP configuration)');
+  console.log('     - prompts/ (agent prompts)');
+  console.log('     - output/ (run logs and session data)');
+  console.log('');
+  console.log('  2. .foundry/ entry from .gitignore');
+  console.log('');
+
+  // Load existing config to check for Linear credentials
+  const envPath = join(foundryDir, 'env');
+  let linearApiKey: string | undefined;
+  let linearTeamKey: string | undefined;
+
+  if (existsSync(envPath)) {
+    const envContent = readFileSync(envPath, 'utf-8');
+    const apiKeyMatch = envContent.match(/LINEAR_API_KEY=(.+)/);
+    const teamKeyMatch = envContent.match(/LINEAR_TEAM_KEY=(.+)/);
+    linearApiKey = apiKeyMatch?.[1];
+    linearTeamKey = teamKeyMatch?.[1];
+  }
+
+  const hasLinearConfig = linearApiKey && linearTeamKey;
+
+  if (hasLinearConfig) {
+    console.log(`  3. Optionally: ${FOUNDRY_STATUS_PREFIX} workflow statuses from Linear`);
+    console.log('     (Only empty statuses can be deleted)');
+    console.log('');
+  }
+
+  console.log('─────────────────────────────────────────');
+  console.log('');
+
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+
+  // Confirm uninstall
+  const confirmUninstall = await promptConfirm(rl, 'Proceed with uninstall?');
+
+  if (!confirmUninstall) {
+    console.log('');
+    console.log('Uninstall cancelled.');
+    rl.close();
+    process.exit(0);
+  }
+
+  console.log('');
+
+  // Ask about Linear statuses if configured
+  let deleteStatuses = false;
+  if (hasLinearConfig) {
+    deleteStatuses = await promptConfirm(
+      rl,
+      `Delete ${FOUNDRY_STATUS_PREFIX} workflow statuses from Linear?`
+    );
+  }
+
+  rl.close();
+  console.log('');
+
+  // Step 1: Delete Linear statuses (before we lose the API key!)
+  if (deleteStatuses && linearApiKey && linearTeamKey) {
+    console.log('Removing Linear workflow statuses...');
+
+    try {
+      const client = createLinearClient(linearApiKey);
+
+      // Validate API key still works
+      const isValid = await validateApiKey(client);
+      if (!isValid) {
+        console.log('  Warning: Linear API key is invalid. Skipping status deletion.');
+      } else {
+        // Get team
+        const team = await getTeamByKeyOrId(client, linearTeamKey);
+        if (!team) {
+          console.log(`  Warning: Team "${linearTeamKey}" not found. Skipping status deletion.`);
+        } else {
+          const result = await deleteFoundryStatuses(client, team.id);
+
+          // Report results
+          if (result.deleted.length > 0) {
+            console.log(`  Deleted ${result.deleted.length} status(es):`);
+            for (const name of result.deleted) {
+              console.log(`    ✓ ${name}`);
+            }
+          }
+
+          if (result.skipped.length > 0) {
+            console.log('');
+            console.log(`  Skipped ${result.skipped.length} status(es) with active issues:`);
+            for (const { name, issueCount } of result.skipped) {
+              console.log(`    ⚠ ${name} (${issueCount} issue${issueCount > 1 ? 's' : ''})`);
+            }
+            console.log('');
+            console.log('  To delete these statuses manually:');
+            console.log('    1. Move issues to other statuses in Linear');
+            console.log('    2. Go to Settings → Teams → Workflow');
+            console.log(`    3. Delete the ${FOUNDRY_STATUS_PREFIX} statuses`);
+          }
+
+          if (result.errors.length > 0) {
+            console.log('');
+            console.log(`  Errors (${result.errors.length}):`);
+            for (const error of result.errors) {
+              console.log(`    ✗ ${error}`);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      console.log(`  Error connecting to Linear: ${msg}`);
+    }
+
+    console.log('');
+  }
+
+  // Step 2: Remove .foundry/ directory
+  console.log('Removing .foundry/ directory...');
+  try {
+    rmSync(foundryDir, { recursive: true, force: true });
+    console.log('  ✓ Removed .foundry/');
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.log(`  ✗ Error removing .foundry/: ${msg}`);
+  }
+
+  // Step 3: Clean up .gitignore
+  console.log('Cleaning up .gitignore...');
+  const removedFromGitignore = removeFromGitignore(projectRoot);
+  if (removedFromGitignore) {
+    console.log('  ✓ Removed .foundry/ from .gitignore');
+  } else {
+    console.log('  (No changes needed)');
+  }
+
+  console.log('');
+  console.log('╔════════════════════════════════════════╗');
+  console.log('║  ✓ Foundry uninstalled                 ║');
   console.log('╚════════════════════════════════════════╝');
 }

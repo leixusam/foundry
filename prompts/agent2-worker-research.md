@@ -104,7 +104,7 @@ After understanding requirements, assess whether this task should follow the one
 - Multiple phases of work needed
 
 **Classification decision**:
-- If task meets **oneshot criteria**: Read and follow `foundry/prompts/agent2-worker-oneshot.md` instead of continuing with research. The oneshot worker will complete the task in this session.
+- If task meets **oneshot criteria**: Read and follow `.foundry/prompts/agent2-worker-oneshot.md` instead of continuing with research. The oneshot worker will complete the task in this session.
 - If task requires **staged workflow**: Continue with the normal research flow below and output `workflow: staged` in WORK_RESULT.
 
 **Important**: When redirecting to oneshot, you will complete the task in this same session. The oneshot WORK_RESULT will include `workflow: oneshot`.
