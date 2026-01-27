@@ -14,6 +14,7 @@ import { prompt, confirm } from './lib/readline.js';
 import { InitResult } from './types.js';
 import { getRepoRoot } from './config.js';
 import { checkCodexLinearMcpConfigured } from './lib/codex.js';
+import { detectAvailableClis, hasAnyCli, CliAvailability } from './lib/cli-detection.js';
 
 // Get the package directory (where Foundry is installed)
 const __filename = fileURLToPath(import.meta.url);
@@ -258,12 +259,69 @@ function saveMcpConfig(apiKey: string): void {
 // Provider type for selection
 type ProviderChoice = 'claude' | 'codex';
 
+/**
+ * Checks which coding CLIs are available and displays the results.
+ * Returns the availability status, or undefined if neither CLI is installed.
+ */
+export function checkAndDisplayCliAvailability(): CliAvailability | undefined {
+  console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('                    Detecting Coding CLIs');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+
+  console.log('Checking for installed coding CLIs...\n');
+
+  const availability = detectAvailableClis();
+
+  // Display detection results
+  const claudeStatus = availability.claude ? '✓ installed' : '✗ not found';
+  const codexStatus = availability.codex ? '✓ installed' : '✗ not found';
+
+  console.log(`  Claude Code CLI: ${claudeStatus}`);
+  console.log(`  Codex CLI:       ${codexStatus}`);
+  console.log('');
+
+  // Check if at least one CLI is available
+  if (!hasAnyCli(availability)) {
+    console.log('❌ Error: No coding CLI found');
+    console.log('');
+    console.log('   Foundry requires at least one of the following to be installed:');
+    console.log('');
+    console.log('   Claude Code CLI:');
+    console.log('     npm install -g @anthropic-ai/claude-code');
+    console.log('     https://github.com/anthropics/claude-code');
+    console.log('');
+    console.log('   Codex CLI:');
+    console.log('     npm install -g @openai/codex');
+    console.log('     https://github.com/openai/codex');
+    console.log('');
+    console.log('   Please install at least one CLI and try again.');
+    return undefined;
+  }
+
+  return availability;
+}
+
 // Prompt user for provider selection (Claude or Codex)
-async function promptForProvider(): Promise<ProviderChoice> {
+// Only shows available options based on CLI detection
+async function promptForProvider(availability: CliAvailability): Promise<ProviderChoice> {
   console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log('                    Provider Selection');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
+  // If only one CLI is installed, auto-select it
+  if (availability.claude && !availability.codex) {
+    console.log('Only Claude Code CLI is installed.');
+    console.log('Auto-selecting Claude as the provider.\n');
+    return 'claude';
+  }
+
+  if (availability.codex && !availability.claude) {
+    console.log('Only Codex CLI is installed.');
+    console.log('Auto-selecting Codex as the provider.\n');
+    return 'codex';
+  }
+
+  // Both CLIs are installed, let user choose
   console.log('Foundry supports two AI providers:');
   console.log('  1. Claude (default) - Anthropic\'s Claude via Claude Code CLI');
   console.log('  2. Codex - OpenAI\'s Codex via Codex CLI');
@@ -320,7 +378,9 @@ function showStatusPreview(): void {
 }
 
 // Run the full initialization wizard
-export async function runInitialization(): Promise<InitResult | undefined> {
+// If cliAvailability is provided, it will be used for provider selection
+// If not provided, CLI detection will be run automatically
+export async function runInitialization(cliAvailability?: CliAvailability): Promise<InitResult | undefined> {
   // Get API key from environment or prompt
   let apiKey = process.env.LINEAR_API_KEY;
 
@@ -349,7 +409,12 @@ export async function runInitialization(): Promise<InitResult | undefined> {
   // Get provider from environment or prompt (only if we're collecting new credentials)
   let provider: ProviderChoice = (process.env.FOUNDRY_PROVIDER as ProviderChoice) || 'claude';
   if (needsSave) {
-    provider = await promptForProvider();
+    // Use provided CLI availability or detect it now
+    const availability = cliAvailability ?? checkAndDisplayCliAvailability();
+    if (!availability) {
+      return undefined; // No CLI available
+    }
+    provider = await promptForProvider(availability);
   }
 
   // Save credentials to .foundry/env if we collected new ones
