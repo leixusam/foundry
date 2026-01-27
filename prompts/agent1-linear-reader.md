@@ -59,9 +59,41 @@ This gives you the full list of status names and their types. Look for:
 
 If you don't see these `∞` statuses, output NO_WORK with reason "Foundry statuses not initialized".
 
-### Step 2: Get All Issues
+### Step 2: Get Issues (Excluding Completed/Canceled)
 
-Use `mcp__linear__list_issues` with `includeArchived: false`.
+To avoid cluttering context with completed work, make **separate queries** for the statuses Foundry can work on. Use `mcp__linear__list_issues` with these parameters:
+
+**Query 1**: Get backlog issues (entry points for new work)
+- `state: "∞ Backlog"` (or whichever backlog status is used)
+- `includeArchived: false`
+
+**Query 2**: Get issues in Foundry workflow ready for work
+Make separate calls for each `∞ Needs *` status:
+- `state: "∞ Needs Research"`, `includeArchived: false`
+- `state: "∞ Needs Specification"`, `includeArchived: false`
+- `state: "∞ Needs Plan"`, `includeArchived: false`
+- `state: "∞ Needs Implement"`, `includeArchived: false`
+- `state: "∞ Needs Validate"`, `includeArchived: false`
+
+**Query 3**: Get in-progress issues (to check for stale claims)
+Make separate calls for each `∞ ... In Progress` status:
+- `state: "∞ Research In Progress"`, `includeArchived: false`
+- `state: "∞ Specification In Progress"`, `includeArchived: false`
+- `state: "∞ Plan In Progress"`, `includeArchived: false`
+- `state: "∞ Implement In Progress"`, `includeArchived: false`
+- `state: "∞ Validate In Progress"`, `includeArchived: false`
+- `state: "∞ Oneshot In Progress"`, `includeArchived: false`
+
+**Query 4**: Get blocked issues (for awareness, cannot be picked up)
+- `state: "∞ Blocked"`, `includeArchived: false`
+
+**Important**: You can make multiple tool calls in parallel within a single message to speed this up. Only use the `∞` prefixed statuses that were confirmed to exist in Step 1.
+
+**Do NOT query for**:
+- `∞ Done`, `Done`, `[RL] Done` (completed)
+- `∞ Canceled`, `Canceled`, `[RL] Canceled`, `Duplicate` (canceled)
+
+This approach fetches only actionable issues and avoids wasting context on completed work.
 
 ### Step 3: Check for Stale "∞ ... In Progress" Issues
 
@@ -85,7 +117,7 @@ For any issue with an `∞ ... In Progress` status:
 
 2. **Claimed by another agent within the last hour**: Check comments for "Agent Claimed" - if another pod claimed it less than 1 hour ago, skip it.
 
-3. **Completed or canceled**: Status type "completed" or "canceled".
+3. **Completed or canceled**: Status type "completed" or "canceled". (Note: These should not appear if Step 2 was followed correctly, but verify as a safety check.)
 
 4. **Blocked status**: Issues in `∞ Blocked` status require human intervention and must not be picked up.
 
