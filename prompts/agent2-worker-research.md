@@ -270,6 +270,38 @@ WORK_RESULT:
     {What went wrong}
 ```
 
+## When to Use `∞ Blocked`
+
+If you cannot proceed due to unclear requirements or need human decision-making, use this output:
+
+```
+WORK_RESULT:
+  success: false
+  stage_completed: research
+  workflow: staged
+  branch_name: foundry/{identifier}
+  next_status: "∞ Blocked"
+  error: |
+    Cannot proceed - human input required.
+
+    ## What's Blocked
+    {Describe what is unclear or needs decision}
+
+    ## Options
+    1. {Option A}
+    2. {Option B}
+
+    ## Questions for Human
+    - {Question 1}
+    - {Question 2}
+```
+
+Use `∞ Blocked` when:
+- Requirements are fundamentally unclear and cannot be resolved through research
+- Critical information is missing from the ticket
+- Contradictory requirements exist that need human resolution
+- The scope is ambiguous and could be interpreted multiple ways
+
 ## Important Notes
 
 - Be thorough but focused - don't over-research
