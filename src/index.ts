@@ -365,10 +365,29 @@ ${writerBasePrompt}`;
   console.log(`\nLoop ${iteration} complete in ${minutes}m ${seconds}s`);
 }
 
+/**
+ * Displays the Foundry startup banner with ASCII art.
+ * Futuristic/sci-fi themed, ~10 lines.
+ */
+function displayBanner(): void {
+  const banner = `
+╔═══════════════════════════════════════════════════════════════╗
+║   ███████╗ ██████╗ ██╗   ██╗███╗   ██╗██████╗ ██████╗ ██╗   ██║
+║   ██╔════╝██╔═══██╗██║   ██║████╗  ██║██╔══██╗██╔══██╗╚██╗ ██╔╝
+║   █████╗  ██║   ██║██║   ██║██╔██╗ ██║██║  ██║██████╔╝ ╚████╔╝ ║
+║   ██╔══╝  ██║   ██║██║   ██║██║╚██╗██║██║  ██║██╔══██╗  ╚██╔╝  ║
+║   ██║     ╚██████╔╝╚██████╔╝██║ ╚████║██████╔╝██║  ██║   ██║   ║
+║   ╚═╝      ╚═════╝  ╚═════╝ ╚═╝  ╚═══╝╚═════╝ ╚═╝  ╚═╝   ╚═╝   ║
+║                                                               ║
+║       ⚡ Autonomous Product Development System ⚡               ║
+╚═══════════════════════════════════════════════════════════════╝`;
+  console.log(banner);
+}
+
 export async function main(): Promise<void> {
   const config = getConfig();
 
-  console.log('Foundry starting...');
+  displayBanner();
   console.log(`   Working directory: ${config.workingDirectory}`);
   console.log(`   Branch: ${getCurrentBranch()}`);
   console.log(`   Provider: ${config.provider}`);
