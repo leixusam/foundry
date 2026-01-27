@@ -6,26 +6,44 @@ import { getRepoRoot } from '../config.js';
 // Pattern to match Linear upload URLs in markdown content
 const LINEAR_UPLOAD_PATTERN = /https:\/\/uploads\.linear\.app\/[^\s\)\]"'<>]+/g;
 
+// Pattern to match markdown image syntax with alt text: ![alt text](url)
+const MARKDOWN_IMAGE_PATTERN = /!\[([^\]]*)\]\((https:\/\/uploads\.linear\.app\/[^\s\)]+)\)/g;
+
 // Size limit warning threshold (10MB)
 const SIZE_WARNING_THRESHOLD = 10 * 1024 * 1024;
 
+// Map Content-Type to file extension
+const CONTENT_TYPE_TO_EXT: Record<string, string> = {
+  'image/png': '.png',
+  'image/jpeg': '.jpg',
+  'image/jpg': '.jpg',
+  'image/gif': '.gif',
+  'image/webp': '.webp',
+  'image/svg+xml': '.svg',
+  'application/pdf': '.pdf',
+  'text/plain': '.txt',
+  'application/json': '.json',
+  'application/zip': '.zip',
+};
+
 /**
  * Extracts Linear upload URLs from markdown content (descriptions, comments, etc.)
+ * Preserves original filenames from markdown alt text (e.g., ![image.png](url))
  */
 export function extractLinearUrls(markdown: string): AttachmentInfo[] {
-  const urls = markdown.match(LINEAR_UPLOAD_PATTERN) || [];
   const seen = new Set<string>();
   const attachments: AttachmentInfo[] = [];
 
-  for (const url of urls) {
-    // Skip duplicates
+  // First, extract images with alt text (which contains the original filename)
+  // This gives us the best filename info: ![Screenshot 2026-01-27.png](url)
+  const imageMatches = [...markdown.matchAll(MARKDOWN_IMAGE_PATTERN)];
+  for (const match of imageMatches) {
+    const [, altText, url] = match;
     if (seen.has(url)) continue;
     seen.add(url);
 
-    // Extract filename from URL
-    const urlPath = new URL(url).pathname;
-    const segments = urlPath.split('/');
-    const filename = segments[segments.length - 1] || 'attachment';
+    // Use alt text as filename if it looks like a filename (has extension)
+    const filename = hasFileExtension(altText) ? altText : getFilenameFromUrl(url);
 
     // Generate a unique ID from URL hash
     const id = Buffer.from(url).toString('base64').slice(0, 12);
@@ -38,7 +56,40 @@ export function extractLinearUrls(markdown: string): AttachmentInfo[] {
     });
   }
 
+  // Then extract any standalone URLs that weren't in markdown image syntax
+  const urls = markdown.match(LINEAR_UPLOAD_PATTERN) || [];
+  for (const url of urls) {
+    if (seen.has(url)) continue;
+    seen.add(url);
+
+    const filename = getFilenameFromUrl(url);
+    const id = Buffer.from(url).toString('base64').slice(0, 12);
+
+    attachments.push({
+      id,
+      url,
+      filename: decodeURIComponent(filename),
+      source: 'embedded',
+    });
+  }
+
   return attachments;
+}
+
+/**
+ * Checks if a string looks like a filename (has a file extension)
+ */
+function hasFileExtension(text: string): boolean {
+  return /\.\w{2,5}$/.test(text.trim());
+}
+
+/**
+ * Extracts filename from URL path (fallback when no alt text available)
+ */
+function getFilenameFromUrl(url: string): string {
+  const urlPath = new URL(url).pathname;
+  const segments = urlPath.split('/');
+  return segments[segments.length - 1] || 'attachment';
 }
 
 /**
@@ -97,6 +148,27 @@ function sanitizeFilename(filename: string): string {
 }
 
 /**
+ * Gets file extension from Content-Type header
+ */
+function getExtensionFromContentType(contentType: string | null): string | null {
+  if (!contentType) return null;
+  // Content-Type can include charset, e.g., "image/png; charset=utf-8"
+  const mimeType = contentType.split(';')[0].trim().toLowerCase();
+  return CONTENT_TYPE_TO_EXT[mimeType] || null;
+}
+
+/**
+ * Ensures a filename has an extension, inferring from Content-Type if needed
+ */
+function ensureFileExtension(filename: string, contentType: string | null): string {
+  if (hasFileExtension(filename)) {
+    return filename;
+  }
+  const ext = getExtensionFromContentType(contentType);
+  return ext ? `${filename}${ext}` : filename;
+}
+
+/**
  * Downloads a single attachment from Linear
  */
 async function downloadAttachment(
@@ -125,7 +197,11 @@ async function downloadAttachment(
     }
 
     const buffer = await response.arrayBuffer();
-    const sanitizedFilename = sanitizeFilename(attachment.filename);
+
+    // Ensure filename has extension (use Content-Type as fallback)
+    const contentType = response.headers.get('content-type');
+    const filenameWithExt = ensureFileExtension(attachment.filename, contentType);
+    const sanitizedFilename = sanitizeFilename(filenameWithExt);
     const localPath = path.join(outputDir, `${attachment.id}-${sanitizedFilename}`);
 
     fs.writeFileSync(localPath, Buffer.from(buffer));
