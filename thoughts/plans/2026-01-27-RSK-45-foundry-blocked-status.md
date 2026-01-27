@@ -4,7 +4,7 @@
 **Date**: 2026-01-27
 **Research**: thoughts/research/2026-01-27-RSK-45-foundry-blocked-status.md
 **Specification**: N/A
-**Status**: Ready for Implementation
+**Status**: Implementation Complete
 
 ## Overview
 
@@ -16,14 +16,14 @@ Add a `∞ Blocked` status to Foundry's workflow to signal when an agent needs h
 
 ## Success Criteria
 
-- [ ] `∞ Blocked` status is defined in `src/lib/linear-api.ts`
-- [ ] `foundry init` creates the `∞ Blocked` status in Linear
-- [ ] Agent 1 skips issues in `∞ Blocked` status
-- [ ] Agent 2 can output `next_status: "∞ Blocked"` when needed
-- [ ] Agent 3 can set the `∞ Blocked` status
-- [ ] README documents the `∞ Blocked` status
-- [ ] Type check passes: `npm run typecheck`
-- [ ] Build succeeds: `npm run build`
+- [x] `∞ Blocked` status is defined in `src/lib/linear-api.ts`
+- [x] `foundry init` creates the `∞ Blocked` status in Linear
+- [x] Agent 1 skips issues in `∞ Blocked` status
+- [x] Agent 2 can output `next_status: "∞ Blocked"` when needed
+- [x] Agent 3 can set the `∞ Blocked` status
+- [x] README documents the `∞ Blocked` status
+- [x] Type check passes: `npm run typecheck`
+- [x] Build succeeds: `npm run build`
 
 ## Phases
 
