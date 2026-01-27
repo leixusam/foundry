@@ -153,6 +153,15 @@ Update the issue status based on what happened AND the merge status:
   - Use status ID: `723acd28-e8a4-4083-a0ff-85986b42c2c2`
   - This indicates the work is done but needs human intervention for merge conflicts
 
+### When next_status is "∞ Blocked"
+- **Any stage incomplete + blocked** → `∞ Blocked`
+  - This indicates the agent needs human intervention to proceed
+  - The error field in WORK_RESULT contains details about what's blocked
+  - Human should review the error details and either:
+    - Clarify requirements and move to appropriate "∞ Needs X" status
+    - Make a decision and move to appropriate "∞ Needs X" status
+    - Add a comment with the answer and move back to the status where work stopped
+
 ### Status Update Command
 
 Use `mcp__linear__update_issue` to change the status:
