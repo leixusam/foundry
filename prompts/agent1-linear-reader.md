@@ -64,8 +64,13 @@ If you don't see these `∞` statuses, output NO_WORK with reason "Foundry statu
 To avoid cluttering context with completed work, make **separate queries** for the statuses Foundry can work on. Use `mcp__linear__list_issues` with these parameters:
 
 **Query 1**: Get backlog issues (entry points for new work)
-- `state: "∞ Backlog"` (or whichever backlog status is used)
-- `includeArchived: false`
+
+Query ALL backlog-type statuses identified in Step 1. This includes not just `∞ Backlog` but any status with type "backlog" (e.g., `Backlog`, `Triage`, etc.). Make separate calls for each:
+- `state: "∞ Backlog"`, `includeArchived: false`
+- `state: "Backlog"`, `includeArchived: false` (if this status exists)
+- Any other backlog-type statuses found in Step 1
+
+**Important**: Always query all backlog statuses, not just `∞ Backlog`. If `∞ Backlog` is empty, there may still be work available in other backlog statuses like `Backlog` or `Triage`.
 
 **Query 2**: Get issues in Foundry workflow ready for work
 Make separate calls for each `∞ Needs *` status:
