@@ -404,8 +404,30 @@ function displayBanner(): void {
   console.log(banner);
 }
 
+/**
+ * Displays a safety warning about AI coding agents.
+ */
+function displaySafetyWarning(): void {
+  console.log(`
+┌─────────────────────────────────────────────────────────────────┐
+│  ⚠️  SAFETY WARNING                                              │
+├─────────────────────────────────────────────────────────────────┤
+│  Foundry uses AI coding agents (Claude Code, Codex) that are    │
+│  granted permissions to read, write, and execute code.          │
+│                                                                 │
+│  • Coding agents may make mistakes                              │
+│  • They may take actions that could be harmful to your system   │
+│  • Always review changes before merging to production           │
+│                                                                 │
+│  We recommend running Foundry in a sandboxed environment or     │
+│  virtual machine for added safety.                              │
+└─────────────────────────────────────────────────────────────────┘
+`);
+}
+
 export async function main(): Promise<void> {
   displayBanner();
+  displaySafetyWarning();
 
   // Check for updates (non-blocking, cached for 24 hours)
   const updateResult = await checkForUpdates();
