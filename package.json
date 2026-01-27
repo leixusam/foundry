@@ -5,7 +5,7 @@
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "foundry": "./dist/cli.js"
+    "foundry": "dist/cli.js"
   },
   "files": [
     "dist/**/*",
