@@ -4,7 +4,8 @@
 **Date**: 2026-01-27
 **Research**: [thoughts/research/2026-01-27-RSK-46-website-landing-page.md](../research/2026-01-27-RSK-46-website-landing-page.md)
 **Specification**: [thoughts/specifications/2026-01-27-RSK-46-website-landing-page.md](../specifications/2026-01-27-RSK-46-website-landing-page.md)
-**Status**: Ready for Implementation
+**Status**: Implementation Complete
+**Implementation Commit**: 32d96df
 
 ## Overview
 
@@ -12,18 +13,18 @@ Build a two-page Astro static website for Foundry that drives npm package instal
 
 ## Success Criteria
 
-- [ ] Website builds successfully with `npm run build` in `website/` directory
-- [ ] Landing page renders with hero section, install command block, and outcomes section
-- [ ] "How It Works" page renders with architecture diagrams and explanations
-- [ ] Copy button copies install command to clipboard and shows "Copied!" feedback
-- [ ] Site is fully responsive (mobile, tablet, desktop breakpoints)
-- [ ] Dark theme matches specification colors (#0a0a0b background, blue accent)
-- [ ] Typography uses Inter and JetBrains Mono as specified
-- [ ] All internal navigation links work correctly
-- [ ] GitHub link in header works
-- [ ] Lighthouse performance score 95+
-- [ ] Type check passes (if any TypeScript used)
-- [ ] No console errors in browser
+- [x] Website builds successfully with `npm run build` in `website/` directory
+- [x] Landing page renders with hero section, install command block, and outcomes section
+- [x] "How It Works" page renders with architecture diagrams and explanations
+- [x] Copy button copies install command to clipboard and shows "Copied!" feedback
+- [x] Site is fully responsive (mobile, tablet, desktop breakpoints)
+- [x] Dark theme matches specification colors (#0a0a0b background, blue accent)
+- [x] Typography uses Inter and JetBrains Mono as specified
+- [x] All internal navigation links work correctly
+- [x] GitHub link in header works
+- [ ] Lighthouse performance score 95+ (requires deployment to test properly)
+- [x] Type check passes (if any TypeScript used)
+- [x] No console errors in browser
 
 ## Phases
 
