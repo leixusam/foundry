@@ -96,7 +96,7 @@ For each phase and for the overall implementation:
 ### Step 4: Write the Plan Document
 
 Create a markdown file at:
-`thoughts/plans/YYYY-MM-DD-{identifier}-{slug}.md`
+`foundry-docs/plans/YYYY-MM-DD-{identifier}-{slug}.md`
 
 ### Step 4.5: Assess Complexity and Consider Sub-Issues
 
@@ -180,7 +180,7 @@ The document should follow this structure:
 ### Step 5: Git Commit and Push
 
 ```bash
-git add thoughts/plans/
+git add foundry-docs/plans/
 git commit -m "plan({identifier}): {short description}"
 git push origin foundry/{identifier}
 ```
@@ -194,7 +194,7 @@ WORK_RESULT:
   success: true
   stage_completed: plan
   branch_name: foundry/{identifier}
-  artifact_path: thoughts/plans/YYYY-MM-DD-{identifier}-{slug}.md
+  artifact_path: foundry-docs/plans/YYYY-MM-DD-{identifier}-{slug}.md
   commit_hash: {short hash}
   next_status: "∞ Needs Implement"
   summary: |

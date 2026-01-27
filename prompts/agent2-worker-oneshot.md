@@ -115,7 +115,7 @@ Fix any issues that arise.
 ### Step 5: Document (Brief)
 
 Create a brief document at:
-`thoughts/oneshot/YYYY-MM-DD-{identifier}-{slug}.md`
+`foundry-docs/oneshot/YYYY-MM-DD-{identifier}-{slug}.md`
 
 ```markdown
 # Oneshot: {issue_title}
@@ -224,7 +224,7 @@ WORK_RESULT:
   workflow: oneshot
   branch_name: foundry/{identifier}
   repo_url: {git remote URL, e.g., https://github.com/owner/repo.git}
-  artifact_path: thoughts/oneshot/YYYY-MM-DD-{identifier}-{slug}.md
+  artifact_path: foundry-docs/oneshot/YYYY-MM-DD-{identifier}-{slug}.md
   commit_hash: {merge commit hash on main}
   merge_status: success
   next_status: "∞ Done"
@@ -243,7 +243,7 @@ WORK_RESULT:
   workflow: oneshot
   branch_name: foundry/{identifier}
   repo_url: {git remote URL, e.g., https://github.com/owner/repo.git}
-  artifact_path: thoughts/oneshot/YYYY-MM-DD-{identifier}-{slug}.md
+  artifact_path: foundry-docs/oneshot/YYYY-MM-DD-{identifier}-{slug}.md
   commit_hash: {short hash on feature branch}
   merge_status: blocked
   merge_conflict_files: [file1.ts, file2.ts]

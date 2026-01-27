@@ -102,7 +102,7 @@ For each success criterion in the plan:
 ### Step 5: Write Validation Report
 
 Create a markdown file at:
-`thoughts/validation/YYYY-MM-DD-{identifier}-{slug}.md`
+`foundry-docs/validation/YYYY-MM-DD-{identifier}-{slug}.md`
 
 ```markdown
 # Validation Report: {issue_title}
@@ -152,7 +152,7 @@ or
 ### Step 6: Git Commit and Push
 
 ```bash
-git add thoughts/validation/
+git add foundry-docs/validation/
 git commit -m "validate({identifier}): {PASSED|FAILED}"
 git push origin foundry/{identifier}
 ```
@@ -226,7 +226,7 @@ WORK_RESULT:
   stage_completed: validate
   branch_name: foundry/{identifier}
   repo_url: {git remote URL, e.g., https://github.com/owner/repo.git}
-  artifact_path: thoughts/validation/YYYY-MM-DD-{identifier}-{slug}.md
+  artifact_path: foundry-docs/validation/YYYY-MM-DD-{identifier}-{slug}.md
   commit_hash: {merge commit hash on main}
   merge_status: success
   next_status: "∞ Done"
@@ -247,7 +247,7 @@ WORK_RESULT:
   stage_completed: validate
   branch_name: foundry/{identifier}
   repo_url: {git remote URL, e.g., https://github.com/owner/repo.git}
-  artifact_path: thoughts/validation/YYYY-MM-DD-{identifier}-{slug}.md
+  artifact_path: foundry-docs/validation/YYYY-MM-DD-{identifier}-{slug}.md
   commit_hash: {short hash on feature branch}
   merge_status: blocked
   merge_conflict_files: [file1.ts, file2.ts]
@@ -267,7 +267,7 @@ WORK_RESULT:
   stage_completed: validate
   branch_name: foundry/{identifier}
   repo_url: {git remote URL, e.g., https://github.com/owner/repo.git}
-  artifact_path: thoughts/validation/YYYY-MM-DD-{identifier}-{slug}.md
+  artifact_path: foundry-docs/validation/YYYY-MM-DD-{identifier}-{slug}.md
   commit_hash: {short hash}
   next_status: "∞ Needs Implement"
   error: |
