@@ -4,7 +4,16 @@
 **Date**: 2026-01-27
 **Research**: foundry-docs/research/2026-01-27-F-56-debug-mcp-team-rsk.md
 **Specification**: N/A (backend infrastructure fix)
-**Status**: Ready for Implementation
+**Status**: ✅ Implementation Complete
+
+## Implementation Notes
+
+- **Pod**: starlit-cheetah / Loop 4 / Agent 2
+- **Date Completed**: 2026-01-27
+- **Commits**:
+  - `7d1b7fb` - feat(F-56): phase 1 - inject LINEAR_TEAM_KEY into all agent prompts
+  - `b5d63da` - feat(F-56): phase 2 - replace hardcoded RSK team with placeholder
+- **Verification**: `npm run typecheck` ✓, `npm run build` ✓
 
 ## Overview
 
@@ -12,11 +21,11 @@ The `LINEAR_TEAM_KEY` environment variable is loaded by Foundry into `config.lin
 
 ## Success Criteria
 
-- [ ] Agent 1 uses the configured team key for all Linear MCP calls
-- [ ] Agent 3 uses the configured team key when creating sub-issues
-- [ ] No hardcoded "RSK" team references remain in prompts
-- [ ] Type check passes: `npm run typecheck`
-- [ ] Build succeeds: `npm run build`
+- [x] Agent 1 uses the configured team key for all Linear MCP calls
+- [x] Agent 3 uses the configured team key when creating sub-issues
+- [x] No hardcoded "RSK" team references remain in prompts
+- [x] Type check passes: `npm run typecheck`
+- [x] Build succeeds: `npm run build`
 
 ## Phases
 
