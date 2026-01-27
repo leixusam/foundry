@@ -101,21 +101,21 @@ This lets you scale development by running multiple Foundry pods in parallel - o
 Foundry uses Linear as its state machine. You don't need to configure Foundry or tell it what to work on - just add tickets to Linear and Foundry handles the rest.
 
 ```
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│  ∞ Needs    │────▶│  ∞ Needs    │────▶│  ∞ Needs    │────▶│  ∞ Needs    │
-│  Research   │     │    Plan     │     │  Implement  │     │  Validate   │
-└─────────────┘     └─────────────┘     └─────────────┘     └─────────────┘
-       │                  │                   │                   │
-       ▼                  ▼                   ▼                   ▼
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│ ∞ Research  │     │  ∞ Plan In  │     │∞ Implement  │     │ ∞ Validate  │
-│ In Progress │     │  Progress   │     │ In Progress │     │ In Progress │
-└─────────────┘     └─────────────┘     └─────────────┘     └─────────────┘
-                                                                  │
-                                                                  ▼
-                                                            ┌─────────────┐
-                                                            │   ∞ Done    │
-                                                            └─────────────┘
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│  ∞ Needs    │────▶│  ∞ Needs    │────▶│  ∞ Needs    │────▶│  ∞ Needs    │────▶│  ∞ Needs    │
+│  Research   │     │    Spec*    │     │    Plan     │     │  Implement  │     │  Validate   │
+└─────────────┘     └─────────────┘     └─────────────┘     └─────────────┘     └─────────────┘
+       │                  │                   │                   │                   │
+       ▼                  ▼                   ▼                   ▼                   ▼
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│ ∞ Research  │     │  ∞ Spec In  │     │  ∞ Plan In  │     │∞ Implement  │     │ ∞ Validate  │
+│ In Progress │     │  Progress*  │     │  Progress   │     │ In Progress │     │ In Progress │
+└─────────────┘     └─────────────┘     └─────────────┘     └─────────────┘     └─────────────┘
+                                                                                      │
+                          * Specification is optional - only when                     ▼
+                            research determines UX decisions are needed         ┌─────────────┐
+                                                                                │   ∞ Done    │
+                                                                                └─────────────┘
 ```
 
 **How it works:**
