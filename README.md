@@ -195,6 +195,9 @@ Foundry creates these statuses in Linear:
 - `∞ Implement In Progress`
 - `∞ Validate In Progress`
 
+**Intervention statuses** (requires human action):
+- `∞ Blocked` - Agent needs clarification or decision before proceeding
+
 **Terminal statuses**:
 - `∞ Done`
 - `∞ Canceled`
