@@ -222,32 +222,43 @@ function getCodexAgentReasoning(): CodexAgentReasoningConfig {
   };
 }
 
-// Configuration loaded from environment variables and CLI args
-// CLI args take precedence over env vars
-export const config: FoundryConfig = {
-  workingDirectory: getRepoRoot(),
-  linearApiKey: process.env.LINEAR_API_KEY,
-  linearTeamId: process.env.LINEAR_TEAM_KEY,
-  gitBranch: 'main',
-  staleTimeoutHours: 4,
-  noWorkSleepMinutes: 60,
-  errorSleepMinutes: 1,
+// Build config from current environment
+function buildConfig(): FoundryConfig {
+  return {
+    workingDirectory: getRepoRoot(),
+    linearApiKey: process.env.LINEAR_API_KEY,
+    linearTeamId: process.env.LINEAR_TEAM_KEY,
+    gitBranch: 'main',
+    staleTimeoutHours: 4,
+    noWorkSleepMinutes: 60,
+    errorSleepMinutes: 1,
 
-  // Provider configuration
-  provider: getProvider(),
-  claudeModel: getClaudeModel(),
-  codexModel: process.env.CODEX_MODEL || 'gpt-5.2-codex',
-  codexReasoningEffort: getCodexReasoningEffort(),
-  codexAgentReasoning: getCodexAgentReasoning(),
-  maxIterations: getMaxIterations(),
+    // Provider configuration
+    provider: getProvider(),
+    claudeModel: getClaudeModel(),
+    codexModel: process.env.CODEX_MODEL || 'gpt-5.2-codex',
+    codexReasoningEffort: getCodexReasoningEffort(),
+    codexAgentReasoning: getCodexAgentReasoning(),
+    maxIterations: getMaxIterations(),
 
-  // Rate limit configuration
-  rateLimitMaxRetries: getRateLimitMaxRetries(),
+    // Rate limit configuration
+    rateLimitMaxRetries: getRateLimitMaxRetries(),
 
-  // GCP configuration
-  gcpAutoStop: getGcpAutoStop(),
-};
+    // GCP configuration
+    gcpAutoStop: getGcpAutoStop(),
+  };
+}
 
-export function getConfig(): FoundryConfig {
+// Initial config loaded at startup
+export let config: FoundryConfig = buildConfig();
+
+/**
+ * Gets the current config.
+ * If reload is true, rebuilds config from process.env (useful after env changes).
+ */
+export function getConfig(reload = false): FoundryConfig {
+  if (reload) {
+    config = buildConfig();
+  }
   return config;
 }

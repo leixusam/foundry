@@ -600,8 +600,8 @@ export async function main(): Promise<void> {
       process.exit(1);
     }
 
-    // Reload config after setup
-    config = getConfig();
+    // Reload config after setup (rebuild from updated process.env)
+    config = getConfig(true);
   }
 
   // Display config summary
