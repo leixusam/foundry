@@ -236,6 +236,37 @@ WORK_RESULT:
     {What went wrong}
 ```
 
+## When to Use `∞ Blocked`
+
+If you cannot proceed due to unclear requirements or need human decision-making, use this output:
+
+```
+WORK_RESULT:
+  success: false
+  stage_completed: specification
+  branch_name: foundry/{identifier}
+  next_status: "∞ Blocked"
+  error: |
+    Cannot proceed - human input required.
+
+    ## What's Blocked
+    {Describe what is unclear or needs decision}
+
+    ## Options
+    1. {Option A}
+    2. {Option B}
+
+    ## Questions for Human
+    - {Question 1}
+    - {Question 2}
+```
+
+Use `∞ Blocked` when:
+- Critical UX decisions need human/designer input
+- Business requirements conflict with good UX and need resolution
+- Target user personas or use cases are unclear
+- The feature scope needs product owner clarification
+
 ## Important Notes
 
 - **Think like a user**, not an engineer

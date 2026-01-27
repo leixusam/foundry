@@ -226,6 +226,37 @@ WORK_RESULT:
     {What went wrong}
 ```
 
+## When to Use `∞ Blocked`
+
+If you cannot proceed due to unclear requirements or need human decision-making, use this output:
+
+```
+WORK_RESULT:
+  success: false
+  stage_completed: plan
+  branch_name: foundry/{identifier}
+  next_status: "∞ Blocked"
+  error: |
+    Cannot proceed - human input required.
+
+    ## What's Blocked
+    {Describe what is unclear or needs decision}
+
+    ## Options
+    1. {Option A}
+    2. {Option B}
+
+    ## Questions for Human
+    - {Question 1}
+    - {Question 2}
+```
+
+Use `∞ Blocked` when:
+- Architectural decisions require human input
+- Multiple valid approaches exist with different tradeoffs that need product decision
+- Research findings are insufficient to create a confident plan
+- Security or compliance decisions need human approval
+
 ## Important Notes
 
 - Plans should be detailed enough for the implement worker to execute without research

@@ -277,6 +277,38 @@ WORK_RESULT:
     Returning to implementation phase.
 ```
 
+## When to Use `∞ Blocked`
+
+If you cannot proceed due to unclear requirements or need human decision-making, use this output:
+
+```
+WORK_RESULT:
+  success: false
+  stage_completed: validate
+  branch_name: foundry/{identifier}
+  repo_url: {git remote URL}
+  next_status: "∞ Blocked"
+  error: |
+    Cannot proceed - human input required.
+
+    ## What's Blocked
+    {Describe what is unclear or needs decision}
+
+    ## Options
+    1. {Option A}
+    2. {Option B}
+
+    ## Questions for Human
+    - {Question 1}
+    - {Question 2}
+```
+
+Use `∞ Blocked` when:
+- Success criteria are ambiguous and cannot be objectively verified
+- Test failures reveal issues that need product decisions to resolve
+- Validation reveals behavior that may or may not be correct depending on intent
+- External systems or test environments are unavailable and need human intervention
+
 ## Important Notes
 
 - Be thorough - this is the last check before production
