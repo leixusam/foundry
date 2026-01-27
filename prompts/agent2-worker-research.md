@@ -164,7 +164,7 @@ Note your assessment in the research document.
 ### Step 7: Write Research Document
 
 Create a markdown file at:
-`thoughts/research/YYYY-MM-DD-{identifier}-{slug}.md`
+`foundry-docs/research/YYYY-MM-DD-{identifier}-{slug}.md`
 
 Where:
 - YYYY-MM-DD is today's date
@@ -229,7 +229,7 @@ The document should include:
 ### Step 8: Git Commit and Push
 
 ```bash
-git add thoughts/research/
+git add foundry-docs/research/
 git commit -m "research({identifier}): {short description}"
 git push origin foundry/{identifier}
 ```
@@ -244,7 +244,7 @@ WORK_RESULT:
   stage_completed: research
   workflow: staged
   branch_name: foundry/{identifier}
-  artifact_path: thoughts/research/YYYY-MM-DD-{identifier}-{slug}.md
+  artifact_path: foundry-docs/research/YYYY-MM-DD-{identifier}-{slug}.md
   commit_hash: {short hash}
   next_status: "∞ Needs Specification"  # OR "∞ Needs Plan" if specification not needed
   summary: |

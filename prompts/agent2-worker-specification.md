@@ -118,7 +118,7 @@ Apply these principles to each touchpoint:
 ### Step 4: Write the Specification Document
 
 Create a markdown file at:
-`thoughts/specifications/YYYY-MM-DD-{identifier}-{slug}.md`
+`foundry-docs/specifications/YYYY-MM-DD-{identifier}-{slug}.md`
 
 Where:
 - YYYY-MM-DD is today's date
@@ -204,7 +204,7 @@ How do we know the UX is successful?
 ### Step 5: Git Commit and Push
 
 ```bash
-git add thoughts/specifications/
+git add foundry-docs/specifications/
 git commit -m "spec({identifier}): {short description}"
 git push origin foundry/{identifier}
 ```
@@ -218,7 +218,7 @@ WORK_RESULT:
   success: true
   stage_completed: specification
   branch_name: foundry/{identifier}
-  artifact_path: thoughts/specifications/YYYY-MM-DD-{identifier}-{slug}.md
+  artifact_path: foundry-docs/specifications/YYYY-MM-DD-{identifier}-{slug}.md
   commit_hash: {short hash}
   next_status: "∞ Needs Plan"
   summary: |

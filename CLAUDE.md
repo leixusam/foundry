@@ -46,8 +46,8 @@ timestamps for easy sorting (e.g., `20250126-051600-swift-wyvern/`).
 
 ## Project Artifacts
 
-The `thoughts/` directory at project root stores Foundry's work artifacts:
-- `thoughts/research/` - Research documents for tickets
-- `thoughts/plans/` - Implementation plans
-- `thoughts/validation/` - Validation reports
-- `thoughts/shared/` - Shared context between sessions
+The `foundry-docs/` directory at project root stores Foundry's work artifacts:
+- `foundry-docs/research/` - Research documents for tickets
+- `foundry-docs/plans/` - Implementation plans
+- `foundry-docs/validation/` - Validation reports
+- `foundry-docs/shared/` - Shared context between sessions

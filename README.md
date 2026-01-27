@@ -32,7 +32,7 @@ npx foundry init
    - Configure Linear API credentials
    - Set up MCP for Claude Code
    - Install Claude Code slash commands
-   - Create the `thoughts/` directory
+   - Create the `foundry-docs/` directory
 
 3. **Create a ticket** in Linear in your team's backlog
 
@@ -141,7 +141,7 @@ your-project/
 │   ├── output/            # Runtime logs
 │   └── attachments/       # Downloaded issue attachments
 ├── .claude/commands/      # Claude Code slash commands
-├── thoughts/              # Work artifacts (committed)
+├── foundry-docs/          # Work artifacts (committed)
 │   ├── research/          # Research documents
 │   ├── plans/             # Implementation plans
 │   └── validation/        # Validation reports
