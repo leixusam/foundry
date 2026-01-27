@@ -175,8 +175,24 @@ codex mcp add linear --url https://mcp.linear.app/mcp
 ```bash
 foundry              # Run the main development loop
 foundry init         # Initialize Foundry in current project
+foundry uninstall    # Remove Foundry from current project
 foundry --help       # Show help
 foundry --version    # Show version
+```
+
+## Updates
+
+Foundry automatically checks for updates once per day. When a new version is available, you'll see a notification on startup:
+
+```
+   Update available: 0.1.3 → 0.1.4
+   Run: npm install -g @leixusam/foundry@latest
+```
+
+Update with:
+
+```bash
+npm install -g @leixusam/foundry@latest
 ```
 
 ## Linear Workflow Statuses
