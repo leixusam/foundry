@@ -1,0 +1,304 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import CodeBlock from '../components/CodeBlock.astro';
+
+const installCommands = `npm install -g @leixusam/foundry
+foundry init
+foundry`;
+
+const podDiagram = `┌─────────────────────────────────────────────────────────────────────────┐
+│                         Pod (swift-wyvern)                              │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│  Loop 1: Ticket RSK-42                                                  │
+│  ┌──────────────┐     ┌──────────────┐     ┌──────────────┐            │
+│  │   Agent 1    │     │   Agent 2    │     │   Agent 3    │            │
+│  │    Linear    │────▶│    Worker    │────▶│    Linear    │            │
+│  │    Reader    │     │              │     │    Writer    │            │
+│  └──────────────┘     └──────────────┘     └──────────────┘            │
+│                                                                         │
+│  Loop 2: Ticket RSK-43                                                  │
+│  ┌──────────────┐     ┌──────────────┐     ┌──────────────┐            │
+│  │   Agent 1    │────▶│   Agent 2    │────▶│   Agent 3    │            │
+│  └──────────────┘     └──────────────┘     └──────────────┘            │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘`;
+
+const statusDiagram = `∞ Needs Research  →  ∞ Needs Plan  →  ∞ Needs Implement  →  ∞ Needs Validate  →  ∞ Done
+       ↓                   ↓                    ↓                     ↓
+∞ Research In Progress  ∞ Plan In Progress  ∞ Implement In Progress  ∞ Validate In Progress`;
+---
+
+<BaseLayout title="How It Works - Foundry" description="Learn how Foundry orchestrates AI agents to turn Linear tickets into shipped code.">
+  <article class="how-it-works">
+    <div class="container">
+      <header class="page-header">
+        <a href="/" class="back-link">← Back to Home</a>
+        <h1>How It Works</h1>
+      </header>
+
+      <section class="intro">
+        <p class="lead">
+          Foundry orchestrates AI agents to turn Linear tickets into shipped code. Here's how the pieces fit together.
+        </p>
+      </section>
+
+      <section class="section">
+        <h2>Pods, Loops, and Agents</h2>
+        <p>
+          Foundry uses three core concepts to organize its work:
+        </p>
+
+        <div class="diagram-container">
+          <CodeBlock code={podDiagram} showPrompt={false} />
+        </div>
+
+        <dl class="definition-list">
+          <dt>Pod</dt>
+          <dd>A running instance of Foundry. Each pod gets a unique name (like "swift-wyvern") and continuously processes tickets until stopped. You can run multiple pods in parallel.</dd>
+
+          <dt>Loop</dt>
+          <dd>One complete cycle of work. Each loop claims a ticket, works on it, and updates Linear. A pod runs loops continuously until there's no more work.</dd>
+
+          <dt>Agent</dt>
+          <dd>An AI worker that handles one part of the loop. Three agents work in sequence to complete each loop.</dd>
+        </dl>
+      </section>
+
+      <section class="section">
+        <h2>The Agent Pipeline</h2>
+        <p>
+          Each loop runs three agents in sequence:
+        </p>
+
+        <div class="pipeline">
+          <div class="pipeline-step">
+            <h3>Agent 1</h3>
+            <span class="agent-role">Linear Reader</span>
+            <p>Scans Linear for available tickets, prioritizes by urgency, claims the highest-priority ticket, and gathers context.</p>
+          </div>
+          <div class="pipeline-arrow">→</div>
+          <div class="pipeline-step">
+            <h3>Agent 2</h3>
+            <span class="agent-role">Worker</span>
+            <p>The developer. Reads code, writes code, runs tests, and commits changes.</p>
+          </div>
+          <div class="pipeline-arrow">→</div>
+          <div class="pipeline-step">
+            <h3>Agent 3</h3>
+            <span class="agent-role">Linear Writer</span>
+            <p>Updates Linear with results—posts comments, updates status, and links commits.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Linear as State Machine</h2>
+        <p>
+          Foundry uses Linear as its state machine. You don't need to configure Foundry or tell it what to work on—just add tickets to Linear and Foundry handles the rest.
+        </p>
+
+        <div class="diagram-container">
+          <CodeBlock code={statusDiagram} showPrompt={false} />
+        </div>
+
+        <ol class="workflow-steps">
+          <li><strong>You create a ticket</strong> in Linear and set its status to <code>∞ Needs Research</code></li>
+          <li><strong>Foundry picks it up</strong>—Agent 1 scans for tickets in "Needs" statuses</li>
+          <li><strong>Foundry claims it</strong>—Changes status to "In Progress" so other pods skip it</li>
+          <li><strong>Foundry works on it</strong>—Agent 2 does the actual development work</li>
+          <li><strong>Foundry advances it</strong>—Agent 3 moves the ticket to the next status</li>
+          <li><strong>Repeat</strong> until the ticket reaches <code>∞ Done</code></li>
+        </ol>
+      </section>
+
+      <section class="section cta-section">
+        <h2>Ready to try?</h2>
+        <div class="cta-code">
+          <CodeBlock code={installCommands} />
+        </div>
+      </section>
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .how-it-works {
+    padding: var(--space-2xl) 0 var(--space-3xl);
+  }
+
+  .page-header {
+    margin-bottom: var(--space-2xl);
+  }
+
+  .back-link {
+    display: inline-block;
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+    margin-bottom: var(--space-md);
+  }
+
+  .back-link:hover {
+    color: var(--color-accent);
+  }
+
+  h1 {
+    font-size: var(--text-3xl);
+    margin: 0;
+  }
+
+  .intro {
+    margin-bottom: var(--space-3xl);
+  }
+
+  .lead {
+    font-size: var(--text-lg);
+    color: var(--color-text-secondary);
+    line-height: 1.6;
+    margin: 0;
+    max-width: 700px;
+  }
+
+  .section {
+    margin-bottom: var(--space-3xl);
+  }
+
+  .section h2 {
+    font-size: var(--text-2xl);
+    margin-bottom: var(--space-md);
+  }
+
+  .section > p {
+    color: var(--color-text-secondary);
+    max-width: 700px;
+  }
+
+  .diagram-container {
+    margin: var(--space-lg) 0;
+    overflow-x: auto;
+  }
+
+  .definition-list {
+    margin-top: var(--space-lg);
+  }
+
+  .definition-list dt {
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin-top: var(--space-md);
+  }
+
+  .definition-list dd {
+    color: var(--color-text-secondary);
+    margin-left: 0;
+    margin-top: var(--space-xs);
+    max-width: 600px;
+  }
+
+  .pipeline {
+    display: flex;
+    align-items: stretch;
+    gap: var(--space-md);
+    margin: var(--space-lg) 0;
+    flex-wrap: wrap;
+  }
+
+  .pipeline-step {
+    flex: 1;
+    min-width: 200px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: var(--space-lg);
+  }
+
+  .pipeline-step h3 {
+    font-size: var(--text-base);
+    margin: 0 0 var(--space-xs);
+  }
+
+  .agent-role {
+    display: inline-block;
+    font-size: var(--text-sm);
+    color: var(--color-accent);
+    margin-bottom: var(--space-sm);
+  }
+
+  .pipeline-step p {
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  .pipeline-arrow {
+    display: flex;
+    align-items: center;
+    color: var(--color-text-secondary);
+    font-size: var(--text-xl);
+  }
+
+  .workflow-steps {
+    margin: var(--space-lg) 0;
+    padding-left: var(--space-lg);
+    max-width: 700px;
+  }
+
+  .workflow-steps li {
+    color: var(--color-text-secondary);
+    margin-bottom: var(--space-sm);
+    line-height: 1.5;
+  }
+
+  .workflow-steps strong {
+    color: var(--color-text-primary);
+  }
+
+  .workflow-steps code {
+    background: var(--color-surface);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--color-code-text);
+  }
+
+  .cta-section {
+    text-align: center;
+    padding-top: var(--space-xl);
+    border-top: 1px solid var(--color-border);
+  }
+
+  .cta-section h2 {
+    margin-bottom: var(--space-lg);
+  }
+
+  .cta-code {
+    max-width: 500px;
+    margin: 0 auto;
+    text-align: left;
+  }
+
+  @media (max-width: 768px) {
+    .pipeline {
+      flex-direction: column;
+    }
+
+    .pipeline-arrow {
+      justify-content: center;
+      transform: rotate(90deg);
+    }
+
+    .pipeline-step {
+      min-width: auto;
+    }
+  }
+
+  @media (min-width: 640px) {
+    h1 {
+      font-size: var(--text-4xl);
+    }
+
+    .lead {
+      font-size: var(--text-xl);
+    }
+  }
+</style>
