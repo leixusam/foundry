@@ -1,0 +1,62 @@
+---
+---
+
+<footer class="footer">
+  <div class="container footer-content">
+    <p class="footer-text">
+      <a href="https://github.com/leixusam/foundry/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT License</a>
+      <span class="separator">·</span>
+      <a href="https://github.com/leixusam/foundry" target="_blank" rel="noopener noreferrer">GitHub</a>
+      <span class="separator">·</span>
+      <span class="tagline">Made for developers who'd rather not</span>
+    </p>
+  </div>
+</footer>
+
+<style>
+  .footer {
+    border-top: 1px solid var(--color-border);
+    padding: var(--space-lg) 0;
+    margin-top: auto;
+  }
+
+  .footer-content {
+    text-align: center;
+  }
+
+  .footer-text {
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+    margin: 0;
+  }
+
+  .footer-text a {
+    color: var(--color-text-secondary);
+    transition: color 150ms;
+  }
+
+  .footer-text a:hover {
+    color: var(--color-text-primary);
+  }
+
+  .separator {
+    margin: 0 var(--space-sm);
+    opacity: 0.5;
+  }
+
+  .tagline {
+    opacity: 0.8;
+  }
+
+  @media (max-width: 640px) {
+    .footer-text {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+    }
+
+    .separator {
+      display: none;
+    }
+  }
+</style>
