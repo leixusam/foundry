@@ -185,12 +185,14 @@ Foundry creates these statuses in Linear:
 
 **Ready statuses** (waiting for Foundry):
 - `∞ Needs Research`
+- `∞ Needs Specification` (optional - when UX decisions are needed)
 - `∞ Needs Plan`
 - `∞ Needs Implement`
 - `∞ Needs Validate`
 
 **In Progress statuses** (Foundry is working):
 - `∞ Research In Progress`
+- `∞ Specification In Progress`
 - `∞ Plan In Progress`
 - `∞ Implement In Progress`
 - `∞ Validate In Progress`
