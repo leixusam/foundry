@@ -143,9 +143,13 @@ export async function checkForUpdates(): Promise<UpdateCheckResult> {
   };
 }
 
+// ANSI color codes
+const yellow = '\x1b[33m';
+const reset = '\x1b[0m';
+
 /**
  * Displays an update notification if an update is available.
- * This is designed to be non-intrusive - just a simple message.
+ * This is designed to be non-intrusive - just a simple message in yellow.
  */
 export function displayUpdateNotification(result: UpdateCheckResult): void {
   if (!result.updateAvailable || !result.latestVersion) {
@@ -155,7 +159,7 @@ export function displayUpdateNotification(result: UpdateCheckResult): void {
   const packageName = getPackageName();
 
   console.log('');
-  console.log(`   Update available: ${result.currentVersion} → ${result.latestVersion}`);
-  console.log(`   Run: npm install -g ${packageName}@latest`);
+  console.log(`${yellow}   Update available: ${result.currentVersion} → ${result.latestVersion}`);
+  console.log(`   Run: npm install -g ${packageName}@latest${reset}`);
   console.log('');
 }
