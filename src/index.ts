@@ -79,6 +79,12 @@ This identifier format is: Pod Name / Loop Number / Agent Number (Role).
 - **Loop Number**: ${iteration} - increments each time Foundry processes a new ticket
 - **Agent**: Agent 1 (Linear Reader) - your role in this loop
 
+## Linear Team Configuration
+
+**Team Key**: ${config.linearTeamId}
+
+Use this team key for all Linear MCP tool calls (list_issues, list_issue_statuses, update_issue, create_comment, etc.). Do NOT use any other team key.
+
 ---
 
 ${agent1BasePrompt}`;
@@ -206,6 +212,12 @@ This identifier format is: Pod Name / Loop Number / Agent Number (Role).
 - **Loop Number**: ${iteration} - increments each time Foundry processes a new ticket
 - **Agent**: Agent 2 (Worker) - your role in this loop
 
+## Linear Team Configuration
+
+**Team Key**: ${config.linearTeamId}
+
+This team key is used for all Linear MCP tool calls. While you don't make Linear calls directly, this context may be passed to other agents.
+
 ---
 
 ## Context from Linear (gathered by Agent 1)
@@ -284,6 +296,12 @@ This identifier format is: Pod Name / Loop Number / Agent Number (Role).
 - **Agent**: Agent 3 (Linear Writer) - your role in this loop
 
 **IMPORTANT**: Include the pod name (${podName}) in all comments you post to Linear so that when multiple pods work in parallel, we can identify which one made which comment.
+
+## Linear Team Configuration
+
+**Team Key**: ${config.linearTeamId}
+
+Use this team key for all Linear MCP tool calls (update_issue, create_comment, create_issue for sub-issues, etc.). Do NOT use any other team key.
 
 ---
 
