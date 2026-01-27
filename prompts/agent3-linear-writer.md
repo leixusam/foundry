@@ -210,10 +210,10 @@ If Agent 2's WORK_RESULT contains a `sub_issues` array, create each sub-issue in
 Example sub-issue creation:
 ```
 mcp__linear__create_issue({
-  title: "RSK-20a: Implement parser changes",
+  title: "{identifier}a: Implement parser changes",
   description: "Implement parser updates for sub-issue support.\nSee Phase 2 of the implementation plan.",
-  team: "RSK",
-  parentId: "48ec45b4-5058-48d0-9b99-9d9824d2b9a5",
+  team: "{team_key from Linear Team Configuration above}",
+  parentId: "{issue_id from Agent 1's output}",
   state: "∞ Needs Implement"
 })
 ```
