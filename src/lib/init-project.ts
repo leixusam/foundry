@@ -1,17 +1,16 @@
+/**
+ * Foundry configuration wizard (`foundry config`).
+ * Shows all current values and allows user to change them with "Enter to keep" UX.
+ */
+
 import {
   existsSync,
   mkdirSync,
-  copyFileSync,
-  readdirSync,
-  appendFileSync,
   readFileSync,
   writeFileSync,
   rmSync,
 } from 'fs';
-import { execSync } from 'child_process';
-import { dirname, join } from 'path';
-import { fileURLToPath } from 'url';
-import { createInterface } from 'readline';
+import { join } from 'path';
 import { getRepoRoot } from '../config.js';
 import {
   createLinearClient,
@@ -19,300 +18,327 @@ import {
   getTeamByKeyOrId,
   deleteFoundryStatuses,
   FOUNDRY_STATUS_PREFIX,
+  getFoundryStatusNames,
 } from './linear-api.js';
+import {
+  ensureFoundryDir,
+  ensureFoundryDocsDir,
+  ensureGitignore,
+  loadExistingConfig,
+  saveEnvConfig,
+  saveMcpConfig,
+  copyClaudeCommands,
+  checkAndDisplayCliAvailability,
+  autoSelectProvider,
+  validateLinearKey,
+  fetchLinearTeams,
+  checkLinearStatuses,
+  createLinearStatuses,
+  checkCodexLinearMcp,
+  createPromptInterface,
+  promptSecret,
+  promptWithDefault,
+  promptConfirm,
+  maskApiKey,
+  LoadedConfig,
+  TeamInfo,
+} from './setup.js';
+import { ProviderName, ClaudeModel, CodexReasoningEffort } from '../types.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-// Check if a CLI tool is installed
-function isInstalled(command: string): boolean {
-  try {
-    execSync(`which ${command}`, { stdio: 'pipe' });
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-// Prompt helper with default value
-async function promptWithDefault(
-  rl: ReturnType<typeof createInterface>,
-  question: string,
-  defaultValue: string,
-): Promise<string> {
-  return new Promise((resolve) => {
-    const displayDefault = defaultValue ? ` [${defaultValue}]` : '';
-    rl.question(`${question}${displayDefault}: `, (answer) => {
-      resolve(answer.trim() || defaultValue);
-    });
-  });
-}
-
-// Prompt for secret (no default shown)
-async function promptSecret(
-  rl: ReturnType<typeof createInterface>,
-  question: string,
-): Promise<string> {
-  return new Promise((resolve) => {
-    rl.question(`${question}: `, (answer) => {
-      resolve(answer.trim());
-    });
-  });
-}
-
-export async function initProject(): Promise<void> {
+/**
+ * Main configuration wizard for `foundry config`.
+ */
+export async function configProject(): Promise<void> {
   const projectRoot = getRepoRoot();
 
   console.log('');
   console.log('╔════════════════════════════════════════╗');
-  console.log('║     Foundry - Setup Wizard             ║');
+  console.log('║     Foundry - Configuration Wizard     ║');
   console.log('╚════════════════════════════════════════╝');
   console.log('');
-  console.log(`Initializing in: ${projectRoot}`);
+  console.log(`Project: ${projectRoot}`);
   console.log('');
 
-  // 1. Check installed providers
-  const claudeInstalled = isInstalled('claude');
-  const codexInstalled = isInstalled('codex');
+  // Ensure directories exist
+  ensureFoundryDir();
+  ensureFoundryDocsDir();
+  ensureGitignore();
 
-  console.log('Detected providers:');
-  console.log(`  Claude Code: ${claudeInstalled ? '✓ installed' : '✗ not found'}`);
-  console.log(`  Codex CLI:   ${codexInstalled ? '✓ installed' : '✗ not found'}`);
-  console.log('');
-
-  if (!claudeInstalled && !codexInstalled) {
-    console.error('Error: No LLM provider found. Install Claude Code or Codex CLI first.');
-    console.error('  Claude Code: npm install -g @anthropic-ai/claude-code');
-    console.error('  Codex CLI:   See https://github.com/openai/codex');
+  // Check CLI availability
+  const cliAvailability = checkAndDisplayCliAvailability();
+  if (!cliAvailability) {
     process.exit(1);
   }
 
-  // 2. Create .foundry/ directory
-  const foundryDir = join(projectRoot, '.foundry');
-  if (!existsSync(foundryDir)) {
-    mkdirSync(foundryDir, { recursive: true });
-  }
+  // Load existing configuration
+  const existingConfig = loadExistingConfig();
+  const rl = createPromptInterface();
 
-  // 3. Load existing config if present
-  const envPath = join(foundryDir, 'env');
-  const existingEnv = existsSync(envPath) ? readFileSync(envPath, 'utf-8') : '';
+  try {
+    // ═══════════════════════════════════════════════════════════════════════════
+    // Linear Configuration
+    // ═══════════════════════════════════════════════════════════════════════════
+    console.log('─── Linear Configuration ───\n');
 
-  const getExisting = (key: string): string => {
-    const match = existingEnv.match(new RegExp(`${key}=(.+)`));
-    return match ? match[1] : '';
-  };
+    // API Key
+    let apiKey: string;
+    if (existingConfig.linearApiKey) {
+      console.log(`Linear API Key: ${maskApiKey(existingConfig.linearApiKey)} (configured)`);
+      const newKey = await promptWithDefault(rl, '  [Enter to keep, or paste new key]', '');
+      apiKey = newKey || existingConfig.linearApiKey;
 
-  // 4. Interactive setup
-  const rl = createInterface({ input: process.stdin, output: process.stdout });
+      // Validate if changed
+      if (newKey && newKey !== existingConfig.linearApiKey) {
+        console.log('Validating...');
+        const isValid = await validateLinearKey(newKey);
+        if (!isValid) {
+          console.log('Invalid API key. Keeping existing key.');
+          apiKey = existingConfig.linearApiKey;
+        } else {
+          console.log('✓ Valid');
+        }
+      }
+    } else {
+      console.log('To get your API key:');
+      console.log('  1. Go to: https://linear.app/settings/account/security/api-keys/new');
+      console.log('  2. Enter a label (e.g., "Foundry")');
+      console.log('  3. Click "Create key"');
+      console.log('');
 
-  // Linear credentials
-  console.log('─── Linear Configuration ───');
-  console.log('Get your API key from: https://linear.app/settings/api');
-  console.log('');
+      apiKey = await promptSecret(rl, 'Linear API Key');
+      if (!apiKey) {
+        console.log('\nLinear API key is required.');
+        process.exit(1);
+      }
 
-  let linearApiKey: string;
-  if (getExisting('LINEAR_API_KEY')) {
-    console.log('LINEAR_API_KEY: (already configured)');
-    linearApiKey = getExisting('LINEAR_API_KEY');
-  } else {
-    linearApiKey = await promptSecret(rl, 'LINEAR_API_KEY');
-  }
-
-  let linearTeamKey: string;
-  if (getExisting('LINEAR_TEAM_KEY')) {
-    console.log('LINEAR_TEAM_KEY: (already configured)');
-    linearTeamKey = getExisting('LINEAR_TEAM_KEY');
-  } else {
-    linearTeamKey = await promptWithDefault(rl, 'LINEAR_TEAM_KEY (e.g., RSK)', '');
-  }
-
-  console.log('');
-
-  // Provider selection
-  console.log('─── Provider Configuration ───');
-  const defaultProvider = claudeInstalled ? 'claude' : 'codex';
-  const provider = await promptWithDefault(rl, 'Provider (claude/codex)', defaultProvider);
-
-  let claudeModel = 'opus';
-  let codexModel = 'gpt-5.2';
-  let codexEffort = 'high';
-
-  if (provider === 'claude') {
-    claudeModel = await promptWithDefault(rl, 'Claude model (opus/sonnet/haiku)', 'opus');
-  } else {
-    codexModel = await promptWithDefault(rl, 'Codex model', 'gpt-5.2');
-    codexEffort = await promptWithDefault(rl, 'Reasoning effort (low/medium/high/extra_high)', 'high');
-  }
-
-  console.log('');
-
-  // Iteration limit
-  console.log('─── Loop Configuration ───');
-  const maxIterations = await promptWithDefault(rl, 'Max iterations (0 = unlimited)', '0');
-
-  rl.close();
-
-  // 5. Save configuration
-  const envContent = `# Foundry Configuration
-# Generated by foundry init
-
-# Linear (required)
-LINEAR_API_KEY=${linearApiKey}
-LINEAR_TEAM_KEY=${linearTeamKey}
-
-# Provider: "claude" or "codex"
-FOUNDRY_PROVIDER=${provider}
-
-# Claude options
-FOUNDRY_CLAUDE_MODEL=${claudeModel}
-
-# Codex options
-CODEX_MODEL=${codexModel}
-CODEX_REASONING_EFFORT=${codexEffort}
-
-# Loop options (0 = unlimited)
-FOUNDRY_MAX_ITERATIONS=${maxIterations}
-`;
-
-  writeFileSync(envPath, envContent);
-  console.log('');
-  console.log('Saved configuration to .foundry/env');
-
-  // 6. Configure MCP for Linear (Claude Code needs this)
-  const mcpPath = join(foundryDir, 'mcp.json');
-  const mcpConfig = {
-    mcpServers: {
-      linear: {
-        type: 'http',
-        url: 'https://mcp.linear.app/mcp',
-        headers: {
-          Authorization: `Bearer ${linearApiKey}`,
-        },
-      },
-    },
-  };
-  writeFileSync(mcpPath, JSON.stringify(mcpConfig, null, 2) + '\n');
-  console.log('Configured Linear MCP in .foundry/mcp.json');
-
-  // 7. Add .foundry/ to .gitignore
-  const gitignorePath = join(projectRoot, '.gitignore');
-  const gitignoreEntry = '.foundry/';
-
-  if (existsSync(gitignorePath)) {
-    const content = readFileSync(gitignorePath, 'utf-8');
-    if (!content.includes(gitignoreEntry)) {
-      appendFileSync(gitignorePath, `\n# Foundry runtime data\n${gitignoreEntry}\n`);
-      console.log('Added .foundry/ to .gitignore');
-    }
-  } else {
-    writeFileSync(gitignorePath, `# Foundry runtime data\n${gitignoreEntry}\n`);
-    console.log('Created .gitignore with .foundry/');
-  }
-
-  // 8. Copy Claude Code commands
-  // When installed via npm: __dirname is node_modules/@leixusam/foundry/dist/lib
-  // commands are at: node_modules/@leixusam/foundry/.claude/commands
-  const sourceCommandsDir = join(__dirname, '../../.claude/commands');
-  const targetCommandsDir = join(projectRoot, '.claude', 'commands');
-
-  if (existsSync(sourceCommandsDir)) {
-    if (!existsSync(targetCommandsDir)) {
-      mkdirSync(targetCommandsDir, { recursive: true });
+      console.log('Validating...');
+      const isValid = await validateLinearKey(apiKey);
+      if (!isValid) {
+        console.log('Invalid API key.');
+        process.exit(1);
+      }
+      console.log('✓ Valid');
     }
 
-    const files = readdirSync(sourceCommandsDir).filter((f) => f.endsWith('.md'));
-    for (const file of files) {
-      copyFileSync(join(sourceCommandsDir, file), join(targetCommandsDir, file));
+    console.log('');
+
+    // Fetch teams for selection
+    console.log('Fetching teams...');
+    let teams: TeamInfo[] = [];
+    try {
+      teams = await fetchLinearTeams(apiKey);
+    } catch (error) {
+      console.log('Failed to fetch teams. Please check your API key.');
+      process.exit(1);
     }
-    if (files.length > 0) {
-      console.log(`Installed ${files.length} Claude Code command(s) to .claude/commands/`);
+
+    if (teams.length === 0) {
+      console.log('No teams found in your Linear workspace.');
+      process.exit(1);
     }
-  }
 
-  // 9. Create foundry-docs/ directory with README
-  const docsDir = join(projectRoot, 'foundry-docs');
-  if (!existsSync(docsDir)) {
-    mkdirSync(docsDir, { recursive: true });
-    console.log('Created foundry-docs/ directory');
-  }
+    // Team selection
+    let teamKey: string;
+    const currentTeam = existingConfig.linearTeamKey
+      ? teams.find((t) => t.key === existingConfig.linearTeamKey)
+      : undefined;
 
-  // Create README in foundry-docs/ if it doesn't exist
-  const docsReadmePath = join(docsDir, 'README.md');
-  if (!existsSync(docsReadmePath)) {
-    const docsReadme = `# Foundry Documentation
-
-This directory contains documentation automatically generated by [Foundry](https://www.npmjs.com/package/@leixusam/foundry), an autonomous product development system.
-
-## Contents
-
-- \`research/\` - Research documents for tickets
-- \`plans/\` - Implementation plans
-- \`specifications/\` - Technical specifications
-- \`validation/\` - Validation reports
-- \`oneshot/\` - Quick implementation notes
-- \`shared/\` - Shared context between sessions
-
-## Note for Developers
-
-These files are **intended to be committed** to version control. They provide context and history for AI-assisted development work.
-
-While the content is AI-generated, it documents real decisions, research, and implementation details that are valuable for understanding the codebase evolution.
-
-Learn more: https://www.npmjs.com/package/@leixusam/foundry
-`;
-    writeFileSync(docsReadmePath, docsReadme);
-  }
-
-  console.log('');
-  console.log('╔════════════════════════════════════════╗');
-  console.log('║  ✓ Foundry initialized!                ║');
-  console.log('║                                        ║');
-  console.log('║  Next steps:                           ║');
-  console.log('║  1. Run `foundry` to start the loop    ║');
-  console.log('║  2. Or open Claude Code in this dir    ║');
-  console.log('╚════════════════════════════════════════╝');
-}
-
-// Prompt for yes/no confirmation
-async function promptConfirm(
-  rl: ReturnType<typeof createInterface>,
-  question: string,
-): Promise<boolean> {
-  return new Promise((resolve) => {
-    rl.question(`${question} (y/n): `, (answer) => {
-      resolve(answer.trim().toLowerCase() === 'y' || answer.trim().toLowerCase() === 'yes');
+    console.log('Available teams:');
+    teams.forEach((team) => {
+      const marker = team.key === existingConfig.linearTeamKey ? ' (current)' : '';
+      console.log(`  - ${team.key}: ${team.name}${marker}`);
     });
-  });
+
+    if (currentTeam) {
+      teamKey = await promptWithDefault(
+        rl,
+        `\nLinear Team [Enter to keep ${currentTeam.key}]`,
+        currentTeam.key
+      );
+    } else {
+      teamKey = await promptWithDefault(rl, `\nSelect team`, teams[0].key);
+    }
+
+    // Verify team exists
+    const selectedTeam = teams.find((t) => t.key === teamKey);
+    if (!selectedTeam) {
+      console.log(`Team "${teamKey}" not found. Using first team.`);
+      teamKey = teams[0].key;
+    } else {
+      console.log(`Selected: ${selectedTeam.name} (${selectedTeam.key})`);
+    }
+
+    console.log('');
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // Provider Configuration
+    // ═══════════════════════════════════════════════════════════════════════════
+    console.log('─── Provider Configuration ───\n');
+
+    let provider: ProviderName;
+
+    // Determine available options based on CLI detection
+    const availableProviders: string[] = [];
+    if (cliAvailability.claude) availableProviders.push('claude');
+    if (cliAvailability.codex) availableProviders.push('codex');
+
+    if (availableProviders.length === 1) {
+      provider = availableProviders[0] as ProviderName;
+      console.log(`Provider: ${provider} (only available option)\n`);
+    } else {
+      const currentProvider = existingConfig.provider || 'claude';
+      const providerInput = await promptWithDefault(
+        rl,
+        `Provider [claude/codex] (${currentProvider})`,
+        currentProvider
+      );
+      provider = (providerInput === 'codex' ? 'codex' : 'claude') as ProviderName;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // Advanced Options
+    // ═══════════════════════════════════════════════════════════════════════════
+    console.log('─── Advanced Options ───\n');
+
+    let claudeModel: ClaudeModel = existingConfig.claudeModel || 'opus';
+    let codexModel: string = existingConfig.codexModel || 'gpt-5.2';
+    let codexEffort: CodexReasoningEffort = existingConfig.codexReasoningEffort || 'high';
+    let maxIterations: number = existingConfig.maxIterations ?? 0;
+
+    if (provider === 'claude') {
+      const modelInput = await promptWithDefault(
+        rl,
+        `Claude Model [opus/sonnet/haiku] (${claudeModel})`,
+        claudeModel
+      );
+      if (modelInput === 'sonnet' || modelInput === 'haiku' || modelInput === 'opus') {
+        claudeModel = modelInput;
+      }
+    } else {
+      const modelInput = await promptWithDefault(
+        rl,
+        `Codex Model (${codexModel})`,
+        codexModel
+      );
+      codexModel = modelInput || codexModel;
+
+      const effortInput = await promptWithDefault(
+        rl,
+        `Reasoning Effort [low/medium/high/extra_high] (${codexEffort})`,
+        codexEffort
+      );
+      if (effortInput === 'low' || effortInput === 'medium' || effortInput === 'high' || effortInput === 'extra_high') {
+        codexEffort = effortInput;
+      }
+    }
+
+    const maxIterInput = await promptWithDefault(
+      rl,
+      `Max Iterations (0=unlimited) (${maxIterations})`,
+      String(maxIterations)
+    );
+    const parsedMax = parseInt(maxIterInput, 10);
+    if (!isNaN(parsedMax) && parsedMax >= 0) {
+      maxIterations = parsedMax;
+    }
+
+    console.log('');
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // Save Configuration
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    const newConfig: LoadedConfig = {
+      linearApiKey: apiKey,
+      linearTeamKey: teamKey,
+      provider,
+      claudeModel,
+      codexModel,
+      codexReasoningEffort: codexEffort,
+      maxIterations,
+    };
+
+    saveEnvConfig(newConfig);
+    saveMcpConfig(apiKey);
+
+    console.log('Saved configuration to .foundry/env');
+
+    // Copy Claude commands if using Claude provider
+    if (provider === 'claude') {
+      copyClaudeCommands();
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // Linear Workflow Statuses
+    // ═══════════════════════════════════════════════════════════════════════════
+    console.log('');
+    console.log('─── Linear Workflow Statuses ───\n');
+
+    const statusesExist = await checkLinearStatuses(apiKey, teamKey);
+
+    if (statusesExist) {
+      console.log(`${FOUNDRY_STATUS_PREFIX} statuses already exist. No action needed.\n`);
+    } else {
+      console.log('Foundry will create the following workflow statuses:\n');
+
+      const statusNames = getFoundryStatusNames();
+      statusNames.forEach((name) => {
+        console.log(`  • ${name}`);
+      });
+
+      console.log('');
+      console.log(`These statuses use the ${FOUNDRY_STATUS_PREFIX} prefix to avoid conflicts`);
+      console.log('with your existing workflow statuses.\n');
+
+      const createStatuses = await promptConfirm(rl, 'Create these statuses?', true);
+
+      if (createStatuses) {
+        console.log('\nCreating statuses...');
+        const result = await createLinearStatuses(apiKey, teamKey);
+
+        if (result.created.length > 0) {
+          console.log(`Created ${result.created.length} status(es).`);
+        }
+        if (result.existing.length > 0) {
+          console.log(`Found ${result.existing.length} existing status(es).`);
+        }
+        if (result.errors.length > 0) {
+          console.log(`Errors (${result.errors.length}):`);
+          result.errors.forEach((err) => console.log(`  - ${err}`));
+        }
+      } else {
+        console.log('\nSkipped status creation. You can create them later by running `foundry config` again.');
+      }
+    }
+
+    // Check Codex MCP if using Codex
+    if (provider === 'codex') {
+      const hasLinearMcp = checkCodexLinearMcp();
+      if (!hasLinearMcp) {
+        console.log('\n⚠️  Linear MCP not configured for Codex.');
+        console.log('   Run: codex mcp add linear --url https://mcp.linear.app/mcp\n');
+      } else {
+        console.log('   Codex Linear MCP: ✓ configured');
+      }
+    }
+
+    // Done
+    console.log('');
+    console.log('╔════════════════════════════════════════╗');
+    console.log('║  ✓ Configuration saved!                ║');
+    console.log('║                                        ║');
+    console.log('║  Run `foundry` to start the loop       ║');
+    console.log('╚════════════════════════════════════════╝');
+    console.log('');
+
+  } finally {
+    rl.close();
+  }
 }
 
-// Remove .foundry/ entry from .gitignore
-function removeFromGitignore(projectRoot: string): boolean {
-  const gitignorePath = join(projectRoot, '.gitignore');
-
-  if (!existsSync(gitignorePath)) {
-    return false;
-  }
-
-  const content = readFileSync(gitignorePath, 'utf-8');
-  const lines = content.split('\n');
-
-  // Filter out .foundry/ related lines
-  const filteredLines = lines.filter((line) => {
-    const trimmed = line.trim();
-    return trimmed !== '.foundry/' && trimmed !== '.foundry' && trimmed !== '# Foundry runtime data';
-  });
-
-  // Only write if we actually removed something
-  if (filteredLines.length < lines.length) {
-    // Clean up any double newlines that might result
-    const newContent = filteredLines.join('\n').replace(/\n{3,}/g, '\n\n');
-    writeFileSync(gitignorePath, newContent);
-    return true;
-  }
-
-  return false;
-}
-
+/**
+ * Removes Foundry from the current project (`foundry uninstall`).
+ */
 export async function uninstallProject(): Promise<void> {
   const projectRoot = getRepoRoot();
   const foundryDir = join(projectRoot, '.foundry');
@@ -345,19 +371,8 @@ export async function uninstallProject(): Promise<void> {
   console.log('');
 
   // Load existing config to check for Linear credentials
-  const envPath = join(foundryDir, 'env');
-  let linearApiKey: string | undefined;
-  let linearTeamKey: string | undefined;
-
-  if (existsSync(envPath)) {
-    const envContent = readFileSync(envPath, 'utf-8');
-    const apiKeyMatch = envContent.match(/LINEAR_API_KEY=(.+)/);
-    const teamKeyMatch = envContent.match(/LINEAR_TEAM_KEY=(.+)/);
-    linearApiKey = apiKeyMatch?.[1];
-    linearTeamKey = teamKeyMatch?.[1];
-  }
-
-  const hasLinearConfig = linearApiKey && linearTeamKey;
+  const existingConfig = loadExistingConfig();
+  const hasLinearConfig = existingConfig.linearApiKey && existingConfig.linearTeamKey;
 
   if (hasLinearConfig) {
     console.log(`  3. Optionally: ${FOUNDRY_STATUS_PREFIX} workflow statuses from Linear`);
@@ -368,110 +383,144 @@ export async function uninstallProject(): Promise<void> {
   console.log('─────────────────────────────────────────');
   console.log('');
 
-  const rl = createInterface({ input: process.stdin, output: process.stdout });
+  const rl = createPromptInterface();
 
-  // Confirm uninstall
-  const confirmUninstall = await promptConfirm(rl, 'Proceed with uninstall?');
+  try {
+    // Confirm uninstall
+    const confirmUninstall = await promptConfirm(rl, 'Proceed with uninstall?', false);
 
-  if (!confirmUninstall) {
-    console.log('');
-    console.log('Uninstall cancelled.');
-    rl.close();
-    process.exit(0);
-  }
-
-  console.log('');
-
-  // Ask about Linear statuses if configured
-  let deleteStatuses = false;
-  if (hasLinearConfig) {
-    deleteStatuses = await promptConfirm(
-      rl,
-      `Delete ${FOUNDRY_STATUS_PREFIX} workflow statuses from Linear?`
-    );
-  }
-
-  rl.close();
-  console.log('');
-
-  // Step 1: Delete Linear statuses (before we lose the API key!)
-  if (deleteStatuses && linearApiKey && linearTeamKey) {
-    console.log('Removing Linear workflow statuses...');
-
-    try {
-      const client = createLinearClient(linearApiKey);
-
-      // Validate API key still works
-      const isValid = await validateApiKey(client);
-      if (!isValid) {
-        console.log('  Warning: Linear API key is invalid. Skipping status deletion.');
-      } else {
-        // Get team
-        const team = await getTeamByKeyOrId(client, linearTeamKey);
-        if (!team) {
-          console.log(`  Warning: Team "${linearTeamKey}" not found. Skipping status deletion.`);
-        } else {
-          const result = await deleteFoundryStatuses(client, team.id);
-
-          // Report results
-          if (result.deleted.length > 0) {
-            console.log(`  Deleted ${result.deleted.length} status(es):`);
-            for (const name of result.deleted) {
-              console.log(`    ✓ ${name}`);
-            }
-          }
-
-          if (result.skipped.length > 0) {
-            console.log('');
-            console.log(`  Skipped ${result.skipped.length} status(es) with active issues:`);
-            for (const { name, issueCount } of result.skipped) {
-              console.log(`    ⚠ ${name} (${issueCount} issue${issueCount > 1 ? 's' : ''})`);
-            }
-            console.log('');
-            console.log('  To delete these statuses manually:');
-            console.log('    1. Move issues to other statuses in Linear');
-            console.log('    2. Go to Settings → Teams → Workflow');
-            console.log(`    3. Delete the ${FOUNDRY_STATUS_PREFIX} statuses`);
-          }
-
-          if (result.errors.length > 0) {
-            console.log('');
-            console.log(`  Errors (${result.errors.length}):`);
-            for (const error of result.errors) {
-              console.log(`    ✗ ${error}`);
-            }
-          }
-        }
-      }
-    } catch (error) {
-      const msg = error instanceof Error ? error.message : String(error);
-      console.log(`  Error connecting to Linear: ${msg}`);
+    if (!confirmUninstall) {
+      console.log('');
+      console.log('Uninstall cancelled.');
+      process.exit(0);
     }
 
     console.log('');
+
+    // Ask about Linear statuses if configured
+    let deleteStatuses = false;
+    if (hasLinearConfig) {
+      deleteStatuses = await promptConfirm(
+        rl,
+        `Delete ${FOUNDRY_STATUS_PREFIX} workflow statuses from Linear?`,
+        false
+      );
+    }
+
+    console.log('');
+
+    // Step 1: Delete Linear statuses (before we lose the API key!)
+    if (deleteStatuses && existingConfig.linearApiKey && existingConfig.linearTeamKey) {
+      console.log('Removing Linear workflow statuses...');
+
+      try {
+        const client = createLinearClient(existingConfig.linearApiKey);
+
+        // Validate API key still works
+        const isValid = await validateApiKey(client);
+        if (!isValid) {
+          console.log('  Warning: Linear API key is invalid. Skipping status deletion.');
+        } else {
+          // Get team
+          const team = await getTeamByKeyOrId(client, existingConfig.linearTeamKey);
+          if (!team) {
+            console.log(`  Warning: Team "${existingConfig.linearTeamKey}" not found. Skipping status deletion.`);
+          } else {
+            const result = await deleteFoundryStatuses(client, team.id);
+
+            // Report results
+            if (result.deleted.length > 0) {
+              console.log(`  Deleted ${result.deleted.length} status(es):`);
+              for (const name of result.deleted) {
+                console.log(`    ✓ ${name}`);
+              }
+            }
+
+            if (result.skipped.length > 0) {
+              console.log('');
+              console.log(`  Skipped ${result.skipped.length} status(es) with active issues:`);
+              for (const { name, issueCount } of result.skipped) {
+                console.log(`    ⚠ ${name} (${issueCount} issue${issueCount > 1 ? 's' : ''})`);
+              }
+              console.log('');
+              console.log('  To delete these statuses manually:');
+              console.log('    1. Move issues to other statuses in Linear');
+              console.log('    2. Go to Settings → Teams → Workflow');
+              console.log(`    3. Delete the ${FOUNDRY_STATUS_PREFIX} statuses`);
+            }
+
+            if (result.errors.length > 0) {
+              console.log('');
+              console.log(`  Errors (${result.errors.length}):`);
+              for (const error of result.errors) {
+                console.log(`    ✗ ${error}`);
+              }
+            }
+          }
+        }
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : String(error);
+        console.log(`  Error connecting to Linear: ${msg}`);
+      }
+
+      console.log('');
+    }
+
+    // Step 2: Remove .foundry/ directory
+    console.log('Removing .foundry/ directory...');
+    try {
+      rmSync(foundryDir, { recursive: true, force: true });
+      console.log('  ✓ Removed .foundry/');
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      console.log(`  ✗ Error removing .foundry/: ${msg}`);
+    }
+
+    // Step 3: Clean up .gitignore
+    console.log('Cleaning up .gitignore...');
+    const removedFromGitignore = removeFromGitignore(projectRoot);
+    if (removedFromGitignore) {
+      console.log('  ✓ Removed .foundry/ from .gitignore');
+    } else {
+      console.log('  (No changes needed)');
+    }
+
+    console.log('');
+    console.log('╔════════════════════════════════════════╗');
+    console.log('║  ✓ Foundry uninstalled                 ║');
+    console.log('╚════════════════════════════════════════╝');
+
+  } finally {
+    rl.close();
+  }
+}
+
+/**
+ * Removes .foundry/ entry from .gitignore.
+ */
+function removeFromGitignore(projectRoot: string): boolean {
+  const gitignorePath = join(projectRoot, '.gitignore');
+
+  if (!existsSync(gitignorePath)) {
+    return false;
   }
 
-  // Step 2: Remove .foundry/ directory
-  console.log('Removing .foundry/ directory...');
-  try {
-    rmSync(foundryDir, { recursive: true, force: true });
-    console.log('  ✓ Removed .foundry/');
-  } catch (error) {
-    const msg = error instanceof Error ? error.message : String(error);
-    console.log(`  ✗ Error removing .foundry/: ${msg}`);
+  const content = readFileSync(gitignorePath, 'utf-8');
+  const lines = content.split('\n');
+
+  // Filter out .foundry/ related lines
+  const filteredLines = lines.filter((line) => {
+    const trimmed = line.trim();
+    return trimmed !== '.foundry/' && trimmed !== '.foundry' && trimmed !== '# Foundry runtime data';
+  });
+
+  // Only write if we actually removed something
+  if (filteredLines.length < lines.length) {
+    // Clean up any double newlines that might result
+    const newContent = filteredLines.join('\n').replace(/\n{3,}/g, '\n\n');
+    writeFileSync(gitignorePath, newContent);
+    return true;
   }
 
-  // Step 3: Clean up .gitignore
-  console.log('Cleaning up .gitignore...');
-  const removedFromGitignore = removeFromGitignore(projectRoot);
-  if (removedFromGitignore) {
-    console.log('  ✓ Removed .foundry/ from .gitignore');
-  } else {
-    console.log('  (No changes needed)');
-  }
-
-  console.log('');
-  console.log('╔════════════════════════════════════════╗');
-  console.log('║  ✓ Foundry uninstalled                 ║');
-  console.log('╚════════════════════════════════════════╝');
+  return false;
 }

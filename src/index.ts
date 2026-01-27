@@ -1,4 +1,4 @@
-import { getConfig, isGitRepository } from './config.js';
+import { getConfig, isGitRepository, getRepoRoot } from './config.js';
 import { sleep, executeWithRateLimitRetry, RateLimitRetryConfig } from './lib/rate-limit.js';
 import { loadPrompt } from './lib/prompts.js';
 import { getCurrentBranch } from './lib/git.js';
@@ -6,11 +6,34 @@ import { generatePodName } from './lib/loop-instance-name.js';
 import { initLoopLogger, getCurrentOutputDir } from './lib/output-logger.js';
 import { initLoopStats, logAgentStats, finalizeLoopStats } from './lib/stats-logger.js';
 import { createProvider, ProviderResult } from './lib/provider.js';
-import { checkInitialized, runInitialization, checkCodexLinearMcp, copyPromptsToProject, checkAndDisplayCliAvailability } from './init.js';
 import { downloadAttachmentsFromAgent1Output } from './lib/attachment-downloader.js';
 import { isRunningOnGcp, stopGcpInstance } from './lib/gcp.js';
 import { getVersion } from './lib/version.js';
 import { checkForUpdates, displayUpdateNotification } from './lib/update-checker.js';
+import {
+  ensureFoundryDir,
+  ensureFoundryDocsDir,
+  ensureGitignore,
+  loadExistingConfig,
+  saveEnvConfig,
+  saveMcpConfig,
+  copyPromptsToProject,
+  copyClaudeCommands,
+  checkAndDisplayCliAvailability,
+  autoSelectProvider,
+  validateLinearKey,
+  fetchLinearTeams,
+  checkLinearStatuses,
+  createLinearStatuses,
+  checkCodexLinearMcp,
+  createPromptInterface,
+  promptSecret,
+  promptWithDefault,
+  maskApiKey,
+  LoadedConfig,
+  TeamInfo,
+  CliAvailability,
+} from './lib/setup.js';
 
 // Import providers to register them
 import './lib/claude.js';
@@ -425,6 +448,103 @@ function displaySafetyWarning(): void {
 `);
 }
 
+/**
+ * Runs minimal first-run setup if credentials are missing.
+ * Prompts only for essentials (API key, team), uses defaults for everything else.
+ * Returns true if setup completed successfully, false if user cancelled.
+ */
+async function runMinimalSetup(cliAvailability: CliAvailability): Promise<boolean> {
+  console.log('\n⚠️  Linear credentials not configured.\n');
+
+  const rl = createPromptInterface();
+
+  try {
+    // Load any existing config
+    const existingConfig = loadExistingConfig();
+
+    // Prompt for API key
+    console.log('To get your API key:');
+    console.log('  1. Go to: https://linear.app/settings/account/security/api-keys/new');
+    console.log('  2. Enter a label (e.g., "Foundry")');
+    console.log('  3. Click "Create key"');
+    console.log('');
+
+    let apiKey = await promptSecret(rl, 'Enter your Linear API key');
+    if (!apiKey) {
+      console.log('\nLinear API key is required.');
+      return false;
+    }
+
+    // Validate API key
+    console.log('Validating...');
+    const isValid = await validateLinearKey(apiKey);
+    if (!isValid) {
+      console.log('Invalid API key. Please check and try again.');
+      return false;
+    }
+    console.log('✓ Valid\n');
+
+    // Fetch teams and select
+    console.log('Fetching teams...');
+    const teams = await fetchLinearTeams(apiKey);
+
+    if (teams.length === 0) {
+      console.log('No teams found in your Linear workspace.');
+      return false;
+    }
+
+    let teamKey: string;
+    if (teams.length === 1) {
+      teamKey = teams[0].key;
+      console.log(`Found team: ${teams[0].name} (${teams[0].key})`);
+      console.log('Auto-selecting as it\'s the only team.\n');
+    } else {
+      console.log('Available teams:');
+      teams.forEach((team) => {
+        console.log(`  - ${team.key}: ${team.name}`);
+      });
+      teamKey = await promptWithDefault(rl, `\nSelect team`, teams[0].key);
+
+      // Verify team exists
+      const selectedTeam = teams.find((t) => t.key === teamKey);
+      if (!selectedTeam) {
+        console.log(`Team "${teamKey}" not found.`);
+        return false;
+      }
+      console.log(`Selected: ${selectedTeam.name} (${selectedTeam.key})\n`);
+    }
+
+    // Auto-select provider based on CLI availability
+    const provider = autoSelectProvider(cliAvailability);
+    console.log(`Using provider: ${provider}`);
+
+    // Save configuration
+    const newConfig: LoadedConfig = {
+      linearApiKey: apiKey,
+      linearTeamKey: teamKey,
+      provider,
+      claudeModel: existingConfig.claudeModel || 'opus',
+      codexModel: existingConfig.codexModel || 'gpt-5.2',
+      codexReasoningEffort: existingConfig.codexReasoningEffort || 'high',
+      maxIterations: existingConfig.maxIterations ?? 0,
+    };
+
+    saveEnvConfig(newConfig);
+    saveMcpConfig(apiKey);
+    ensureGitignore();
+
+    // Update process.env so config picks up new values
+    process.env.LINEAR_API_KEY = apiKey;
+    process.env.LINEAR_TEAM_KEY = teamKey;
+    process.env.FOUNDRY_PROVIDER = provider;
+
+    console.log('\n✓ Configuration saved!\n');
+    return true;
+  } finally {
+    rl.close();
+  }
+}
+
 export async function main(): Promise<void> {
   displayBanner();
   displaySafetyWarning();
@@ -448,6 +568,11 @@ export async function main(): Promise<void> {
     process.exit(1);
   }
 
+  // Ensure directories exist (silent)
+  ensureFoundryDir();
+  ensureFoundryDocsDir();
+  ensureGitignore();
+
   // Check for coding CLI availability - at least one must be installed
   const cliAvailability = checkAndDisplayCliAvailability();
   if (!cliAvailability) {
@@ -458,7 +583,28 @@ export async function main(): Promise<void> {
   // Sync prompts from package to .foundry/prompts/ (ensures they're always up-to-date)
   copyPromptsToProject();
 
-  const config = getConfig();
+  // Copy Claude commands if using Claude provider
+  const existingConfig = loadExistingConfig();
+  if (!existingConfig.provider || existingConfig.provider === 'claude') {
+    copyClaudeCommands();
+  }
+
+  let config = getConfig();
+
+  // Check if Linear credentials are configured
+  if (!config.linearApiKey || !config.linearTeamId) {
+    const setupSuccess = await runMinimalSetup(cliAvailability);
+    if (!setupSuccess) {
+      console.log('\nCannot start Foundry without Linear configuration.');
+      console.log('Run `foundry config` for full configuration options.\n');
+      process.exit(1);
+    }
+
+    // Reload config after setup
+    config = getConfig();
+  }
+
+  // Display config summary
   console.log(`   Working directory: ${config.workingDirectory}`);
   console.log(`   Branch: ${getCurrentBranch()}`);
   console.log(`   Provider: ${config.provider}`);
@@ -476,40 +622,26 @@ export async function main(): Promise<void> {
     console.log(`   GCP Auto-Stop: enabled`);
   }
 
-  // Check if Linear is configured and initialized
-  if (!config.linearApiKey || !config.linearTeamId) {
-    console.log('\n⚠️  Linear configuration missing.');
-    console.log('   Set LINEAR_API_KEY and LINEAR_TEAM_KEY environment variables,');
-    console.log('   or run initialization wizard.\n');
+  // Check if Foundry ∞ statuses exist in Linear, create if needed
+  const statusesExist = await checkLinearStatuses(config.linearApiKey!, config.linearTeamId!);
+  if (!statusesExist) {
+    console.log('\n   Creating ∞ workflow statuses in Linear...');
+    const result = await createLinearStatuses(config.linearApiKey!, config.linearTeamId!);
 
-    const result = await runInitialization(cliAvailability);
-    if (!result || !result.success) {
-      console.log('\nCannot start Foundry without Linear configuration.');
+    if (!result.success) {
+      console.log('\n❌ Failed to create ∞ statuses. Please check Linear permissions.');
+      if (result.errors.length > 0) {
+        result.errors.forEach((err) => console.log(`   - ${err}`));
+      }
       process.exit(1);
     }
 
-    // Reload config values from process.env (set by runInitialization)
-    // The init wizard updates process.env, so we need to refresh our config
-    config.linearApiKey = process.env.LINEAR_API_KEY;
-    config.linearTeamId = process.env.LINEAR_TEAM_KEY;
-
-    // Verify config has values after initialization
-    if (!config.linearApiKey || !config.linearTeamId) {
-      console.log('\nCannot start Foundry without Linear configuration.');
-      process.exit(1);
+    // Show status creation summary
+    if (result.created.length > 0) {
+      console.log(`   Created ${result.created.length} status(es)`);
     }
-  }
-
-  // Check if Foundry statuses exist in Linear
-  const isInitialized = await checkInitialized(config.linearApiKey, config.linearTeamId);
-  if (!isInitialized) {
-    console.log('\n⚠️  ∞ statuses not found in Linear.');
-    console.log('   Running initialization wizard...\n');
-
-    const result = await runInitialization();
-    if (!result || !result.success) {
-      console.log('\nFailed to create ∞ statuses. Please check Linear permissions.');
-      process.exit(1);
+    if (result.existing.length > 0) {
+      console.log(`   Found ${result.existing.length} existing status(es)`);
     }
   }
 

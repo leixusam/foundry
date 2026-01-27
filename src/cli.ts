@@ -13,7 +13,7 @@ Foundry v${version} - Autonomous Product Development Agent
 
 Usage:
   foundry              Run the main development loop
-  foundry init         Initialize Foundry in current project
+  foundry config       Configure Foundry settings
   foundry uninstall    Remove Foundry from current project
   foundry --help       Show this help message
   foundry --version    Show version
@@ -36,8 +36,8 @@ if (args.includes('--version') || args.includes('-v')) {
 }
 
 // Dynamic imports to avoid config.ts being loaded before we check help/version
-if (args[0] === 'init') {
-  import('./lib/init-project.js').then((m) => m.initProject().catch(console.error));
+if (args[0] === 'config') {
+  import('./lib/init-project.js').then((m) => m.configProject().catch(console.error));
 } else if (args[0] === 'uninstall') {
   import('./lib/init-project.js').then((m) => m.uninstallProject().catch(console.error));
 } else {

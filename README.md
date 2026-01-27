@@ -10,39 +10,32 @@ Foundry is an AI-powered autonomous development system that works on Linear tick
 npm install -g @leixusam/foundry
 ```
 
-Then initialize Foundry in your project:
-
-```bash
-cd your-project
-foundry init
-```
-
 ### Local Project Installation
 
 ```bash
 npm install --save-dev @leixusam/foundry
-npx foundry init
 ```
 
 ## Quick Start
 
 1. **Install Foundry** (see above)
 
-2. **Initialize** - Run `foundry init` to:
-   - Configure Linear API credentials
-   - Set up MCP for Claude Code
-   - Install Claude Code slash commands
-   - Create the `foundry-docs/` directory
-
-3. **Create a ticket** in Linear in your team's backlog
-
-4. **Start Foundry**:
+2. **Run Foundry**:
    ```bash
+   cd your-project
    foundry              # Global install
    npx foundry          # Local install
    ```
 
-Foundry will claim the ticket, work on it autonomously, and update Linear with progress.
+3. **First-run setup** - On first run, Foundry will:
+   - Prompt for your Linear API key
+   - Auto-detect your Linear team
+   - Create necessary directories and configuration
+   - Start the development loop
+
+4. **Create tickets** in Linear and Foundry will work on them autonomously
+
+For advanced configuration, run `foundry config` to change settings like provider, model, and iteration limits.
 
 ## How It Works
 
@@ -131,7 +124,7 @@ This means you can queue up work by creating tickets, and Foundry will process t
 
 ## Directory Structure
 
-After `foundry init`, your project will have:
+After running Foundry, your project will have:
 
 ```
 your-project/
@@ -174,7 +167,7 @@ codex mcp add linear --url https://mcp.linear.app/mcp
 
 ```bash
 foundry              # Run the main development loop
-foundry init         # Initialize Foundry in current project
+foundry config       # Configure Foundry settings
 foundry uninstall    # Remove Foundry from current project
 foundry --help       # Show help
 foundry --version    # Show version
