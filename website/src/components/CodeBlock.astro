@@ -1,0 +1,129 @@
+---
+interface Props {
+  code: string;
+  showPrompt?: boolean;
+}
+
+const { code, showPrompt = true } = Astro.props;
+
+// Generate a unique ID for this code block
+const id = `code-${Math.random().toString(36).slice(2, 9)}`;
+
+// Process code lines - add $ prompt to command lines if showPrompt is true
+const processedCode = showPrompt
+  ? code.trim().split('\n').map(line => {
+      // Add $ prompt to non-empty lines that don't already have it
+      if (line.trim() && !line.trim().startsWith('$') && !line.trim().startsWith('#')) {
+        return `$ ${line}`;
+      }
+      return line;
+    }).join('\n')
+  : code.trim();
+---
+
+<div class="code-block">
+  <pre><code id={id}>{processedCode}</code></pre>
+  <button class="copy-button" data-code={code.trim()} type="button" aria-label="Copy code to clipboard">
+    <span class="copy-text">Copy</span>
+    <span class="copied-text">Copied!</span>
+  </button>
+</div>
+
+<script>
+  document.querySelectorAll('.code-block .copy-button').forEach(button => {
+    button.addEventListener('click', async () => {
+      const code = button.getAttribute('data-code');
+      if (!code) return;
+
+      try {
+        await navigator.clipboard.writeText(code);
+        button.classList.add('copied');
+
+        setTimeout(() => {
+          button.classList.remove('copied');
+        }, 2000);
+      } catch (err) {
+        console.error('Failed to copy:', err);
+      }
+    });
+  });
+</script>
+
+<style>
+  .code-block {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: var(--space-lg);
+    position: relative;
+    overflow-x: auto;
+  }
+
+  pre {
+    margin: 0;
+    padding-right: var(--space-3xl);
+  }
+
+  code {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--color-code-text);
+    white-space: pre;
+    line-height: 1.7;
+  }
+
+  .copy-button {
+    position: absolute;
+    top: var(--space-md);
+    right: var(--space-md);
+    background: var(--color-border);
+    border: none;
+    border-radius: 4px;
+    color: var(--color-text-secondary);
+    padding: var(--space-xs) var(--space-sm);
+    cursor: pointer;
+    font-size: var(--text-sm);
+    font-family: var(--font-sans);
+    transition: background 150ms, color 150ms;
+  }
+
+  .copy-button:hover {
+    background: var(--color-accent);
+    color: var(--color-text-primary);
+  }
+
+  .copy-button.copied {
+    background: var(--color-success);
+    color: var(--color-text-primary);
+  }
+
+  .copied-text {
+    display: none;
+  }
+
+  .copy-button.copied .copy-text {
+    display: none;
+  }
+
+  .copy-button.copied .copied-text {
+    display: inline;
+  }
+
+  @media (max-width: 640px) {
+    .code-block {
+      padding: var(--space-md);
+      border-radius: 6px;
+    }
+
+    pre {
+      padding-right: var(--space-2xl);
+    }
+
+    .copy-button {
+      top: var(--space-sm);
+      right: var(--space-sm);
+      padding: var(--space-xs);
+      font-size: 12px;
+    }
+  }
+</style>
