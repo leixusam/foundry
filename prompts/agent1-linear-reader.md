@@ -52,6 +52,8 @@ This gives you the full list of status names and their types. Look for:
   - `∞ Implement In Progress`
   - `∞ Validate In Progress`
   - `∞ Oneshot In Progress`
+- **Intervention status** (requires human action):
+  - `∞ Blocked` - Agent needs clarification or decision before proceeding
 - **Done**: `∞ Done`
 - **Canceled**: `∞ Canceled`
 
@@ -84,6 +86,8 @@ For any issue with an `∞ ... In Progress` status:
 2. **Claimed by another agent within the last hour**: Check comments for "Agent Claimed" - if another pod claimed it less than 1 hour ago, skip it.
 
 3. **Completed or canceled**: Status type "completed" or "canceled".
+
+4. **Blocked status**: Issues in `∞ Blocked` status require human intervention and must not be picked up.
 
 #### Soft Preferences (use judgment):
 
