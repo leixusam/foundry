@@ -47,3 +47,6 @@ temp/
 
 # Supabase local
 .supabase/
+
+# Playwright MCP
+.playwright-mcp/
