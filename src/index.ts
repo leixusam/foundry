@@ -6,7 +6,7 @@ import { generatePodName } from './lib/loop-instance-name.js';
 import { initLoopLogger, getCurrentOutputDir } from './lib/output-logger.js';
 import { initLoopStats, logAgentStats, finalizeLoopStats } from './lib/stats-logger.js';
 import { createProvider, ProviderResult } from './lib/provider.js';
-import { checkInitialized, runInitialization, checkCodexLinearMcp, copyPromptsToProject } from './init.js';
+import { checkInitialized, runInitialization, checkCodexLinearMcp, copyPromptsToProject, checkAndDisplayCliAvailability } from './init.js';
 import { downloadAttachmentsFromAgent1Output } from './lib/attachment-downloader.js';
 import { isRunningOnGcp, stopGcpInstance } from './lib/gcp.js';
 import { getVersion } from './lib/version.js';
@@ -448,6 +448,13 @@ export async function main(): Promise<void> {
     process.exit(1);
   }
 
+  // Check for coding CLI availability - at least one must be installed
+  const cliAvailability = checkAndDisplayCliAvailability();
+  if (!cliAvailability) {
+    // Error message already displayed by checkAndDisplayCliAvailability
+    process.exit(1);
+  }
+
   // Sync prompts from package to .foundry/prompts/ (ensures they're always up-to-date)
   copyPromptsToProject();
 
@@ -475,7 +482,7 @@ export async function main(): Promise<void> {
     console.log('   Set LINEAR_API_KEY and LINEAR_TEAM_KEY environment variables,');
     console.log('   or run initialization wizard.\n');
 
-    const result = await runInitialization();
+    const result = await runInitialization(cliAvailability);
     if (!result || !result.success) {
       console.log('\nCannot start Foundry without Linear configuration.');
       process.exit(1);
