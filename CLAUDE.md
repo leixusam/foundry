@@ -51,3 +51,15 @@ The `foundry-docs/` directory at project root stores Foundry's work artifacts:
 - `foundry-docs/plans/` - Implementation plans
 - `foundry-docs/validation/` - Validation reports
 - `foundry-docs/shared/` - Shared context between sessions
+
+## Releasing
+
+To release a new version (auto-publishes to npm via GitHub Actions):
+
+```bash
+npm version patch    # or minor/major - bumps package.json + creates git tag
+git push && git push --tags
+gh release create v0.x.x --generate-notes --title "v0.x.x"
+```
+
+The `publish.yml` workflow automatically runs `npm publish` when a GitHub release is created.
