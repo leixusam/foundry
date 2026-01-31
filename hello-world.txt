@@ -1,0 +1,7 @@
+Hello, World!
+
+Here's a joke for you:
+
+Why do programmers prefer dark mode?
+
+Because light attracts bugs!
