@@ -255,6 +255,14 @@ npm run typecheck
 - A Linear account with API access
 - Git repository initialized
 
+## Acknowledgments
+
+Foundry builds on ideas and techniques from the AI engineering community:
+
+- **[Dex Horthy](https://github.com/humanlayer/advanced-context-engineering-for-coding-agents/blob/main/ace-fca.md)** - For the research/plan/implement pattern that structures how Foundry approaches work
+- **[Geoff Huntley](https://ghuntley.com/ralph/)** - For the Ralph Wiggum technique that inspires Foundry's autonomous agent approach
+- **[Vaibhav @ BoundaryML](https://boundaryml.com/podcast)** - For BAML and the "AI That Works" podcast series on building reliable AI systems
+
 ## License
 
 MIT
