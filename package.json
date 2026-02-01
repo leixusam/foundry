@@ -1,6 +1,6 @@
 {
   "name": "@leixusam/foundry",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "Linear-orchestrated autonomous agent system",
   "type": "module",
   "main": "dist/index.js",
