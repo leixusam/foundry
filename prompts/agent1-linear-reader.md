@@ -30,13 +30,19 @@ Multiple agents may be running simultaneously and looking at issues together. Th
 
 Use `mcp__linear__list_issue_statuses` with the team parameter to get all available workflow statuses.
 
-**IMPORTANT**: Foundry uses `∞` prefixed statuses for its workflow stages. However, Foundry can pick up work from ANY backlog status (not just `∞ Backlog`).
+**IMPORTANT**: Foundry uses `∞` prefixed statuses for its workflow stages. However, Foundry can pick up work from ANY backlog or todo-like status (not just `∞ Backlog`).
 
 This gives you the full list of status names and their types. Look for:
 
 **Entry Points (any of these can be picked up for work)**:
 - Any status with type "backlog" (e.g., `Backlog`, `∞ Backlog`, `Triage`, etc.)
+- Any status with type "unstarted" (e.g., `Todo`, `Ready`, etc.) - these are "ready to work" statuses
 - Any `∞ Needs ...` status (issues already in Foundry's workflow)
+
+**Note on Status Type Hierarchy**:
+1. First prioritize Foundry's `∞` prefixed statuses (already in workflow)
+2. Then backlog-type statuses (explicitly waiting for work)
+3. Then unstarted-type statuses (like "Todo" - ready but not started)
 
 **Foundry Workflow Statuses (use these exact names for stage transitions)**:
 - **Ready statuses** (unstarted):
@@ -63,14 +69,17 @@ If you don't see these `∞` statuses, output NO_WORK with reason "Foundry statu
 
 To avoid cluttering context with completed work, make **separate queries** for the statuses Foundry can work on. Use `mcp__linear__list_issues` with these parameters:
 
-**Query 1**: Get backlog issues (entry points for new work)
+**Query 1**: Get backlog and todo issues (entry points for new work)
 
-Query ALL backlog-type statuses identified in Step 1. This includes not just `∞ Backlog` but any status with type "backlog" (e.g., `Backlog`, `Triage`, etc.). Make separate calls for each:
+Query ALL backlog-type AND unstarted-type statuses identified in Step 1. This includes not just `∞ Backlog` but any status that represents "ready for work". Make separate calls for each:
 - `state: "∞ Backlog"`, `includeArchived: false`
 - `state: "Backlog"`, `includeArchived: false` (if this status exists)
-- Any other backlog-type statuses found in Step 1
+- `state: "Todo"`, `includeArchived: false` (if this status exists)
+- Any other backlog-type or unstarted-type statuses found in Step 1
 
-**Important**: Always query all backlog statuses, not just `∞ Backlog`. If `∞ Backlog` is empty, there may still be work available in other backlog statuses like `Backlog` or `Triage`.
+**Important**: Always query all entry point statuses. If `∞ Backlog` is empty, there may still be work available in other statuses like `Backlog`, `Todo`, or `Triage`. The goal is to find any work that is ready to be picked up.
+
+**Exclusions**: Do NOT pick up issues from standard started-type statuses like `In Progress` or `In Review` - these are being actively worked on by humans. Only pick up from backlog-type and unstarted-type statuses (which represent "waiting for work" states).
 
 **Query 2**: Get issues in Foundry workflow ready for work
 Make separate calls for each `∞ Needs *` status:
@@ -156,6 +165,7 @@ Also gather:
 
 Map the issue's current status to the appropriate stage:
 - Any backlog-type status (e.g., `Backlog`, `∞ Backlog`, `Triage`) → research
+- Any unstarted-type status (e.g., `Todo`, `Ready`) → research
 - `∞ Needs Research` → research
 - `∞ Needs Specification` → specification
 - `∞ Needs Plan` → plan
