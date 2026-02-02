@@ -175,12 +175,6 @@ class CodexProvider implements LLMProvider {
     const model = options.model || config.codexModel;
     const reasoningEffort: CodexReasoningEffort = options.reasoningEffort || config.codexReasoningEffort;
 
-    // Warn if allowedTools is specified (Codex doesn't support per-session tool restriction)
-    if (options.allowedTools && options.allowedTools.length > 0) {
-      console.warn(`${YELLOW}⚠️  Warning: allowedTools option is ignored by Codex CLI.${RESET}`);
-      console.warn(`${YELLOW}   Codex uses global MCP configuration from ~/.codex/config.toml${RESET}`);
-    }
-
     return new Promise((resolve, reject) => {
       const args = [
         'exec',
