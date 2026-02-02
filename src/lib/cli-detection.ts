@@ -7,37 +7,25 @@ export interface CliAvailability {
 }
 
 /**
- * Checks if Claude Code CLI is installed and working.
- * Uses `claude -p` with a simple "hello" prompt to verify it's functional.
+ * Checks if Claude Code CLI is installed.
+ * Uses `claude --version` to verify the binary exists.
  */
 export function isClaudeCliInstalled(): boolean {
   try {
-    // Use `claude -p` with echo to stdin, with a short timeout
-    // The `--print` flag outputs the response to stdout
-    execSync('echo "Say hello" | claude -p --print 2>/dev/null', {
+    execSync('claude --version', {
       encoding: 'utf-8',
-      timeout: 30000, // 30 second timeout
+      timeout: 5000,
       stdio: ['pipe', 'pipe', 'pipe'],
     });
     return true;
   } catch {
-    // Also try just checking if the binary exists with --version
-    try {
-      execSync('claude --version', {
-        encoding: 'utf-8',
-        timeout: 5000,
-        stdio: ['pipe', 'pipe', 'pipe'],
-      });
-      return true;
-    } catch {
-      return false;
-    }
+    return false;
   }
 }
 
 /**
- * Checks if Codex CLI is installed and working.
- * Uses `codex --version` to verify it's functional.
+ * Checks if Codex CLI is installed.
+ * Uses `codex --version` to verify the binary exists.
  */
 export function isCodexCliInstalled(): boolean {
   try {

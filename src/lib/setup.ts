@@ -25,7 +25,7 @@ import {
   FOUNDRY_STATUS_PREFIX,
 } from './linear-api.js';
 import { isClaudeCliInstalled, isCodexCliInstalled, hasAnyCli, CliAvailability } from './cli-detection.js';
-import { ProviderName, ClaudeModel, CodexReasoningEffort, InitResult } from '../types.js';
+import { ProviderName, ClaudeModel, CodexReasoningEffort, InitResult, MergeMode } from '../types.js';
 
 // Get the package directory (where Foundry is installed)
 const __filename = fileURLToPath(import.meta.url);
@@ -48,6 +48,7 @@ export interface LoadedConfig {
   codexModel?: string;
   codexReasoningEffort?: CodexReasoningEffort;
   maxIterations?: number;
+  mergeMode?: MergeMode;
 }
 
 // MCP configuration interface
@@ -199,6 +200,11 @@ export function loadExistingConfig(): LoadedConfig {
     if (!isNaN(parsed)) config.maxIterations = parsed;
   }
 
+  const mergeMode = getValue('FOUNDRY_MERGE_MODE');
+  if (mergeMode === 'merge' || mergeMode === 'pr') {
+    config.mergeMode = mergeMode;
+  }
+
   return config;
 }
 
@@ -238,6 +244,10 @@ export function saveEnvConfig(config: LoadedConfig): void {
   lines.push('');
   lines.push('# Loop options (0 = unlimited)');
   lines.push(`FOUNDRY_MAX_ITERATIONS=${config.maxIterations ?? 0}`);
+
+  lines.push('');
+  lines.push('# Merge mode: "merge" (direct to main) or "pr" (create pull request)');
+  lines.push(`FOUNDRY_MERGE_MODE=${config.mergeMode || 'merge'}`);
 
   lines.push(''); // Trailing newline
 
@@ -395,9 +405,11 @@ export async function createLinearStatuses(apiKey: string, teamKey: string): Pro
 
 /**
  * Copies prompts from package to .foundry/prompts/.
+ * Assembles prompts with merge fragment based on current config.
  */
 export function copyPromptsToProject(): void {
   const sourceDir = join(PACKAGE_ROOT, 'prompts');
+  const fragmentsDir = join(sourceDir, 'fragments');
   const destDir = join(ensureFoundryDir(), 'prompts');
 
   if (!existsSync(destDir)) {
@@ -409,15 +421,53 @@ export function copyPromptsToProject(): void {
     return;
   }
 
+  // Load current config to determine merge mode
+  const config = loadExistingConfig();
+  const mergeMode = config.mergeMode || 'merge';
+  const provider = config.provider || 'claude';
+
+  // Load the appropriate merge fragment
+  const fragmentName = mergeMode === 'pr' ? 'merge-pr.md' : 'merge-direct.md';
+  const fragmentPath = join(fragmentsDir, fragmentName);
+  let mergeFragment = '';
+  if (existsSync(fragmentPath)) {
+    mergeFragment = readFileSync(fragmentPath, 'utf-8');
+
+    // Substitute provider link in fragment
+    const providerLink = provider === 'codex'
+      ? '[Codex](https://openai.com/codex)'
+      : '[Claude Code](https://claude.ai/claude-code)';
+    mergeFragment = mergeFragment.replace(/\{\{PROVIDER_LINK\}\}/g, providerLink);
+  }
+
   const files = readdirSync(sourceDir).filter((f) => f.endsWith('.md'));
   let copied = 0;
 
   for (const file of files) {
-    copyFileSync(join(sourceDir, file), join(destDir, file));
+    let content = readFileSync(join(sourceDir, file), 'utf-8');
+
+    // For worker prompts, substitute merge instructions and stage-specific placeholders
+    if (file === 'agent2-worker-oneshot.md') {
+      content = content.replace('{{MERGE_INSTRUCTIONS}}',
+        mergeFragment
+          .replace(/\{\{STAGE\}\}/g, 'oneshot')
+          .replace(/\{\{WORKFLOW\}\}/g, 'oneshot')
+          .replace(/\{\{ARTIFACT_DIR\}\}/g, 'oneshot')
+      );
+    } else if (file === 'agent2-worker-validate.md') {
+      content = content.replace('{{MERGE_INSTRUCTIONS}}',
+        mergeFragment
+          .replace(/\{\{STAGE\}\}/g, 'validate')
+          .replace(/\{\{WORKFLOW\}\}/g, 'staged')
+          .replace(/\{\{ARTIFACT_DIR\}\}/g, 'validation')
+      );
+    }
+
+    writeFileSync(join(destDir, file), content);
     copied++;
   }
 
-  console.log(`   Prompts synced (${copied} files)`);
+  console.log(`   Prompts synced (${copied} files, merge mode: ${mergeMode})`);
 }
 
 /**

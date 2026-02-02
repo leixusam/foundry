@@ -60,6 +60,7 @@ This gives you the full list of status names and their types. Look for:
   - `∞ Oneshot In Progress`
 - **Intervention status** (requires human action):
   - `∞ Blocked` - Agent needs clarification or decision before proceeding
+  - `∞ Awaiting Merge` - Work complete, PR awaiting human review/merge
 - **Done**: `∞ Done`
 - **Canceled**: `∞ Canceled`
 
@@ -106,6 +107,7 @@ Make separate calls for each `∞ ... In Progress` status:
 **Do NOT query for**:
 - `∞ Done`, `Done`, `[RL] Done` (completed)
 - `∞ Canceled`, `Canceled`, `[RL] Canceled`, `Duplicate` (canceled)
+- `∞ Awaiting Merge` (completed, waiting for human to merge PR)
 
 This approach fetches only actionable issues and avoids wasting context on completed work.
 

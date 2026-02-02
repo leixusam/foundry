@@ -43,7 +43,7 @@ import {
   LoadedConfig,
   TeamInfo,
 } from './setup.js';
-import { ProviderName, ClaudeModel, CodexReasoningEffort } from '../types.js';
+import { ProviderName, ClaudeModel, CodexReasoningEffort, MergeMode } from '../types.js';
 
 /**
  * Main configuration wizard for `foundry config`.
@@ -245,6 +245,29 @@ export async function configProject(): Promise<void> {
     console.log('');
 
     // ═══════════════════════════════════════════════════════════════════════════
+    // Merge Mode Configuration
+    // ═══════════════════════════════════════════════════════════════════════════
+    console.log('─── Merge Mode ───\n');
+
+    let mergeMode: MergeMode = existingConfig.mergeMode || 'merge';
+
+    console.log('When Foundry completes work on a ticket:');
+    console.log('  merge - Merge directly to main (autonomous)');
+    console.log('  pr    - Create a pull request for human review');
+    console.log('');
+
+    const mergeModeInput = await promptWithDefault(
+      rl,
+      `Merge mode [merge/pr] (${mergeMode})`,
+      mergeMode
+    );
+    if (mergeModeInput === 'pr' || mergeModeInput === 'merge') {
+      mergeMode = mergeModeInput;
+    }
+
+    console.log('');
+
+    // ═══════════════════════════════════════════════════════════════════════════
     // Save Configuration
     // ═══════════════════════════════════════════════════════════════════════════
 
@@ -256,6 +279,7 @@ export async function configProject(): Promise<void> {
       codexModel,
       codexReasoningEffort: codexEffort,
       maxIterations,
+      mergeMode,
     };
 
     saveEnvConfig(newConfig);

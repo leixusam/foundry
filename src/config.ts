@@ -1,7 +1,7 @@
 import { execSync } from 'child_process';
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
-import { FoundryConfig, ProviderName, ClaudeModel, CodexReasoningEffort, CodexAgentReasoningConfig } from './types.js';
+import { FoundryConfig, ProviderName, ClaudeModel, CodexReasoningEffort, CodexAgentReasoningConfig, MergeMode } from './types.js';
 import { parseArgs } from 'util';
 
 // Get the git repo root directory
@@ -109,6 +109,7 @@ Environment Variables:
   CODEX_AGENT3_REASONING     Agent 3 reasoning: low, medium (default), high, extra_high
   FOUNDRY_QUICK_CHECK_INTERVAL_MINUTES   Quick check interval (default: 5)
   FOUNDRY_FULL_CHECK_INTERVAL_MINUTES    Full check fallback interval (default: 120)
+  FOUNDRY_MERGE_MODE                     Merge mode: merge (default) or pr
 
 Examples:
   npm start                      # Run with Claude (default)
@@ -226,6 +227,13 @@ function getFullCheckInterval(): number {
   return 120; // Default: 120 minutes (2 hours)
 }
 
+// Parse merge mode (default: merge)
+function getMergeMode(): MergeMode {
+  const envMode = process.env.FOUNDRY_MERGE_MODE?.toLowerCase();
+  if (envMode === 'pr') return 'pr';
+  return 'merge'; // Default: direct merge
+}
+
 // Parse per-agent reasoning effort from environment variables
 // Agent 1 and 2 default to 'high', Agent 3 defaults to 'medium' (as specified in ticket RSK-40)
 function getCodexAgentReasoning(): CodexAgentReasoningConfig {
@@ -276,6 +284,9 @@ function buildConfig(): FoundryConfig {
     // Quick check configuration
     quickCheckIntervalMinutes: getQuickCheckInterval(),
     fullCheckIntervalMinutes: getFullCheckInterval(),
+
+    // Merge mode
+    mergeMode: getMergeMode(),
   };
 }
 
