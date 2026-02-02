@@ -107,6 +107,8 @@ Environment Variables:
   CODEX_AGENT1_REASONING     Agent 1 reasoning: low, medium, high (default), extra_high
   CODEX_AGENT2_REASONING     Agent 2 reasoning: low, medium, high (default), extra_high
   CODEX_AGENT3_REASONING     Agent 3 reasoning: low, medium (default), high, extra_high
+  FOUNDRY_QUICK_CHECK_INTERVAL_MINUTES   Quick check interval (default: 5)
+  FOUNDRY_FULL_CHECK_INTERVAL_MINUTES    Full check fallback interval (default: 120)
 
 Examples:
   npm start                      # Run with Claude (default)
