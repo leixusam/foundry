@@ -173,6 +173,28 @@ async function getIssueCountForState(client: LinearClient, stateId: string): Pro
   return issues.nodes.length;
 }
 
+// Fetch issue description with fresh pre-signed URLs
+// Linear generates short-lived signed URLs for uploads, so we need to fetch fresh URLs right before download
+export async function getIssueDescription(
+  client: LinearClient,
+  issueIdentifier: string
+): Promise<string | null> {
+  try {
+    // Search for the issue by identifier (e.g., "F-69")
+    const searchResult = await client.searchIssues(issueIdentifier);
+    const issues = searchResult.nodes;
+    if (!issues || issues.length === 0) return null;
+
+    // Find exact match for identifier
+    const issue = issues.find((i) => i.identifier === issueIdentifier);
+    if (!issue) return null;
+
+    return issue.description ?? null;
+  } catch {
+    return null;
+  }
+}
+
 // Delete Foundry workflow statuses that have no issues
 export async function deleteFoundryStatuses(
   client: LinearClient,
