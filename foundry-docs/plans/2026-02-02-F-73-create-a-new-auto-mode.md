@@ -27,7 +27,7 @@ Add a third merge mode, `auto`, alongside `merge` and `pr`. In `auto` mode (the 
 ### Phase Checklist
 
 - [x] Phase 1: Add `auto` to merge mode typing + config parsing (and make it default)
-- [ ] Phase 2: Update onboarding wizards to offer `auto` (default)
+- [x] Phase 2: Update onboarding wizards to offer `auto` (default)
 - [ ] Phase 3: Implement `auto` prompt behavior via a new merge fragment
 - [ ] Phase 4: Reclassify `∞ Awaiting Merge` as blocked-like without creating wake loops
 

@@ -241,9 +241,10 @@ export async function configProject(): Promise<void> {
     // ═══════════════════════════════════════════════════════════════════════════
     console.log('─── Merge Mode ───\n');
 
-    const currentMergeMode: MergeMode = existingConfig.mergeMode || 'merge';
+    const currentMergeMode: MergeMode = existingConfig.mergeMode || 'auto';
 
     const mergeModeOptions: SelectOption<MergeMode>[] = [
+      { value: 'auto', label: 'auto', description: 'Agent decides: merge directly or create PR (recommended)' },
       { value: 'merge', label: 'merge', description: 'Merge directly to main' },
       { value: 'pr', label: 'pr', description: 'Create PR for review' },
     ];

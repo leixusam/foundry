@@ -567,6 +567,7 @@ async function runMinimalSetup(cliAvailability: CliAvailability): Promise<boolea
     // ─── Merge Mode ───
     console.log('When work completes:');
     const mergeModeOptions: SelectOption<MergeMode>[] = [
+      { value: 'auto', label: 'auto', description: 'Agent decides: merge directly or create PR (recommended)' },
       { value: 'merge', label: 'merge', description: 'Merge directly to main' },
       { value: 'pr', label: 'pr', description: 'Create PR for review' },
     ];
