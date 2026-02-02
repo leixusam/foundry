@@ -9,6 +9,9 @@ const LINEAR_UPLOAD_PATTERN = /https:\/\/uploads\.linear\.app\/[^\s\)\]"'<>]+/g;
 // Pattern to match markdown image syntax with alt text: ![alt text](url)
 const MARKDOWN_IMAGE_PATTERN = /!\[([^\]]*)\]\((https:\/\/uploads\.linear\.app\/[^\s\)]+)\)/g;
 
+// Pattern to match markdown link syntax with link text: [link text](url)
+const MARKDOWN_LINK_PATTERN = /\[([^\]]+)\]\((https:\/\/uploads\.linear\.app\/[^\s\)]+)\)/g;
+
 // Size limit warning threshold (10MB)
 const SIZE_WARNING_THRESHOLD = 10 * 1024 * 1024;
 
@@ -56,7 +59,26 @@ export function extractLinearUrls(markdown: string): AttachmentInfo[] {
     });
   }
 
-  // Then extract any standalone URLs that weren't in markdown image syntax
+  // Then extract markdown links: [filename.md](url)
+  const linkMatches = [...markdown.matchAll(MARKDOWN_LINK_PATTERN)];
+  for (const match of linkMatches) {
+    const [, linkText, url] = match;
+    if (seen.has(url)) continue;
+    seen.add(url);
+
+    // Use link text as filename if it looks like a filename (has extension)
+    const filename = hasFileExtension(linkText) ? linkText : getFilenameFromUrl(url);
+    const id = Buffer.from(url).toString('base64').slice(0, 12);
+
+    attachments.push({
+      id,
+      url,
+      filename: decodeURIComponent(filename),
+      source: 'embedded',
+    });
+  }
+
+  // Finally extract any standalone URLs that weren't in markdown syntax
   const urls = markdown.match(LINEAR_UPLOAD_PATTERN) || [];
   for (const url of urls) {
     if (seen.has(url)) continue;
@@ -200,7 +222,7 @@ async function downloadAttachment(
     const contentType = response.headers.get('content-type');
     const filenameWithExt = ensureFileExtension(attachment.filename, contentType);
     const sanitizedFilename = sanitizeFilename(filenameWithExt);
-    const localPath = path.join(outputDir, `${attachment.id}-${sanitizedFilename}`);
+    const localPath = path.join(outputDir, sanitizedFilename);
 
     fs.writeFileSync(localPath, Buffer.from(buffer));
 
