@@ -98,4 +98,15 @@ export interface FoundryConfig {
 
   // GCP configuration
   gcpAutoStop: boolean;
+
+  // Quick check configuration
+  quickCheckIntervalMinutes: number;
+  fullCheckIntervalMinutes: number;
+}
+
+// Quick check result
+export interface QuickCheckResult {
+  hasWork: boolean;
+  ticketCount: number;
+  error?: string;
 }
