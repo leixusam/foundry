@@ -39,6 +39,11 @@ interface CodexItemCompleted {
     aggregated_output?: string;
     changes?: Array<{ kind: string; path: string }>;
     text?: string;
+    // MCP tool call fields
+    tool_name?: string;
+    tool_arguments?: Record<string, unknown>;
+    // Web search fields
+    query?: string;
   };
 }
 
@@ -65,8 +70,8 @@ function cleanCommand(cmd: string): string {
     .replace(/^['"]|['"]$/g, '');
 }
 
-// Helper: Truncate string to max length
-function truncate(str: string, maxLen: number): string {
+// Helper: Truncate string to max length (default 120 for better visibility)
+function truncate(str: string, maxLen: number = 120): string {
   if (str.length <= maxLen) return str;
   return str.substring(0, maxLen) + '...';
 }
@@ -80,15 +85,15 @@ function formatCodexEvent(event: CodexEvent): string | null {
     switch (item.type) {
       case 'command_execution': {
         const cmd = cleanCommand(item.command || '');
-        const shortCmd = truncate(cmd.replace(/\n/g, ' '), 80);
+        const shortCmd = truncate(cmd.replace(/\n/g, ' '));
         const exitCode = item.exit_code ?? 0;
 
         if (exitCode === 0) {
           return `${DIM}🔧 [codex] ${shortCmd}${RESET}`;
         } else {
-          let output = `${DIM}⚠️ [codex] ${shortCmd} (exit ${exitCode})${RESET}`;
+          let output = `${YELLOW}⚠️ [codex] ${shortCmd} (exit ${exitCode})${RESET}`;
           if (item.aggregated_output) {
-            const shortOutput = truncate(item.aggregated_output, 80);
+            const shortOutput = truncate(item.aggregated_output);
             output += `\n${DIM}↳ [codex] ${shortOutput}${RESET}`;
           }
           return output;
@@ -108,12 +113,35 @@ function formatCodexEvent(event: CodexEvent): string | null {
         // Extract first line of reasoning (often a header like **Planning**)
         const text = item.text || '';
         const firstLine = text.split('\n')[0] || '';
-        const cleanLine = firstLine.replace(/^\*\*|\*\*$/g, '');
-        return `💭 [codex] ${cleanLine}`;
+        const cleanLine = firstLine.replace(/^\*\*|\*\*$/g, '').trim();
+        // Dim reasoning like other events for visual consistency
+        return `${DIM}💭 [codex] ${cleanLine}${RESET}`;
       }
 
       case 'agent_message': {
         return `${BOLD}💬 [codex] ${item.text || ''}${RESET}`;
+      }
+
+      case 'mcp_tool_call': {
+        const toolName = item.tool_name || 'unknown';
+        // Show tool name and a preview of arguments if present
+        let display = `🔌 [codex] mcp:${toolName}`;
+        if (item.tool_arguments) {
+          const argPreview = truncate(JSON.stringify(item.tool_arguments), 80);
+          display += ` ${DIM}${argPreview}${RESET}`;
+        }
+        return `${DIM}${display}${RESET}`;
+      }
+
+      case 'web_search': {
+        const query = item.query || item.text || 'search';
+        return `${DIM}🔍 [codex] web search: ${truncate(query, 100)}${RESET}`;
+      }
+
+      case 'plan_update': {
+        const text = item.text || 'plan updated';
+        const firstLine = text.split('\n')[0] || '';
+        return `${DIM}📋 [codex] ${truncate(firstLine, 100)}${RESET}`;
       }
 
       default:
@@ -124,7 +152,7 @@ function formatCodexEvent(event: CodexEvent): string | null {
   if (event.type === 'error') {
     const errorEvent = event as CodexError;
     const message = errorEvent.message || errorEvent.error || 'error';
-    return `${YELLOW}⚠️ [codex] ${message}${RESET}`;
+    return `${YELLOW}⚠️ [codex] ERROR: ${message}${RESET}`;
   }
 
   return null;
