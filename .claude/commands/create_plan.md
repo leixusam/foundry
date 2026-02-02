@@ -51,7 +51,7 @@ Then wait for the user's input.
    Before asking the user any questions, use specialized agents to research in parallel:
    - Use the **codebase-locator** agent to find all files related to the ticket/task
    - Use the **codebase-analyzer** agent to understand how the current implementation works
-   - If relevant, use the **thoughts-locator** agent to find any existing thoughts documents about this feature
+   - If relevant, use the **foundry-docs-locator** agent to find any existing foundry-docs documents about this feature
    - If a Linear ticket is mentioned, use the **linear-ticket-reader** agent to get full details
 
    These agents will:
@@ -111,8 +111,8 @@ After getting initial clarifications:
    - **codebase-pattern-finder** - To find similar features we can model after
 
    **For historical context:**
-   - **thoughts-locator** - To find any research, plans, or decisions about this area
-   - **thoughts-analyzer** - To extract key insights from the most relevant documents
+   - **foundry-docs-locator** - To find any research, plans, or decisions about this area
+   - **foundry-docs-analyzer** - To extract key insights from the most relevant documents
 
    **For related tickets:**
    - **linear-searcher** - To find similar issues or past implementations
@@ -295,7 +295,7 @@ After structure approval:
 
 2. **Present the draft plan location**:
 
-   ```
+   ```markdown
    I've created the initial implementation plan at:
    `foundry-docs/shared/plans/YYYY-MM-DD-ENG-XXXX-description.md`
 
@@ -392,7 +392,7 @@ After structure approval:
 
 ## Common Patterns
 
-### For Database Changes:
+### For Database Changes
 
 - Start with schema/migration
 - Add store methods
@@ -400,7 +400,7 @@ After structure approval:
 - Expose via API
 - Update clients
 
-### For New Features:
+### For New Features
 
 - Research existing patterns first
 - Start with data model
@@ -408,7 +408,7 @@ After structure approval:
 - Add API endpoints
 - Implement UI last
 
-### For Refactoring:
+### For Refactoring
 
 - Document current behavior
 - Plan incremental changes

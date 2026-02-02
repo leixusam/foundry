@@ -19,7 +19,7 @@ When this command is invoked:
 
    **If NO plan file provided**:
 
-   ```
+   ```markdown
    I'll help you iterate on an existing implementation plan.
 
    Which plan would you like to update? Please provide the path to the plan file (e.g., `foundry-docs/shared/plans/2025-10-16-feature.md`).
@@ -31,7 +31,7 @@ When this command is invoked:
 
    **If plan file provided but NO feedback**:
 
-   ```
+   ```markdown
    I've found the plan at [path]. What changes would you like to make?
 
    For example:
@@ -78,8 +78,8 @@ If the user's feedback requires understanding new code patterns or validating as
    - **codebase-pattern-finder** - To find similar patterns
 
    **For historical context:**
-   - **thoughts-locator** - To find related research or decisions
-   - **thoughts-analyzer** - To extract insights from documents
+   - **foundry-docs-locator** - To find related research or decisions
+   - **foundry-docs-analyzer** - To extract insights from documents
 
    **Be EXTREMELY specific about directories**:
    - If the change involves "WUI", specify `humanlayer-wui/` directory
@@ -142,7 +142,7 @@ Get user confirmation before proceeding.
 
 2. **Present the changes made**:
 
-   ```
+   ```markdown
    I've updated the plan at `foundry-docs/shared/plans/[filename].md`
 
    Changes made:
@@ -231,14 +231,14 @@ When spawning research sub-tasks:
 
 **Scenario 1: User provides everything upfront**
 
-```
+```markdown
 User: /iterate_plan foundry-docs/shared/plans/2025-10-16-feature.md - add phase for error handling
 Assistant: [Reads plan, researches error handling patterns, updates plan]
 ```
 
 **Scenario 2: User provides just plan file**
 
-```
+```markdown
 User: /iterate_plan foundry-docs/shared/plans/2025-10-16-feature.md
 Assistant: I've found the plan. What changes would you like to make?
 User: Split Phase 2 into two phases - one for backend, one for frontend
@@ -247,7 +247,7 @@ Assistant: [Proceeds with update]
 
 **Scenario 3: User provides no arguments**
 
-```
+```markdown
 User: /iterate_plan
 Assistant: Which plan would you like to update? Please provide the path...
 User: foundry-docs/shared/plans/2025-10-16-feature.md
