@@ -29,12 +29,14 @@ import {
   checkCodexLinearMcp,
   createPromptInterface,
   promptSecret,
-  promptWithDefault,
+  promptSelect,
   maskApiKey,
   LoadedConfig,
   TeamInfo,
   CliAvailability,
+  SelectOption,
 } from './lib/setup.js';
+import { MergeMode } from './types.js';
 
 // Import providers to register them
 import './lib/claude.js';
@@ -510,7 +512,7 @@ async function runMinimalSetup(cliAvailability: CliAvailability): Promise<boolea
     // Load any existing config
     const existingConfig = loadExistingConfig();
 
-    // Prompt for API key
+    // ─── API Key ───
     console.log('To get your API key:');
     console.log('  1. Go to: https://linear.app/settings/account/security/api-keys/new');
     console.log('  2. Enter a label (e.g., "Foundry")');
@@ -532,7 +534,7 @@ async function runMinimalSetup(cliAvailability: CliAvailability): Promise<boolea
     }
     console.log('✓ Valid\n');
 
-    // Fetch teams and select
+    // ─── Team Selection ───
     console.log('Fetching teams...');
     const teams = await fetchLinearTeams(apiKey);
 
@@ -547,32 +549,29 @@ async function runMinimalSetup(cliAvailability: CliAvailability): Promise<boolea
       console.log(`Found team: ${teams[0].name} (${teams[0].key})`);
       console.log('Auto-selecting as it\'s the only team.\n');
     } else {
-      console.log('Available teams:');
-      teams.forEach((team) => {
-        console.log(`  - ${team.key}: ${team.name}`);
-      });
-      teamKey = await promptWithDefault(rl, `\nSelect team`, teams[0].key);
+      console.log('Select team:');
+      const teamOptions: SelectOption<string>[] = teams.map((team) => ({
+        value: team.key,
+        label: `${team.name} (${team.key})`,
+      }));
 
-      // Verify team exists
-      const selectedTeam = teams.find((t) => t.key === teamKey);
-      if (!selectedTeam) {
-        console.log(`Team "${teamKey}" not found.`);
-        return false;
-      }
-      console.log(`Selected: ${selectedTeam.name} (${selectedTeam.key})\n`);
+      teamKey = await promptSelect(rl, teamOptions, 0);
+      const selectedTeam = teams.find((t) => t.key === teamKey)!;
+      console.log(`Selected: ${selectedTeam.name}\n`);
     }
 
     // Auto-select provider based on CLI availability
     const provider = autoSelectProvider(cliAvailability);
     console.log(`Using provider: ${provider}\n`);
 
-    // Prompt for merge mode
-    console.log('Merge Mode Options:');
-    console.log('  merge - Merge directly to main after validation (default)');
-    console.log('  pr    - Create a pull request for human review');
-    console.log('');
-    const mergeModeInput = await promptWithDefault(rl, 'Merge mode [merge/pr]', 'merge');
-    const mergeMode = mergeModeInput === 'pr' ? 'pr' : 'merge';
+    // ─── Merge Mode ───
+    console.log('When work completes:');
+    const mergeModeOptions: SelectOption<MergeMode>[] = [
+      { value: 'merge', label: 'merge', description: 'Merge directly to main' },
+      { value: 'pr', label: 'pr', description: 'Create PR for review' },
+    ];
+
+    const mergeMode = await promptSelect(rl, mergeModeOptions, 0);
 
     // Save configuration
     const newConfig: LoadedConfig = {

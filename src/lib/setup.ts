@@ -533,6 +533,56 @@ export async function promptConfirm(
 }
 
 /**
+ * Option for numbered selection prompts.
+ */
+export interface SelectOption<T> {
+  value: T;
+  label: string;
+  description?: string;
+}
+
+/**
+ * Prompts user to select from a numbered list.
+ * Shows options as numbered list and accepts number input.
+ * Returns the selected option's value.
+ */
+export async function promptSelect<T>(
+  rl: ReturnType<typeof createInterface>,
+  options: SelectOption<T>[],
+  defaultIndex = 0
+): Promise<T> {
+  return new Promise((resolve) => {
+    // Display numbered options
+    options.forEach((opt, i) => {
+      const desc = opt.description ? ` - ${opt.description}` : '';
+      console.log(`  ${i + 1}. ${opt.label}${desc}`);
+    });
+    console.log('');
+
+    rl.question(`Choice [default=${defaultIndex + 1}]: `, (answer) => {
+      const trimmed = answer.trim();
+
+      // Empty input = use default
+      if (trimmed === '') {
+        resolve(options[defaultIndex].value);
+        return;
+      }
+
+      // Parse number
+      const num = parseInt(trimmed, 10);
+      if (!isNaN(num) && num >= 1 && num <= options.length) {
+        resolve(options[num - 1].value);
+        return;
+      }
+
+      // Invalid input, use default
+      console.log(`Invalid choice, using default (${defaultIndex + 1})`);
+      resolve(options[defaultIndex].value);
+    });
+  });
+}
+
+/**
  * Masks an API key for display (shows last 4 chars).
  */
 export function maskApiKey(apiKey: string): string {

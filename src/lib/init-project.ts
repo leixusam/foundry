@@ -38,9 +38,11 @@ import {
   promptSecret,
   promptWithDefault,
   promptConfirm,
+  promptSelect,
   maskApiKey,
   LoadedConfig,
   TeamInfo,
+  SelectOption,
 } from './setup.js';
 import { ProviderName, ClaudeModel, CodexReasoningEffort, MergeMode } from '../types.js';
 
@@ -51,9 +53,7 @@ export async function configProject(): Promise<void> {
   const projectRoot = getRepoRoot();
 
   console.log('');
-  console.log('╔════════════════════════════════════════╗');
-  console.log('║     Foundry - Configuration Wizard     ║');
-  console.log('╚════════════════════════════════════════╝');
+  console.log('╭─ Foundry Configuration ─╮');
   console.log('');
   console.log(`Project: ${projectRoot}`);
   console.log('');
@@ -137,67 +137,54 @@ export async function configProject(): Promise<void> {
     }
 
     // Team selection
-    let teamKey: string;
-    const currentTeam = existingConfig.linearTeamKey
-      ? teams.find((t) => t.key === existingConfig.linearTeamKey)
-      : undefined;
+    const currentTeamIndex = existingConfig.linearTeamKey
+      ? teams.findIndex((t) => t.key === existingConfig.linearTeamKey)
+      : 0;
+    const defaultTeamIndex = currentTeamIndex >= 0 ? currentTeamIndex : 0;
 
-    console.log('Available teams:');
-    teams.forEach((team) => {
-      const marker = team.key === existingConfig.linearTeamKey ? ' (current)' : '';
-      console.log(`  - ${team.key}: ${team.name}${marker}`);
-    });
+    console.log('Select team:');
+    const teamOptions: SelectOption<string>[] = teams.map((team) => ({
+      value: team.key,
+      label: `${team.name} (${team.key})`,
+    }));
 
-    if (currentTeam) {
-      teamKey = await promptWithDefault(
-        rl,
-        `\nLinear Team [Enter to keep ${currentTeam.key}]`,
-        currentTeam.key
-      );
-    } else {
-      teamKey = await promptWithDefault(rl, `\nSelect team`, teams[0].key);
-    }
-
-    // Verify team exists
-    const selectedTeam = teams.find((t) => t.key === teamKey);
-    if (!selectedTeam) {
-      console.log(`Team "${teamKey}" not found. Using first team.`);
-      teamKey = teams[0].key;
-    } else {
-      console.log(`Selected: ${selectedTeam.name} (${selectedTeam.key})`);
-    }
+    const teamKey = await promptSelect(rl, teamOptions, defaultTeamIndex);
+    const selectedTeam = teams.find((t) => t.key === teamKey)!;
+    console.log(`Selected: ${selectedTeam.name} (${selectedTeam.key})`);
 
     console.log('');
 
     // ═══════════════════════════════════════════════════════════════════════════
     // Provider Configuration
     // ═══════════════════════════════════════════════════════════════════════════
-    console.log('─── Provider Configuration ───\n');
+    console.log('─── Provider ───\n');
 
     let provider: ProviderName;
 
     // Determine available options based on CLI detection
-    const availableProviders: string[] = [];
-    if (cliAvailability.claude) availableProviders.push('claude');
-    if (cliAvailability.codex) availableProviders.push('codex');
+    const providerOptions: SelectOption<ProviderName>[] = [];
+    if (cliAvailability.claude) {
+      providerOptions.push({ value: 'claude', label: 'claude', description: 'Claude Code CLI' });
+    }
+    if (cliAvailability.codex) {
+      providerOptions.push({ value: 'codex', label: 'codex', description: 'OpenAI Codex CLI' });
+    }
 
-    if (availableProviders.length === 1) {
-      provider = availableProviders[0] as ProviderName;
+    if (providerOptions.length === 1) {
+      provider = providerOptions[0].value;
       console.log(`Provider: ${provider} (only available option)\n`);
     } else {
       const currentProvider = existingConfig.provider || 'claude';
-      const providerInput = await promptWithDefault(
-        rl,
-        `Provider [claude/codex] (${currentProvider})`,
-        currentProvider
-      );
-      provider = (providerInput === 'codex' ? 'codex' : 'claude') as ProviderName;
+      const defaultProviderIndex = providerOptions.findIndex((p) => p.value === currentProvider);
+
+      console.log('Select provider:');
+      provider = await promptSelect(rl, providerOptions, defaultProviderIndex >= 0 ? defaultProviderIndex : 0);
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
     // Advanced Options
     // ═══════════════════════════════════════════════════════════════════════════
-    console.log('─── Advanced Options ───\n');
+    console.log('─── Model ───\n');
 
     let claudeModel: ClaudeModel = existingConfig.claudeModel || 'opus';
     let codexModel: string = existingConfig.codexModel || 'gpt-5.2';
@@ -205,14 +192,15 @@ export async function configProject(): Promise<void> {
     let maxIterations: number = existingConfig.maxIterations ?? 0;
 
     if (provider === 'claude') {
-      const modelInput = await promptWithDefault(
-        rl,
-        `Claude Model [opus/sonnet/haiku] (${claudeModel})`,
-        claudeModel
-      );
-      if (modelInput === 'sonnet' || modelInput === 'haiku' || modelInput === 'opus') {
-        claudeModel = modelInput;
-      }
+      const modelOptions: SelectOption<ClaudeModel>[] = [
+        { value: 'opus', label: 'opus', description: 'Most capable' },
+        { value: 'sonnet', label: 'sonnet', description: 'Balanced' },
+        { value: 'haiku', label: 'haiku', description: 'Fastest' },
+      ];
+      const defaultModelIndex = modelOptions.findIndex((m) => m.value === claudeModel);
+
+      console.log('Select model:');
+      claudeModel = await promptSelect(rl, modelOptions, defaultModelIndex >= 0 ? defaultModelIndex : 0);
     } else {
       const modelInput = await promptWithDefault(
         rl,
@@ -221,15 +209,20 @@ export async function configProject(): Promise<void> {
       );
       codexModel = modelInput || codexModel;
 
-      const effortInput = await promptWithDefault(
-        rl,
-        `Reasoning Effort [low/medium/high/extra_high] (${codexEffort})`,
-        codexEffort
-      );
-      if (effortInput === 'low' || effortInput === 'medium' || effortInput === 'high' || effortInput === 'extra_high') {
-        codexEffort = effortInput;
-      }
+      const effortOptions: SelectOption<CodexReasoningEffort>[] = [
+        { value: 'low', label: 'low' },
+        { value: 'medium', label: 'medium' },
+        { value: 'high', label: 'high' },
+        { value: 'extra_high', label: 'extra_high' },
+      ];
+      const defaultEffortIndex = effortOptions.findIndex((e) => e.value === codexEffort);
+
+      console.log('\nSelect reasoning effort:');
+      codexEffort = await promptSelect(rl, effortOptions, defaultEffortIndex >= 0 ? defaultEffortIndex : 2);
     }
+
+    console.log('');
+    console.log('─── Advanced ───\n');
 
     const maxIterInput = await promptWithDefault(
       rl,
@@ -248,22 +241,27 @@ export async function configProject(): Promise<void> {
     // ═══════════════════════════════════════════════════════════════════════════
     console.log('─── Merge Mode ───\n');
 
-    let mergeMode: MergeMode = existingConfig.mergeMode || 'merge';
+    const currentMergeMode: MergeMode = existingConfig.mergeMode || 'merge';
 
-    console.log('When Foundry completes work on a ticket:');
-    console.log('  merge - Merge directly to main (autonomous)');
-    console.log('  pr    - Create a pull request for human review');
+    const mergeModeOptions: SelectOption<MergeMode>[] = [
+      { value: 'merge', label: 'merge', description: 'Merge directly to main' },
+      { value: 'pr', label: 'pr', description: 'Create PR for review' },
+    ];
+    const defaultMergeIndex = mergeModeOptions.findIndex((m) => m.value === currentMergeMode);
+
+    console.log('When work completes:');
+    const mergeMode = await promptSelect(rl, mergeModeOptions, defaultMergeIndex >= 0 ? defaultMergeIndex : 0);
+
     console.log('');
 
-    const mergeModeInput = await promptWithDefault(
-      rl,
-      `Merge mode [merge/pr] (${mergeMode})`,
-      mergeMode
-    );
-    if (mergeModeInput === 'pr' || mergeModeInput === 'merge') {
-      mergeMode = mergeModeInput;
-    }
-
+    // ═══════════════════════════════════════════════════════════════════════════
+    // Summary
+    // ═══════════════════════════════════════════════════════════════════════════
+    console.log('─── Summary ───\n');
+    console.log(`  Team: ${selectedTeam.name} (${selectedTeam.key})`);
+    console.log(`  Provider: ${provider}${provider === 'claude' ? ` (${claudeModel})` : ` (${codexModel})`}`);
+    console.log(`  Merge: ${mergeMode}`);
+    console.log(`  Max iterations: ${maxIterations === 0 ? 'unlimited' : maxIterations}`);
     console.log('');
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -284,7 +282,7 @@ export async function configProject(): Promise<void> {
     saveEnvConfig(newConfig);
     saveMcpConfig(apiKey);
 
-    console.log('Saved configuration to .foundry/env');
+    console.log('Saved to .foundry/env');
 
     // ═══════════════════════════════════════════════════════════════════════════
     // Linear Workflow Statuses
@@ -342,11 +340,8 @@ export async function configProject(): Promise<void> {
 
     // Done
     console.log('');
-    console.log('╔════════════════════════════════════════╗');
-    console.log('║  ✓ Configuration saved!                ║');
-    console.log('║                                        ║');
-    console.log('║  Run `foundry` to start the loop       ║');
-    console.log('╚════════════════════════════════════════╝');
+    console.log('✓ Configuration complete');
+    console.log('  Run `foundry` to start');
     console.log('');
 
   } finally {
@@ -362,9 +357,7 @@ export async function uninstallProject(): Promise<void> {
   const foundryDir = join(projectRoot, '.foundry');
 
   console.log('');
-  console.log('╔════════════════════════════════════════╗');
-  console.log('║     Foundry - Uninstall Wizard         ║');
-  console.log('╚════════════════════════════════════════╝');
+  console.log('╭─ Foundry Uninstall ─╮');
   console.log('');
   console.log(`Project: ${projectRoot}`);
   console.log('');
@@ -504,9 +497,7 @@ export async function uninstallProject(): Promise<void> {
     }
 
     console.log('');
-    console.log('╔════════════════════════════════════════╗');
-    console.log('║  ✓ Foundry uninstalled                 ║');
-    console.log('╚════════════════════════════════════════╝');
+    console.log('✓ Foundry uninstalled');
 
   } finally {
     rl.close();
