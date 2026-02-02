@@ -39,9 +39,10 @@ interface CodexItemCompleted {
     aggregated_output?: string;
     changes?: Array<{ kind: string; path: string }>;
     text?: string;
-    // MCP tool call fields
-    tool_name?: string;
-    tool_arguments?: Record<string, unknown>;
+    // MCP tool call fields (server + tool, not tool_name)
+    server?: string;
+    tool?: string;
+    arguments?: Record<string, unknown>;
     // Web search fields
     query?: string;
   };
@@ -123,12 +124,15 @@ function formatCodexEvent(event: CodexEvent): string | null {
       }
 
       case 'mcp_tool_call': {
-        const toolName = item.tool_name || 'unknown';
+        // Codex uses server + tool fields for MCP calls
+        const server = item.server || '';
+        const tool = item.tool || 'unknown';
+        const toolDisplay = server ? `${server}:${tool}` : tool;
         // Show tool name and a preview of arguments if present
-        let display = `🔌 [codex] mcp:${toolName}`;
-        if (item.tool_arguments) {
-          const argPreview = truncate(JSON.stringify(item.tool_arguments), 80);
-          display += ` ${DIM}${argPreview}${RESET}`;
+        let display = `🔌 [codex] ${toolDisplay}`;
+        if (item.arguments && Object.keys(item.arguments).length > 0) {
+          const argPreview = truncate(JSON.stringify(item.arguments), 80);
+          display += ` ${argPreview}`;
         }
         return `${DIM}${display}${RESET}`;
       }
