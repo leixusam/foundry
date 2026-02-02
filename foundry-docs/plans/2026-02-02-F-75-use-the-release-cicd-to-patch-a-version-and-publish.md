@@ -4,7 +4,7 @@
 **Date**: 2026-02-02  
 **Research**: `foundry-docs/research/2026-02-02-F-75-use-the-release-cicd-to-patch-a-version-and-publish.md`  
 **Specification**: N/A  
-**Status**: Ready for Implementation
+**Status**: Implementation Complete
 
 ## Overview
 
@@ -20,8 +20,8 @@ The repository already contains:
 
 - [x] Maintainer checklist exists for doing a patch release via GitHub Actions (inputs + expected artifacts)
 - [x] Recovery path is documented for “tag exists but publish failed” and “publish succeeded but release creation failed”
-- [ ] `CLAUDE.md` release guidance matches the Actions-based process (no outdated local/manual steps)
-- [ ] Local CI parity checks pass: `npm run build && npm run typecheck && npm test`
+- [x] `CLAUDE.md` release guidance matches the Actions-based process (no outdated local/manual steps)
+- [x] Local CI parity checks pass: `npm run build && npm run typecheck && npm test`
 
 ## Phases
 
@@ -87,6 +87,7 @@ npm test
 ### Phase 2: Update `CLAUDE.md` to match the real release process
 
 **Goal**: Remove outdated manual instructions to prevent maintainers (and agents) from following incorrect steps.
+- [x] Complete
 
 **Changes**:
 - `CLAUDE.md`: replace the current “Releasing” section (manual `npm version` / `gh release create`) with:

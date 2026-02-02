@@ -52,14 +52,12 @@ The `foundry-docs/` directory at project root stores Foundry's work artifacts:
 - `foundry-docs/validation/` - Validation reports
 - `foundry-docs/shared/` - Shared context between sessions
 
-## Releasing
+## Releasing (Maintainers)
 
-To release a new version (auto-publishes to npm via GitHub Actions):
+Releases are performed via GitHub Actions (see `README.md` for the full checklist).
 
-```bash
-npm version patch    # or minor/major - bumps package.json + creates git tag
-git push && git push --tags
-gh release create v0.x.x --generate-notes --title "v0.x.x"
-```
-
-The `publish.yml` workflow automatically runs `npm publish` when a GitHub release is created.
+- GitHub → Actions → `Release` (branch: `main`)
+  - Inputs: `release_type` (`patch|minor|major`), `npm_tag` (default `latest`), `dry_run` (`true` runs CI only)
+  - Requires `NPM_TOKEN` secret; optionally `RELEASE_TOKEN` if the workflow needs to push to a protected `main` and/or create the GitHub Release.
+- Recovery: If a tag exists but publish failed, run `Publish existing ref to npm` with `ref = vX.Y.Z`.
+  - Note: `Publish existing ref to npm` is a manual recovery workflow (`workflow_dispatch`); it does not run automatically on GitHub Release events.
