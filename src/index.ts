@@ -705,7 +705,7 @@ export async function main(): Promise<void> {
     const hasLinearMcp = checkCodexLinearMcp();
     if (!hasLinearMcp) {
       console.log('\n⚠️  Linear MCP not configured for Codex.');
-      console.log('   Run: codex mcp add linear --url https://mcp.linear.app/mcp');
+      console.log('   Run: foundry config');
       process.exit(1);
     }
     console.log('   Codex Linear MCP: ✓ configured');

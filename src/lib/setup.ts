@@ -287,6 +287,49 @@ export function saveMcpConfig(apiKey: string): void {
   writeFileSync(mcpPath, JSON.stringify(config, null, 2) + '\n', 'utf-8');
 }
 
+/**
+ * Saves Codex MCP configuration to global ~/.codex/config.toml.
+ * Uses bearer_token_env_var so the actual API key stays in .foundry/env.
+ */
+export function saveCodexMcpConfig(): void {
+  const homeDir = process.env.HOME || process.env.USERPROFILE || '';
+  const codexDir = join(homeDir, '.codex');
+  const configPath = join(codexDir, 'config.toml');
+
+  // Ensure ~/.codex directory exists
+  if (!existsSync(codexDir)) {
+    mkdirSync(codexDir, { recursive: true });
+  }
+
+  // Read existing config if it exists
+  let existingContent = '';
+  if (existsSync(configPath)) {
+    existingContent = readFileSync(configPath, 'utf-8');
+  }
+
+  // Check if [mcp_servers.linear] section already exists
+  if (existingContent.includes('[mcp_servers.linear]')) {
+    // Update the existing section - find and replace
+    const linearSectionRegex = /\[mcp_servers\.linear\][^\[]*(?=\[|$)/s;
+    const newSection = `[mcp_servers.linear]
+url = "https://mcp.linear.app/mcp"
+bearer_token_env_var = "LINEAR_API_KEY"
+
+`;
+    existingContent = existingContent.replace(linearSectionRegex, newSection);
+  } else {
+    // Append the new section
+    const newSection = `
+[mcp_servers.linear]
+url = "https://mcp.linear.app/mcp"
+bearer_token_env_var = "LINEAR_API_KEY"
+`;
+    existingContent = existingContent.trimEnd() + '\n' + newSection;
+  }
+
+  writeFileSync(configPath, existingContent, 'utf-8');
+}
+
 // ════════════════════════════════════════════════════════════════════════════
 // CLI Detection
 // ════════════════════════════════════════════════════════════════════════════

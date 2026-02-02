@@ -27,13 +27,13 @@ import {
   loadExistingConfig,
   saveEnvConfig,
   saveMcpConfig,
+  saveCodexMcpConfig,
   checkAndDisplayCliAvailability,
   autoSelectProvider,
   validateLinearKey,
   fetchLinearTeams,
   checkLinearStatuses,
   createLinearStatuses,
-  checkCodexLinearMcp,
   createPromptInterface,
   promptSecret,
   promptWithDefault,
@@ -282,6 +282,11 @@ export async function configProject(): Promise<void> {
     saveEnvConfig(newConfig);
     saveMcpConfig(apiKey);
 
+    // Configure Codex MCP if using Codex provider
+    if (provider === 'codex') {
+      saveCodexMcpConfig();
+    }
+
     console.log('Saved to .foundry/env');
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -327,15 +332,12 @@ export async function configProject(): Promise<void> {
       }
     }
 
-    // Check Codex MCP if using Codex
+    // Show Codex MCP status if using Codex
     if (provider === 'codex') {
-      const hasLinearMcp = checkCodexLinearMcp();
-      if (!hasLinearMcp) {
-        console.log('\n⚠️  Linear MCP not configured for Codex.');
-        console.log('   Run: codex mcp add linear --url https://mcp.linear.app/mcp\n');
-      } else {
-        console.log('   Codex Linear MCP: ✓ configured');
-      }
+      console.log('');
+      console.log('─── Codex MCP ───\n');
+      console.log('Linear MCP configured in ~/.codex/config.toml');
+      console.log('(Uses LINEAR_API_KEY from .foundry/env)');
     }
 
     // Done
