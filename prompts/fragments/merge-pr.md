@@ -8,42 +8,81 @@ git remote get-url origin
 
 Include this as `repo_url` in WORK_RESULT.
 
-### Step 8: Create Pull Request
+### Step 8: Create PR Description Document
 
-Instead of merging directly, create a pull request for human review.
+Before creating the PR, write a comprehensive PR description document to `foundry-docs/prs/{identifier}.md`:
 
-```bash
-# Ensure all changes are pushed to the feature branch
-git push origin foundry/{identifier}
+```markdown
+# PR: {issue_identifier} - {issue_title}
 
-# Create the pull request
-gh pr create \
-  --title "{issue_identifier}: {issue_title}" \
-  --body "$(cat <<'EOF'
+**Branch**: `foundry/{identifier}`
+**Linear Issue**: {issue_identifier}
+**Date**: {YYYY-MM-DD}
+
 ## Summary
 
-{Brief description of what was implemented}
+{2-3 sentence description of what this PR accomplishes and why}
+
+## Problem
+
+{What problem does this solve? What was the user pain point or technical need?}
+
+## Solution
+
+{How does this PR solve the problem? Describe the approach taken.}
 
 ## Changes
 
-{List of key changes made}
+{List the key changes made, organized by category if helpful}
+
+### Files Changed
+- `path/to/file.ts` - {brief description of change}
+- `path/to/other.ts` - {brief description of change}
 
 ## Testing
 
-{How the changes were verified}
+{How were the changes verified?}
 
-- [ ] Tests pass
-- [ ] TypeScript compiles
-- [ ] Lint passes
+### Automated
+- [ ] Tests pass (`npm test`)
+- [ ] TypeScript compiles (`npm run typecheck`)
+- [ ] Lint passes (`npm run lint`)
 
-## Linear Issue
+### Manual Verification
+{Any manual testing performed or recommended}
 
-{issue_identifier}
+## Breaking Changes
+
+{List any breaking changes, or "None" if backward compatible}
+
+## Migration Notes
+
+{Any steps needed for users upgrading, or "None" if not applicable}
+
+## Screenshots
+
+{If UI changes, include before/after screenshots, or "N/A" for non-UI changes}
 
 ---
 🤖 Created by [Foundry](https://github.com/leixusam/foundry) with {{PROVIDER_LINK}}
-EOF
-)" \
+```
+
+Commit and push this document:
+```bash
+git add foundry-docs/prs/
+git commit -m "docs({identifier}): add PR description"
+git push origin foundry/{identifier}
+```
+
+### Step 9: Create Pull Request
+
+Create the pull request using the description document:
+
+```bash
+# Create the pull request with the description file
+gh pr create \
+  --title "{issue_identifier}: {issue_title}" \
+  --body-file foundry-docs/prs/{identifier}.md \
   --base main \
   --head foundry/{identifier}
 ```
@@ -51,7 +90,7 @@ EOF
 Replace the placeholders:
 - `{issue_identifier}`: The issue ID (e.g., RSK-123)
 - `{issue_title}`: The issue title
-- Other fields based on the work completed
+- `{identifier}`: The issue identifier for branch naming
 
 **Handle the PR creation result:**
 
@@ -73,6 +112,7 @@ WORK_RESULT:
   branch_name: foundry/{identifier}
   repo_url: {git remote URL, e.g., https://github.com/owner/repo.git}
   artifact_path: foundry-docs/{{ARTIFACT_DIR}}/YYYY-MM-DD-{identifier}-{slug}.md
+  pr_description_path: foundry-docs/prs/{identifier}.md
   commit_hash: {short hash on feature branch}
   merge_status: pr_created
   pr_url: {GitHub PR URL}
