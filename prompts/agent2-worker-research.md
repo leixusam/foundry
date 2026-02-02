@@ -226,7 +226,25 @@ The document should include:
 {Ready for specification phase / Ready for planning phase.}
 ```
 
-### Step 8: Git Commit and Push
+### Step 8: Post-Research Oneshot Re-evaluation
+
+**Before committing, reassess complexity.** Research often reveals the task is simpler than the vague ticket description suggested.
+
+**Fast-track to oneshot if research revealed ANY of these:**
+- The solution is just running existing commands/scripts (no code changes needed)
+- Only documentation updates are required
+- Changes are <50 lines across ≤3 files
+- The implementation path is now completely clear with no ambiguity
+
+**If fast-tracking to oneshot:**
+1. Do NOT commit the research document
+2. Read and follow `.foundry/prompts/agent2-worker-oneshot.md` instead
+3. Complete the task in this session
+4. The oneshot worker will output `workflow: oneshot`
+
+**If still staged workflow:** Continue to Step 9.
+
+### Step 9: Git Commit and Push
 
 ```bash
 git add foundry-docs/research/
@@ -236,7 +254,7 @@ git push origin foundry/{identifier}
 
 ## Output Format
 
-After completing research, output:
+After completing research (staged workflow only), output:
 
 ```
 WORK_RESULT:
@@ -251,7 +269,7 @@ WORK_RESULT:
     {Description of what was researched and key findings}
 ```
 
-**Note**: Research stage always outputs `workflow: staged` because if the task was classified as oneshot, the agent would have switched to the oneshot worker prompt and that stage outputs `workflow: oneshot`.
+**Note**: If you reach this output format, you're in staged workflow. If the task was classified as oneshot (either at Step 2 or Step 8 re-evaluation), you should have switched to the oneshot worker prompt which outputs `workflow: oneshot`.
 
 **Choose next_status based on your Specification Assessment:**
 - `"∞ Needs Specification"` - For features with significant UX components
@@ -307,5 +325,5 @@ Use `∞ Blocked` when:
 - Be thorough but focused - don't over-research
 - Focus on what's needed for THIS issue, not general improvements
 - If the issue is unclear, note that in Questions section
-- Always commit and push before outputting WORK_RESULT
-- If the task is simple, switch to oneshot flow immediately - don't do unnecessary research
+- Always commit and push before outputting WORK_RESULT (staged workflow only)
+- **Oneshot opportunities**: Check at Step 2 (initial assessment) AND Step 8 (post-research). If research reveals the task is simpler than expected, fast-track to oneshot instead of continuing staged workflow
