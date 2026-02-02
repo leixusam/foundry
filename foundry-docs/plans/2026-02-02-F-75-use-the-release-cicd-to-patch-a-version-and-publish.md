@@ -18,8 +18,8 @@ The repository already contains:
 
 ## Success Criteria
 
-- [ ] Maintainer checklist exists for doing a patch release via GitHub Actions (inputs + expected artifacts)
-- [ ] Recovery path is documented for “tag exists but publish failed” and “publish succeeded but release creation failed”
+- [x] Maintainer checklist exists for doing a patch release via GitHub Actions (inputs + expected artifacts)
+- [x] Recovery path is documented for “tag exists but publish failed” and “publish succeeded but release creation failed”
 - [ ] `CLAUDE.md` release guidance matches the Actions-based process (no outdated local/manual steps)
 - [ ] Local CI parity checks pass: `npm run build && npm run typecheck && npm test`
 
@@ -28,6 +28,7 @@ The repository already contains:
 ### Phase 1: Write the patch-release checklist (Actions-based)
 
 **Goal**: Provide a step-by-step checklist that a maintainer can follow without guessing.
+- [x] Complete
 
 **Changes**:
 - `README.md`: expand the “Releasing (Maintainers)” section with a concise checklist that includes the workflow inputs (`release_type`, `npm_tag`, `dry_run`), prerequisites, and expected outputs.
@@ -118,4 +119,3 @@ rg -n "Releasing|publish\\.yml|release\\.yml|npm version" README.md CLAUDE.md .g
   - `release_type`: `patch|minor|major`
   - `npm_tag`: dist-tag (default `latest`)
   - `dry_run`: run CI gates only
-

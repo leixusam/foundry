@@ -207,11 +207,62 @@ npm install -g @leixusam/foundry@latest
 
 ## Releasing (Maintainers)
 
-Releases are performed via GitHub Actions:
+Releases are performed via GitHub Actions.
 
-- Run the `Release` workflow (on `main`) with `release_type` = `patch|minor|major`.
-- Requires `NPM_TOKEN` (npm publish token). If `main` is protected from workflow pushes, also set `RELEASE_TOKEN` (a GitHub token/PAT with `contents: write`) so the workflow can push the version bump commit + tag and create the GitHub Release.
-- If a release run fails after pushing a tag but before publishing, run `Publish existing ref to npm` with `ref` = the tag (e.g. `v0.1.10`).
+### Preflight
+
+1. Confirm GitHub repo secrets:
+   - `NPM_TOKEN` (required): npm publish token with access to publish `@leixusam/foundry`.
+   - `RELEASE_TOKEN` (optional): GitHub token/PAT with `contents: write` in case `github.token` can’t push to `main` due to branch protections (also used to create the GitHub Release).
+2. Confirm no other release run is in progress (the workflow uses `concurrency: release`).
+
+### Optional: dry run (CI gates only)
+
+1. GitHub → Actions → `Release` → Run workflow (branch: `main`)
+2. Inputs:
+   - `release_type`: `patch`
+   - `npm_tag`: `latest`
+   - `dry_run`: `true`
+3. Expectation: build/typecheck/tests run and pass; **no** version bump commit, tag, GitHub Release, or npm publish is created.
+
+### Patch release
+
+1. GitHub → Actions → `Release` → Run workflow (branch: `main`)
+2. Inputs:
+   - `release_type`: `patch` (or `minor` / `major`)
+   - `npm_tag`: `latest` (or another intended dist-tag)
+   - `dry_run`: `false`
+3. Expected outputs:
+   - A commit on `main` with message like `chore(release): vX.Y.Z`
+   - A git tag `vX.Y.Z` pushed to the repo
+   - A GitHub Release created for `vX.Y.Z` (auto-generated notes)
+   - `@leixusam/foundry@X.Y.Z` published to npm under the chosen dist-tag
+
+### Recovery (partial failures)
+
+- **Tag exists but npm publish failed**: GitHub → Actions → `Publish existing ref to npm`
+  - `ref`: the tag (e.g. `vX.Y.Z`)
+  - `npm_tag`: the intended dist-tag (default `latest`)
+- **npm publish succeeded but GitHub Release creation failed**: create a GitHub Release from the existing tag (UI or `gh release create vX.Y.Z --generate-notes`).
+
+### Rollback (only if necessary)
+
+If a tag was created but should not exist (and npm publish did not occur):
+
+```bash
+git tag -d vX.Y.Z && git push origin :refs/tags/vX.Y.Z
+```
+
+Delete the GitHub Release for that tag in the UI if one was created.
+
+### Local parity checks (optional)
+
+```bash
+npm ci
+npm run build
+npm run typecheck
+npm test
+```
 
 ## Linear Workflow Statuses
 
