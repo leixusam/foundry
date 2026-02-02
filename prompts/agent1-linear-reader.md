@@ -107,7 +107,7 @@ Make separate calls for each `∞ ... In Progress` status:
 **Do NOT query for**:
 - `∞ Done`, `Done`, `[RL] Done` (completed)
 - `∞ Canceled`, `Canceled`, `[RL] Canceled`, `Duplicate` (canceled)
-- `∞ Awaiting Merge` (completed, waiting for human to merge PR)
+- `∞ Awaiting Merge` (waiting for human to merge PR)
 
 This approach fetches only actionable issues and avoids wasting context on completed work.
 

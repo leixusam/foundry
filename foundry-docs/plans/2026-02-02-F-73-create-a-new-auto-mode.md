@@ -4,7 +4,7 @@
 **Date**: 2026-02-02  
 **Research**: `foundry-docs/research/2026-02-02-F-73-create-a-new-auto-mode-in-addition-to-merge-and-pr.md`  
 **Specification**: N/A  
-**Status**: Ready for Implementation
+**Status**: Implementation Complete (Ready for Validation)
 
 ## Overview
 
@@ -29,7 +29,11 @@ Add a third merge mode, `auto`, alongside `merge` and `pr`. In `auto` mode (the 
 - [x] Phase 1: Add `auto` to merge mode typing + config parsing (and make it default)
 - [x] Phase 2: Update onboarding wizards to offer `auto` (default)
 - [x] Phase 3: Implement `auto` prompt behavior via a new merge fragment
-- [ ] Phase 4: Reclassify `∞ Awaiting Merge` as blocked-like without creating wake loops
+- [x] Phase 4: Reclassify `∞ Awaiting Merge` as blocked-like without creating wake loops
+
+### Implementation Notes
+
+- Linear does not allow updating a workflow state's `type` after creation. To upgrade existing teams, Foundry migrates `∞ Awaiting Merge` by renaming the legacy state, creating a new `∞ Awaiting Merge` with `type: started`, and moving issues over.
 
 ### Phase 1: Add `auto` to merge mode typing + config parsing (and make it default)
 

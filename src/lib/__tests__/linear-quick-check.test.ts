@@ -60,12 +60,12 @@ describe('linear-quick-check module', () => {
         first: 1,
         filter: {
           team: { key: { eq: 'MYTEAM' } },
-          state: { type: { nin: ['completed', 'canceled'] } },
+          state: { type: { in: ['backlog', 'unstarted'] } },
         },
       });
     });
 
-    it('excludes completed and canceled states', async () => {
+    it('includes only backlog and unstarted states', async () => {
       mockIssues.mockResolvedValue({ nodes: [] });
 
       await checkForUncompletedTickets('api-key', 'F');
@@ -73,7 +73,7 @@ describe('linear-quick-check module', () => {
       expect(mockIssues).toHaveBeenCalledWith({
         first: 1,
         filter: expect.objectContaining({
-          state: { type: { nin: ['completed', 'canceled'] } },
+          state: { type: { in: ['backlog', 'unstarted'] } },
         }),
       });
     });
@@ -116,7 +116,7 @@ describe('linear-quick-check module', () => {
         first: 50,
         filter: {
           team: { key: { eq: 'F' } },
-          state: { type: { nin: ['completed', 'canceled'] } },
+          state: { type: { in: ['backlog', 'unstarted'] } },
         },
       });
     });

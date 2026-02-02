@@ -2,10 +2,11 @@ import { LinearClient } from '@linear/sdk';
 import { QuickCheckResult } from '../types.js';
 
 /**
- * Performs a lightweight check for uncompleted tickets in a Linear team.
+ * Performs a lightweight check for tickets that are ready to be picked up.
  *
- * This queries the Linear API for issues that are NOT in 'completed' or 'canceled'
- * status types, scoped to the specified team.
+ * This queries the Linear API for issues in "backlog" or "unstarted" status types
+ * (i.e., waiting for work). It intentionally ignores "started" states, which often
+ * represent human intervention or in-progress work.
  *
  * @param apiKey - Linear API key
  * @param teamKey - Team key (e.g., "F")
@@ -18,13 +19,13 @@ export async function checkForUncompletedTickets(
   try {
     const client = new LinearClient({ apiKey });
 
-    // Query for issues not in completed or canceled states
+    // Query for issues ready to be picked up (backlog/unstarted)
     // Using first: 1 for efficiency - we only need to know if ANY exist
     const issues = await client.issues({
       first: 1,
       filter: {
         team: { key: { eq: teamKey } },
-        state: { type: { nin: ['completed', 'canceled'] } }
+        state: { type: { in: ['backlog', 'unstarted'] } },
       }
     });
 
@@ -37,7 +38,7 @@ export async function checkForUncompletedTickets(
         first: 50,
         filter: {
           team: { key: { eq: teamKey } },
-          state: { type: { nin: ['completed', 'canceled'] } }
+          state: { type: { in: ['backlog', 'unstarted'] } },
         }
       });
       ticketCount = countResult.nodes.length;

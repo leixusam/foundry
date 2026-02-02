@@ -33,7 +33,7 @@ export const FOUNDRY_STATUS_DEFINITIONS: FoundryStatusWithColor[] = [
   { name: `${FOUNDRY_STATUS_PREFIX} Validate In Progress`, type: 'started', color: STATE_COLORS.started },
   { name: `${FOUNDRY_STATUS_PREFIX} Oneshot In Progress`, type: 'started', color: STATE_COLORS.started },
   { name: `${FOUNDRY_STATUS_PREFIX} Blocked`, type: 'started', color: '#eb5757' },  // Red - requires human intervention
-  { name: `${FOUNDRY_STATUS_PREFIX} Awaiting Merge`, type: 'completed', color: STATE_COLORS.completed },  // PR created, waiting for human review
+  { name: `${FOUNDRY_STATUS_PREFIX} Awaiting Merge`, type: 'started', color: STATE_COLORS.started },  // PR created, waiting for human merge
   { name: `${FOUNDRY_STATUS_PREFIX} Done`, type: 'completed', color: STATE_COLORS.completed },
   { name: `${FOUNDRY_STATUS_PREFIX} Canceled`, type: 'canceled', color: STATE_COLORS.canceled },
 ];
@@ -66,6 +66,7 @@ export async function listWorkflowStates(client: LinearClient, teamId: string): 
     name: state.name,
     type: state.type as WorkflowState['type'],
     position: state.position,
+    color: state.color ?? undefined,
   }));
 }
 
@@ -93,6 +94,7 @@ export async function createWorkflowState(
     name: createdState.name,
     type: createdState.type as WorkflowState['type'],
     position: createdState.position,
+    color: createdState.color ?? undefined,
   };
 }
 
@@ -121,12 +123,82 @@ export async function ensureFoundryStatuses(client: LinearClient, teamId: string
 
   // Get existing states
   const existingStates = await listWorkflowStates(client, teamId);
-  const existingNames = new Set(existingStates.map((s) => s.name));
+  const existingByName = new Map(existingStates.map((s) => [s.name, s]));
+
+  async function migrateAwaitingMergeState(existing: WorkflowState, desired: FoundryStatusWithColor): Promise<void> {
+    // Linear does not allow updating a workflow state's `type` after creation.
+    // To migrate existing teams, we:
+    // 1) Rename the legacy state (freeing up the canonical name)
+    // 2) Create a new state with the correct type/color and the canonical name
+    // 3) Move any issues from the legacy state into the new canonical state
+    const legacyBase = `${FOUNDRY_STATUS_PREFIX} Awaiting Merge (Legacy)`;
+    let legacyName = legacyBase;
+    let suffix = 2;
+    while (existingByName.has(legacyName)) {
+      legacyName = `${legacyBase} ${suffix}`;
+      suffix++;
+    }
+
+    await client.updateWorkflowState(existing.id, { name: legacyName });
+    console.log(`  Renamed: ${desired.name} → ${legacyName}`);
+
+    const created = await createWorkflowState(client, teamId, desired);
+    console.log(`  Created: ${desired.name}`);
+
+    let migratedCount = 0;
+    let after: string | undefined;
+    while (true) {
+      const issues = await client.issues({
+        first: 50,
+        after,
+        filter: {
+          team: { id: { eq: teamId } },
+          state: { id: { eq: existing.id } },
+        },
+      });
+
+      for (const issue of issues.nodes) {
+        await client.updateIssue(issue.id, { stateId: created.id });
+        migratedCount++;
+      }
+
+      if (!issues.pageInfo.hasNextPage) break;
+      after = issues.pageInfo.endCursor ?? undefined;
+      if (!after) break;
+    }
+
+    if (migratedCount > 0) {
+      console.log(`  Migrated: ${migratedCount} issue(s) → ${desired.name}`);
+    }
+  }
 
   // Check each Foundry status
   for (const statusDef of FOUNDRY_STATUS_DEFINITIONS) {
-    if (existingNames.has(statusDef.name)) {
+    const existing = existingByName.get(statusDef.name);
+    if (existing) {
       result.existing.push(statusDef.name);
+
+      // Upgrade path for existing teams:
+      // Allow updating specific Foundry statuses (∞-prefixed) when our definitions change.
+      if (statusDef.name === `${FOUNDRY_STATUS_PREFIX} Awaiting Merge`) {
+        const typeMismatch = existing.type !== statusDef.type;
+        const colorMismatch = existing.color !== undefined && existing.color !== statusDef.color;
+
+        try {
+          if (typeMismatch) {
+            await migrateAwaitingMergeState(existing, statusDef);
+            result.created.push(statusDef.name);
+          } else if (colorMismatch) {
+            await client.updateWorkflowState(existing.id, { color: statusDef.color });
+            console.log(`  Updated: ${statusDef.name}`);
+          }
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          result.errors.push(`${statusDef.name}: ${errorMessage}`);
+          result.success = false;
+          console.error(`  Error upgrading ${statusDef.name}: ${errorMessage}`);
+        }
+      }
     } else {
       try {
         await createWorkflowState(client, teamId, statusDef);

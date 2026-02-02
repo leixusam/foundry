@@ -31,6 +31,7 @@ export interface WorkflowState {
   name: string;
   type: LinearStateType;
   position: number;
+  color?: string;
 }
 
 // Foundry status definition for creating workflow states
