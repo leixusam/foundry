@@ -97,6 +97,8 @@ npm run test -- src/lib/__tests__/gcp.test.ts
 
 **Goal**: Validate interactive flows deterministically by mocking the readline interface and controlling answer sequences.
 
+**Status**: Complete (commit `211ed5b`)
+
 **Changes**:
 - `src/lib/__tests__/readline.test.ts`: add tests for `prompt()`, `confirm()`, and `selectFromList()`.
   - Mock `readline.createInterface()` to return an object with `question(cb)` and `close()`.
