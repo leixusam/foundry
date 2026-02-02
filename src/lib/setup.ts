@@ -470,7 +470,11 @@ export function copyPromptsToProject(): void {
   const provider = config.provider || 'claude';
 
   // Load the appropriate merge fragment
-  const fragmentName = mergeMode === 'pr' ? 'merge-pr.md' : 'merge-direct.md';
+  const fragmentName = mergeMode === 'auto'
+    ? 'merge-auto.md'
+    : mergeMode === 'pr'
+      ? 'merge-pr.md'
+      : 'merge-direct.md';
   const fragmentPath = join(fragmentsDir, fragmentName);
   let mergeFragment = '';
   if (existsSync(fragmentPath)) {
