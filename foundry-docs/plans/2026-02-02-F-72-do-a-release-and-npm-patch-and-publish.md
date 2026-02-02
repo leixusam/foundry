@@ -4,7 +4,7 @@
 **Date**: 2026-02-02  
 **Research**: `foundry-docs/research/2026-02-02-F-72-do-a-release-and-npm-patch-and-publish.md`  
 **Specification**: N/A  
-**Status**: Ready for Implementation
+**Status**: Implementation Complete
 
 ## Overview
 
@@ -141,3 +141,8 @@ If npm publish succeeded with an incorrect artifact:
   - adjust branch protection to permit GitHub Actions to push release commits/tags, or
   - switch to a PR-based bump approach (not preferred; only if required).
 
+## Implementation Notes (2026-02-02)
+
+- Added `.github/workflows/release.yml` to run CI gates, bump `npm` version, push tag/commit, create a GitHub Release, and publish to npm.
+- Re-scoped `.github/workflows/publish.yml` to an emergency manual workflow (“publish existing ref”) to avoid double-publishing.
+- Documented maintainer release steps in `README.md`.
