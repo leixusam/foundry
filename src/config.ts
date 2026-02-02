@@ -26,6 +26,11 @@ export function isGitRepository(): boolean {
 
 // Load .foundry/env file if it exists
 function loadFoundryEnv(): void {
+  const skipEnvFile = process.env.FOUNDRY_SKIP_ENV_FILE?.toLowerCase();
+  if (skipEnvFile === '1' || skipEnvFile === 'true') {
+    return;
+  }
+
   const envPath = join(getRepoRoot(), '.foundry', 'env');
   if (!existsSync(envPath)) {
     return;

@@ -4,7 +4,7 @@
 **Date**: 2026-02-02  
 **Research**: `foundry-docs/research/2026-02-02-F-71-add-test-running-to-cicd.md`  
 **Specification**: N/A  
-**Status**: Ready for Implementation
+**Status**: Implementation Complete
 
 ## Overview
 
@@ -12,11 +12,11 @@ Update GitHub Actions workflows so Vitest unit tests run in CI (PRs + `main`) an
 
 ## Success Criteria
 
-- [ ] CI workflow runs `npm test` on PRs and `main` pushes
-- [ ] Publish workflow runs `npm test` before `npm publish`
-- [ ] Local tests pass: `npm test`
-- [ ] Typecheck passes: `npm run typecheck`
-- [ ] Build passes: `npm run build`
+- [x] CI workflow runs `npm test` on PRs and `main` pushes
+- [x] Publish workflow runs `npm test` before `npm publish`
+- [x] Local tests pass: `npm test`
+- [x] Typecheck passes: `npm run typecheck`
+- [x] Build passes: `npm run build`
 
 ## Phases
 
@@ -64,4 +64,4 @@ npm test
 
 - Current workflows use Node.js 20; the package supports Node >= 18, so running CI on Node 20 is compatible.
 - The publish workflow is triggered on GitHub Release publish; adding tests will gate `npm publish` (but not the creation of the GitHub Release itself).
-
+- During implementation, `npm test` was failing locally because `.foundry/env` (ignored by git) was being loaded at config module import time. Tests now set `FOUNDRY_SKIP_ENV_FILE=1`, and the config loader respects it, so `npm test` is deterministic even when a developer has a local `.foundry/env`.
