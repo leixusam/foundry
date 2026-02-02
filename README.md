@@ -154,6 +154,23 @@ Set these in `.foundry/env` or export them:
 | `FOUNDRY_PROVIDER` | AI provider: "claude" or "codex" | "claude" |
 | `FOUNDRY_CLAUDE_MODEL` | Claude model: "opus", "sonnet", "haiku" | "opus" |
 | `FOUNDRY_MAX_ITERATIONS` | Stop after N iterations (0 = unlimited) | 0 |
+| `FOUNDRY_MERGE_MODE` | Merge mode: "merge" or "pr" | "merge" |
+
+### Merge Modes
+
+Foundry supports two modes for completing work:
+
+**Direct Merge (default)**
+```bash
+export FOUNDRY_MERGE_MODE=merge
+```
+Foundry merges completed work directly to main. Best for trusted autonomous operation.
+
+**Pull Request Mode**
+```bash
+export FOUNDRY_MERGE_MODE=pr
+```
+Foundry creates a pull request instead of merging. The ticket moves to `∞ Awaiting Merge` status until a human reviews and merges the PR. Best for teams that want human oversight.
 
 ### Using Codex CLI as Provider
 
@@ -208,6 +225,7 @@ Foundry creates these statuses in Linear:
 
 **Intervention statuses** (requires human action):
 - `∞ Blocked` - Agent needs clarification or decision before proceeding
+- `∞ Awaiting Merge` - Work complete, PR awaiting human review/merge (PR mode only)
 
 **Terminal statuses**:
 - `∞ Done`

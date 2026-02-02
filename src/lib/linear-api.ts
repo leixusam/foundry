@@ -33,6 +33,7 @@ export const FOUNDRY_STATUS_DEFINITIONS: FoundryStatusWithColor[] = [
   { name: `${FOUNDRY_STATUS_PREFIX} Validate In Progress`, type: 'started', color: STATE_COLORS.started },
   { name: `${FOUNDRY_STATUS_PREFIX} Oneshot In Progress`, type: 'started', color: STATE_COLORS.started },
   { name: `${FOUNDRY_STATUS_PREFIX} Blocked`, type: 'started', color: '#eb5757' },  // Red - requires human intervention
+  { name: `${FOUNDRY_STATUS_PREFIX} Awaiting Merge`, type: 'completed', color: STATE_COLORS.completed },  // PR created, waiting for human review
   { name: `${FOUNDRY_STATUS_PREFIX} Done`, type: 'completed', color: STATE_COLORS.completed },
   { name: `${FOUNDRY_STATUS_PREFIX} Canceled`, type: 'canceled', color: STATE_COLORS.canceled },
 ];

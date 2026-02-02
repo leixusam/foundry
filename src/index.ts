@@ -555,7 +555,15 @@ async function runMinimalSetup(cliAvailability: CliAvailability): Promise<boolea
 
     // Auto-select provider based on CLI availability
     const provider = autoSelectProvider(cliAvailability);
-    console.log(`Using provider: ${provider}`);
+    console.log(`Using provider: ${provider}\n`);
+
+    // Prompt for merge mode
+    console.log('Merge Mode Options:');
+    console.log('  merge - Merge directly to main after validation (default)');
+    console.log('  pr    - Create a pull request for human review');
+    console.log('');
+    const mergeModeInput = await promptWithDefault(rl, 'Merge mode [merge/pr]', 'merge');
+    const mergeMode = mergeModeInput === 'pr' ? 'pr' : 'merge';
 
     // Save configuration
     const newConfig: LoadedConfig = {
@@ -566,6 +574,7 @@ async function runMinimalSetup(cliAvailability: CliAvailability): Promise<boolea
       codexModel: existingConfig.codexModel || 'gpt-5.2',
       codexReasoningEffort: existingConfig.codexReasoningEffort || 'high',
       maxIterations: existingConfig.maxIterations ?? 0,
+      mergeMode,
     };
 
     saveEnvConfig(newConfig);
@@ -576,6 +585,7 @@ async function runMinimalSetup(cliAvailability: CliAvailability): Promise<boolea
     process.env.LINEAR_API_KEY = apiKey;
     process.env.LINEAR_TEAM_KEY = teamKey;
     process.env.FOUNDRY_PROVIDER = provider;
+    process.env.FOUNDRY_MERGE_MODE = mergeMode;
 
     console.log('\n✓ Configuration saved!\n');
     return true;

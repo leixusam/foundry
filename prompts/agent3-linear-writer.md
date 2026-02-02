@@ -15,8 +15,9 @@ The context above contains:
    - `commit_hash`: The git commit hash
    - `branch_name`: The feature branch (e.g., `foundry/RSK-123`)
    - `repo_url`: The GitHub repository URL (if provided)
-   - `merge_status`: `success` or `blocked` (if merge was attempted)
+   - `merge_status`: `success`, `blocked`, or `pr_created` (if merge was attempted)
    - `merge_conflict_files`: List of files with conflicts (if merge was blocked)
+   - `pr_url`: The pull request URL (if PR was created)
 3. **Attach branch link** to the issue (if branch_name provided)
 4. **Post a comment** summarizing Agent 2's work, including commit and branch info
 5. **Update the status** based on what happened and merge_status
@@ -41,7 +42,18 @@ When Agent 2 provides `branch_name` in WORK_RESULT, attach a link to the Linear 
    })
    ```
 
-**Important**: Only attach the branch link once. Check if link already exists in issue before adding.
+3. **Attach PR link** (if `pr_url` provided in WORK_RESULT):
+   ```
+   mcp__linear__update_issue({
+     id: "{issue_id}",
+     links: [{
+       url: "{pr_url}",
+       title: "PR: {issue_identifier}"
+     }]
+   })
+   ```
+
+**Important**: Only attach links once. Check if link already exists in issue before adding.
 
 ## Comment Format
 
@@ -133,6 +145,37 @@ The following files have conflicts that require human resolution:
 | **Total** | - | {totals} | **${total_cost}** |
 ```
 
+If PR was created (Agent 2 outputs `merge_status: pr_created`):
+
+```
+**PR Created** | {loop instance name} | {current timestamp}
+
+**Stage**: {stage completed (validate or oneshot)}
+**Loop Instance**: {loop instance name from session stats}
+**Duration**: {loop total duration from session stats}
+**Branch**: {branch_name}
+**Commit**: {commit hash on feature branch}
+**PR**: {pr_url}
+
+## Status
+Work completed successfully. Pull request created for human review.
+
+## Pull Request
+{pr_url}
+
+## Next Steps
+1. Review the PR at the link above
+2. Approve and merge when ready
+3. The Linear status will remain at `∞ Awaiting Merge` until merged
+
+## Cost Summary
+| Agent | Model | Tokens (in/out/cached) | Cost |
+|-------|-------|----------------------|------|
+| Agent 1 | {model} | {in}/{out}/{cached} | ${cost} |
+| Agent 2 | {model} | {in}/{out}/{cached} | ${cost} |
+| **Total** | - | {totals} | **${total_cost}** |
+```
+
 ## Status Updates
 
 **Note**: Agent 2's `workflow` field indicates whether the task followed oneshot or staged flow. Status routing is determined by `next_status` from Agent 2, not the `workflow` field directly. The `workflow` field is primarily for logging and tracking purposes.
@@ -152,6 +195,12 @@ Update the issue status based on what happened AND the merge status:
 - **oneshot/validate complete + merge blocked** → "Blocked"
   - Use status ID: `723acd28-e8a4-4083-a0ff-85986b42c2c2`
   - This indicates the work is done but needs human intervention for merge conflicts
+
+### When merge_status is "pr_created"
+- **oneshot/validate complete + PR created** → `∞ Awaiting Merge`
+  - This indicates the work is done and awaiting human review/merge
+  - Include the PR URL in the comment
+  - Attach the PR URL as a link to the issue (see Branch Linking section)
 
 ### When next_status is "∞ Blocked"
 - **Any stage incomplete + blocked** → `∞ Blocked`
