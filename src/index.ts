@@ -670,6 +670,7 @@ export async function main(): Promise<void> {
   if (config.gcpAutoStop) {
     console.log(`   GCP Auto-Stop: enabled`);
   }
+  console.log(`   Merge Mode: ${config.mergeMode}`);
 
   // Check if Foundry ∞ statuses exist in Linear, create if needed
   const statusesExist = await checkLinearStatuses(config.linearApiKey!, config.linearTeamId!);
