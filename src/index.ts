@@ -227,9 +227,11 @@ ${agent1BasePrompt}`;
   if (issueIdentifier && config.linearApiKey) {
     console.log('\nDownloading attachments from Linear...');
     try {
+      // Use raw output (streaming JSON) which contains full URLs with signatures
+      // The finalOutput (agent1Output) may have truncated URLs in the human-readable summary
       attachmentPaths = await downloadAttachmentsFromAgent1Output(
         config.linearApiKey,
-        agent1Output,
+        agent1Result.output,
         issueIdentifier
       );
       if (attachmentPaths.length > 0) {
