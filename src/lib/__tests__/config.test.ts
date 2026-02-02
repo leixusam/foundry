@@ -13,6 +13,8 @@ describe('config module', () => {
         delete process.env[key];
       }
     });
+    // Prevent local .foundry/env from affecting test defaults
+    process.env.FOUNDRY_SKIP_ENV_FILE = '1';
   });
 
   afterEach(() => {
