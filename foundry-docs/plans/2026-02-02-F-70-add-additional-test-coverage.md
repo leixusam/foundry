@@ -50,6 +50,8 @@ npm run test -- src/lib/__tests__/config.test.ts
 
 **Goal**: Cover cache behavior (fresh vs stale), failure modes, and notification printing without network or filesystem side effects.
 
+**Status**: Complete (commit `2183f2d`)
+
 **Changes**:
 - `src/lib/__tests__/update-checker.test.ts`: add tests for `checkForUpdates()` and `displayUpdateNotification()`.
   - Mock `./version.js` dependency via `vi.mock('../version.js', ...)` (from within `src/lib/__tests__`) to control `getVersion()` and `getPackageName()`.
