@@ -14,6 +14,14 @@ vi.mock('@linear/sdk', () => {
 
 import { checkForUncompletedTickets } from '../linear-quick-check.js';
 
+// Expected state filter that excludes completed, canceled, and blocked statuses
+const expectedStateFilter = {
+  and: [
+    { type: { nin: ['completed', 'canceled'] } },
+    { name: { neq: '∞ Blocked' } }
+  ]
+};
+
 describe('linear-quick-check module', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -60,12 +68,12 @@ describe('linear-quick-check module', () => {
         first: 1,
         filter: {
           team: { key: { eq: 'MYTEAM' } },
-          state: { type: { nin: ['completed', 'canceled'] } },
+          state: expectedStateFilter,
         },
       });
     });
 
-    it('excludes completed and canceled states', async () => {
+    it('excludes completed, canceled, and blocked states', async () => {
       mockIssues.mockResolvedValue({ nodes: [] });
 
       await checkForUncompletedTickets('api-key', 'F');
@@ -73,7 +81,7 @@ describe('linear-quick-check module', () => {
       expect(mockIssues).toHaveBeenCalledWith({
         first: 1,
         filter: expect.objectContaining({
-          state: { type: { nin: ['completed', 'canceled'] } },
+          state: expectedStateFilter,
         }),
       });
     });
@@ -116,7 +124,7 @@ describe('linear-quick-check module', () => {
         first: 50,
         filter: {
           team: { key: { eq: 'F' } },
-          state: { type: { nin: ['completed', 'canceled'] } },
+          state: expectedStateFilter,
         },
       });
     });

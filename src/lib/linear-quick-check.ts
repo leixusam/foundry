@@ -1,11 +1,18 @@
 import { LinearClient } from '@linear/sdk';
 import { QuickCheckResult } from '../types.js';
+import { FOUNDRY_STATUS_PREFIX } from './linear-api.js';
+
+// Status name for blocked tickets that require human intervention
+const BLOCKED_STATUS_NAME = `${FOUNDRY_STATUS_PREFIX} Blocked`;
 
 /**
  * Performs a lightweight check for uncompleted tickets in a Linear team.
  *
  * This queries the Linear API for issues that are NOT in 'completed' or 'canceled'
- * status types, scoped to the specified team.
+ * status types, and NOT in the '∞ Blocked' status, scoped to the specified team.
+ *
+ * The '∞ Blocked' status is excluded because it requires human intervention and
+ * should not trigger automated agent loops.
  *
  * @param apiKey - Linear API key
  * @param teamKey - Team key (e.g., "F")
@@ -18,13 +25,23 @@ export async function checkForUncompletedTickets(
   try {
     const client = new LinearClient({ apiKey });
 
-    // Query for issues not in completed or canceled states
+    // Filter for actionable tickets:
+    // - NOT completed or canceled (by type)
+    // - NOT blocked (by name, since blocked has type 'started')
+    const stateFilter = {
+      and: [
+        { type: { nin: ['completed', 'canceled'] } },
+        { name: { neq: BLOCKED_STATUS_NAME } }
+      ]
+    };
+
+    // Query for issues not in completed, canceled, or blocked states
     // Using first: 1 for efficiency - we only need to know if ANY exist
     const issues = await client.issues({
       first: 1,
       filter: {
         team: { key: { eq: teamKey } },
-        state: { type: { nin: ['completed', 'canceled'] } }
+        state: stateFilter
       }
     });
 
@@ -37,7 +54,7 @@ export async function checkForUncompletedTickets(
         first: 50,
         filter: {
           team: { key: { eq: teamKey } },
-          state: { type: { nin: ['completed', 'canceled'] } }
+          state: stateFilter
         }
       });
       ticketCount = countResult.nodes.length;
