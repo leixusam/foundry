@@ -1,5 +1,6 @@
 name: Release
 
+# Manual release workflow - run via Actions tab
 on:
   workflow_dispatch:
     inputs:
