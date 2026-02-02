@@ -260,6 +260,22 @@ describe('config module', () => {
   });
 
   describe('getConfig() - merge mode', () => {
+    it('returns "auto" when FOUNDRY_MERGE_MODE=auto', async () => {
+      process.env.FOUNDRY_MERGE_MODE = 'auto';
+      vi.resetModules();
+      const { getConfig } = await import('../../config.js');
+      const config = getConfig(true);
+      expect(config.mergeMode).toBe('auto');
+    });
+
+    it('returns "auto" when FOUNDRY_MERGE_MODE=AUTO (case insensitive)', async () => {
+      process.env.FOUNDRY_MERGE_MODE = 'AUTO';
+      vi.resetModules();
+      const { getConfig } = await import('../../config.js');
+      const config = getConfig(true);
+      expect(config.mergeMode).toBe('auto');
+    });
+
     it('returns "merge" when explicitly set', async () => {
       // Explicitly set to merge (overrides .foundry/env file)
       process.env.FOUNDRY_MERGE_MODE = 'merge';
@@ -285,12 +301,12 @@ describe('config module', () => {
       expect(config.mergeMode).toBe('pr');
     });
 
-    it('returns "merge" for invalid values', async () => {
+    it('returns "auto" for invalid values', async () => {
       process.env.FOUNDRY_MERGE_MODE = 'invalid';
       vi.resetModules();
       const { getConfig } = await import('../../config.js');
       const config = getConfig(true);
-      expect(config.mergeMode).toBe('merge');
+      expect(config.mergeMode).toBe('auto');
     });
   });
 

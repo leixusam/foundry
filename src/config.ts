@@ -114,7 +114,7 @@ Environment Variables:
   CODEX_AGENT3_REASONING     Agent 3 reasoning: low, medium (default), high, extra_high
   FOUNDRY_QUICK_CHECK_INTERVAL_MINUTES   Quick check interval (default: 5)
   FOUNDRY_FULL_CHECK_INTERVAL_MINUTES    Full check fallback interval (default: 120)
-  FOUNDRY_MERGE_MODE                     Merge mode: merge (default) or pr
+  FOUNDRY_MERGE_MODE                     Merge mode: auto (default), merge, or pr
 
 Examples:
   npm start                      # Run with Claude (default)
@@ -232,11 +232,13 @@ function getFullCheckInterval(): number {
   return 120; // Default: 120 minutes (2 hours)
 }
 
-// Parse merge mode (default: merge)
+// Parse merge mode (default: auto)
 function getMergeMode(): MergeMode {
   const envMode = process.env.FOUNDRY_MERGE_MODE?.toLowerCase();
+  if (envMode === 'auto') return 'auto';
+  if (envMode === 'merge') return 'merge';
   if (envMode === 'pr') return 'pr';
-  return 'merge'; // Default: direct merge
+  return 'auto'; // Default: agent decides safest path
 }
 
 // Parse per-agent reasoning effort from environment variables
