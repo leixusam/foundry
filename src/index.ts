@@ -7,7 +7,7 @@ import { initLoopLogger, getCurrentOutputDir } from './lib/output-logger.js';
 import { initLoopStats, logAgentStats, finalizeLoopStats } from './lib/stats-logger.js';
 import { createProvider, ProviderResult } from './lib/provider.js';
 import { extractLinearUrls, downloadIssueAttachments } from './lib/attachment-downloader.js';
-import { createLinearClient, getIssueDescription } from './lib/linear-api.js';
+import { createLinearClientWithSignedUrls, getIssueDescription } from './lib/linear-api.js';
 import { isRunningOnGcp, stopGcpInstance } from './lib/gcp.js';
 import { checkForUncompletedTickets } from './lib/linear-quick-check.js';
 import { getVersion } from './lib/version.js';
@@ -228,9 +228,9 @@ ${agent1BasePrompt}`;
   if (issueIdentifier && config.linearApiKey) {
     console.log('\nDownloading attachments from Linear...');
     try {
-      // Fetch fresh description from Linear API to get non-expired signed URLs
-      // Linear's pre-signed URLs expire after ~5 minutes, so we need fresh ones
-      const linearClient = createLinearClient(config.linearApiKey);
+      // Fetch fresh description from Linear API with signed URLs
+      // The public-file-urls-expire-in header makes Linear return pre-signed URLs (1 hour expiry)
+      const linearClient = createLinearClientWithSignedUrls(config.linearApiKey, 3600);
       const freshDescription = await getIssueDescription(linearClient, issueIdentifier);
 
       if (freshDescription) {

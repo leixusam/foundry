@@ -43,6 +43,18 @@ export function createLinearClient(apiKey: string): LinearClient {
   return new LinearClient({ apiKey });
 }
 
+// Create Linear client with signed file URLs (for downloading attachments)
+// The public-file-urls-expire-in header makes Linear return signed URLs in responses
+// See: https://linear.app/developers/file-storage-authentication
+export function createLinearClientWithSignedUrls(apiKey: string, expireInSeconds = 3600): LinearClient {
+  return new LinearClient({
+    apiKey,
+    headers: {
+      'public-file-urls-expire-in': String(expireInSeconds),
+    },
+  });
+}
+
 // Get all workflow states for a team
 export async function listWorkflowStates(client: LinearClient, teamId: string): Promise<WorkflowState[]> {
   const team = await client.team(teamId);
