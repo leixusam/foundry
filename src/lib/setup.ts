@@ -24,7 +24,7 @@ import {
   ensureFoundryStatuses,
   FOUNDRY_STATUS_PREFIX,
 } from './linear-api.js';
-import { detectAvailableClis, hasAnyCli, CliAvailability } from './cli-detection.js';
+import { isClaudeCliInstalled, isCodexCliInstalled, hasAnyCli, CliAvailability } from './cli-detection.js';
 import { ProviderName, ClaudeModel, CodexReasoningEffort, InitResult } from '../types.js';
 
 // Get the package directory (where Foundry is installed)
@@ -282,20 +282,31 @@ export function saveMcpConfig(apiKey: string): void {
 // ════════════════════════════════════════════════════════════════════════════
 
 /**
- * Checks which CLIs are available and displays results.
+ * Checks which CLIs are available and displays results one-by-one.
+ * Provides real-time feedback as each check completes.
  * Returns availability, or undefined if neither is installed.
  */
 export function checkAndDisplayCliAvailability(): CliAvailability | undefined {
   console.log('Detecting CLIs...');
 
-  const availability = detectAvailableClis();
+  // Check Claude Code first, display immediately
+  process.stdout.write('  Claude Code: checking...');
+  const claudeAvailable = isClaudeCliInstalled();
+  const claudeStatus = claudeAvailable ? '✓ installed' : '✗ not found';
+  process.stdout.write(`\r  Claude Code: ${claudeStatus}   \n`);
 
-  const claudeStatus = availability.claude ? '✓ installed' : '✗ not found';
-  const codexStatus = availability.codex ? '✓ installed' : '✗ not found';
+  // Check Codex, display immediately
+  process.stdout.write('  Codex CLI:   checking...');
+  const codexAvailable = isCodexCliInstalled();
+  const codexStatus = codexAvailable ? '✓ installed' : '✗ not found';
+  process.stdout.write(`\r  Codex CLI:   ${codexStatus}   \n`);
 
-  console.log(`  Claude Code: ${claudeStatus}`);
-  console.log(`  Codex CLI:   ${codexStatus}`);
   console.log('');
+
+  const availability: CliAvailability = {
+    claude: claudeAvailable,
+    codex: codexAvailable,
+  };
 
   if (!hasAnyCli(availability)) {
     console.log('❌ Error: No coding CLI found');
