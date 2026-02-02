@@ -1,5 +1,5 @@
 ---
-description: Document codebase as-is with thoughts directory for historical context
+description: Document codebase as-is with foundry-docs directory for historical context
 model: opus
 ---
 
@@ -17,7 +17,7 @@ You are tasked with conducting comprehensive research across the codebase to ans
 - ONLY describe what exists, where it exists, how it works, and how components interact
 - You are creating a technical map/documentation of the existing system
 
-## Initial Setup:
+## Initial Setup
 
 When this command is invoked, respond with:
 
@@ -27,7 +27,7 @@ I'm ready to research the codebase. Please provide your research question or are
 
 Then wait for the user's research query.
 
-## Steps to follow after receiving the research query:
+## Steps to follow after receiving the research query
 
 1. **Read any directly mentioned files first:**
    - If the user mentions specific files (tickets, docs, JSON), read them FULLY first
@@ -53,9 +53,9 @@ Then wait for the user's research query.
 
    **IMPORTANT**: All agents are documentarians, not critics. They will describe what exists without suggesting improvements or identifying issues.
 
-   **For thoughts directory:**
-   - Use the **thoughts-locator** agent to discover what documents exist about the topic
-   - Use the **thoughts-analyzer** agent to extract key insights from specific documents (only the most relevant ones)
+   **For foundry-docs directory:**
+   - Use the **foundry-docs-locator** agent to discover what documents exist about the topic
+   - Use the **foundry-docs-analyzer** agent to extract key insights from specific documents (only the most relevant ones)
 
    **For web research (only if user explicitly asks):**
    - Use the **web-search-researcher** agent for external documentation and resources
@@ -75,7 +75,7 @@ Then wait for the user's research query.
 
 4. **Wait for all sub-agents to complete and synthesize findings:**
    - IMPORTANT: Wait for ALL sub-agent tasks to complete before proceeding
-   - Compile all sub-agent results (both codebase and thoughts findings)
+   - Compile all sub-agent results (both codebase and foundry-docs findings)
    - Prioritize live codebase findings as primary source of truth
    - Use foundry-docs/ findings as supplementary historical context
    - Connect findings across different components
@@ -102,7 +102,7 @@ Then wait for the user's research query.
      ```markdown
      ---
      date: [Current date and time with timezone in ISO format]
-     researcher: [Researcher name from thoughts status]
+     researcher: [Researcher name from foundry-docs status]
      git_commit: [Current commit hash]
      branch: [Current branch name]
      repository: [Repository name]
@@ -116,7 +116,7 @@ Then wait for the user's research query.
      # Research: [User's Question/Topic]
 
      **Date**: [Current date and time with timezone from step 4]
-     **Researcher**: [Researcher name from thoughts status]
+     **Researcher**: [Researcher name from foundry-docs status]
      **Git Commit**: [Current commit hash from step 4]
      **Branch**: [Current branch name from step 4]
      **Repository**: [Repository name]
@@ -175,7 +175,7 @@ Then wait for the user's research query.
    - Replace local file references with permalinks in the document
 
 8. **Sync and present findings:**
-   - Run `humanlayer thoughts sync` to sync the thoughts directory
+   - Run `humanlayer thoughts sync` to sync the foundry-docs directory
    - Present a concise summary of findings to the user
    - Include key file references for easy navigation
    - Ask if they have follow-up questions or need clarification
@@ -188,7 +188,7 @@ Then wait for the user's research query.
    - Spawn new sub-agents as needed for additional investigation
    - Continue updating the document and syncing
 
-## Important notes:
+## Important notes
 
 - Always use parallel Task agents to maximize efficiency and minimize context usage
 - Always run fresh codebase research - never rely solely on existing research documents
