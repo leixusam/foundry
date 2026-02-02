@@ -205,6 +205,14 @@ Update with:
 npm install -g @leixusam/foundry@latest
 ```
 
+## Releasing (Maintainers)
+
+Releases are performed via GitHub Actions:
+
+- Run the `Release` workflow (on `main`) with `release_type` = `patch|minor|major`.
+- Requires `NPM_TOKEN` (npm publish token). If `main` is protected from workflow pushes, also set `RELEASE_TOKEN` (a GitHub token/PAT with `contents: write`) so the workflow can push the version bump commit + tag and create the GitHub Release.
+- If a release run fails after pushing a tag but before publishing, run `Publish existing ref to npm` with `ref` = the tag (e.g. `v0.1.10`).
+
 ## Linear Workflow Statuses
 
 Foundry creates these statuses in Linear:

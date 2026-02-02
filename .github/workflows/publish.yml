@@ -1,14 +1,23 @@
-name: Publish to npm
+name: Publish existing ref to npm
 
 on:
-  release:
-    types: [published]
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Git ref to publish (e.g. a tag like v0.1.10).
+        required: true
+      npm_tag:
+        description: npm dist-tag to publish under.
+        required: true
+        default: latest
 
 jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
 
       - uses: actions/setup-node@v4
         with:
@@ -23,6 +32,6 @@ jobs:
 
       - run: npm test
 
-      - run: npm publish --access public
+      - run: npm publish --access public --tag "${{ inputs.npm_tag }}"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
