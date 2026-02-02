@@ -107,6 +107,8 @@ Environment Variables:
   CODEX_AGENT1_REASONING     Agent 1 reasoning: low, medium, high (default), extra_high
   CODEX_AGENT2_REASONING     Agent 2 reasoning: low, medium, high (default), extra_high
   CODEX_AGENT3_REASONING     Agent 3 reasoning: low, medium (default), high, extra_high
+  FOUNDRY_QUICK_CHECK_INTERVAL_MINUTES   Quick check interval (default: 5)
+  FOUNDRY_FULL_CHECK_INTERVAL_MINUTES    Full check fallback interval (default: 120)
 
 Examples:
   npm start                      # Run with Claude (default)
@@ -200,6 +202,30 @@ function getGcpAutoStop(): boolean {
   return envVal === 'true' || envVal === '1';
 }
 
+// Parse quick check interval (default: 5 minutes)
+function getQuickCheckInterval(): number {
+  const envVal = process.env.FOUNDRY_QUICK_CHECK_INTERVAL_MINUTES;
+  if (envVal) {
+    const parsed = parseInt(envVal, 10);
+    if (!isNaN(parsed) && parsed >= 1) {
+      return parsed;
+    }
+  }
+  return 5; // Default: 5 minutes
+}
+
+// Parse full check interval (default: 120 minutes = 2 hours)
+function getFullCheckInterval(): number {
+  const envVal = process.env.FOUNDRY_FULL_CHECK_INTERVAL_MINUTES;
+  if (envVal) {
+    const parsed = parseInt(envVal, 10);
+    if (!isNaN(parsed) && parsed >= 1) {
+      return parsed;
+    }
+  }
+  return 120; // Default: 120 minutes (2 hours)
+}
+
 // Parse per-agent reasoning effort from environment variables
 // Agent 1 and 2 default to 'high', Agent 3 defaults to 'medium' (as specified in ticket RSK-40)
 function getCodexAgentReasoning(): CodexAgentReasoningConfig {
@@ -246,6 +272,10 @@ function buildConfig(): FoundryConfig {
 
     // GCP configuration
     gcpAutoStop: getGcpAutoStop(),
+
+    // Quick check configuration
+    quickCheckIntervalMinutes: getQuickCheckInterval(),
+    fullCheckIntervalMinutes: getFullCheckInterval(),
   };
 }
 
