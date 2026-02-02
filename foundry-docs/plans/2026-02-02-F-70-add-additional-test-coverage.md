@@ -73,6 +73,8 @@ npm run test -- src/lib/__tests__/update-checker.test.ts
 
 **Goal**: Validate metadata detection and instance stop orchestration without real metadata calls or `gcloud`.
 
+**Status**: Complete (commit `eb2a3b4`)
+
 **Changes**:
 - `src/lib/__tests__/gcp.test.ts`: add tests for `isRunningOnGcp()` and `stopGcpInstance()`.
   - Mock `child_process.execSync` (pattern already used in other tests) to capture command execution without running anything.
