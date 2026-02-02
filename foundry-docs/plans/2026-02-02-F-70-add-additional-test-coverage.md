@@ -34,6 +34,8 @@ Additionally, harden tests against local developer environments where `.foundry/
 
 **Goal**: Ensure `npm run test` does not change behavior based on a developer’s local `.foundry/env`.
 
+**Status**: Complete (commit `21d724e`)
+
 **Changes**:
 - `src/lib/__tests__/config.test.ts`: mock `fs.existsSync` / `fs.readFileSync` (or otherwise stub the env-path checks) so `loadFoundryEnv()` behaves as if `.foundry/env` does not exist during these tests.
   - Prefer a narrow mock: only special-case the exact env path (`join(getRepoRoot(), '.foundry', 'env')`) and delegate other paths to the real `fs` implementation.
