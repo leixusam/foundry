@@ -1,9 +1,11 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { sep } from 'path';
+import { execSync } from 'child_process';
+import { join } from 'path';
 
 // `src/config.ts` loads `.foundry/env` at import-time. Make tests deterministic even if a developer
 // has that file locally by pretending it doesn't exist.
-const FOUNDRY_ENV_SUFFIX = `${sep}.foundry${sep}env`;
+const REPO_ROOT = execSync('git rev-parse --show-toplevel', { encoding: 'utf-8' }).trim();
+const FOUNDRY_ENV_PATH = join(REPO_ROOT, '.foundry', 'env');
 
 vi.mock('fs', async (importOriginal) => {
   const actual = await importOriginal<typeof import('fs')>();
@@ -11,17 +13,16 @@ vi.mock('fs', async (importOriginal) => {
   return {
     ...actual,
     existsSync: vi.fn((path: Parameters<typeof actual.existsSync>[0]) => {
-      if (typeof path === 'string' && path.endsWith(FOUNDRY_ENV_SUFFIX)) {
+      if (path === FOUNDRY_ENV_PATH) {
         return false;
       }
       return actual.existsSync(path);
     }),
     readFileSync: vi.fn((path: Parameters<typeof actual.readFileSync>[0], ...rest: unknown[]) => {
-      if (typeof path === 'string' && path.endsWith(FOUNDRY_ENV_SUFFIX)) {
+      if (path === FOUNDRY_ENV_PATH) {
         return '';
       }
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      return actual.readFileSync(path, ...(rest as [any]));
+      return (actual.readFileSync as unknown as (...args: unknown[]) => unknown)(path, ...rest);
     }),
   };
 });
