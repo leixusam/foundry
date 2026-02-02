@@ -172,16 +172,14 @@ function ensureFileExtension(filename: string, contentType: string | null): stri
  * Downloads a single attachment from Linear
  */
 async function downloadAttachment(
-  apiKey: string,
+  _apiKey: string,
   attachment: AttachmentInfo,
   outputDir: string
 ): Promise<{ success: boolean; localPath?: string; error?: string }> {
   try {
-    const response = await fetch(attachment.url, {
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-      },
-    });
+    // Linear attachment URLs are pre-signed with ?signature= query parameters
+    // No Authorization header needed - the signature provides access
+    const response = await fetch(attachment.url);
 
     if (!response.ok) {
       return {
