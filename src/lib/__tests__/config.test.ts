@@ -1,4 +1,30 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { sep } from 'path';
+
+// `src/config.ts` loads `.foundry/env` at import-time. Make tests deterministic even if a developer
+// has that file locally by pretending it doesn't exist.
+const FOUNDRY_ENV_SUFFIX = `${sep}.foundry${sep}env`;
+
+vi.mock('fs', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('fs')>();
+
+  return {
+    ...actual,
+    existsSync: vi.fn((path: Parameters<typeof actual.existsSync>[0]) => {
+      if (typeof path === 'string' && path.endsWith(FOUNDRY_ENV_SUFFIX)) {
+        return false;
+      }
+      return actual.existsSync(path);
+    }),
+    readFileSync: vi.fn((path: Parameters<typeof actual.readFileSync>[0], ...rest: unknown[]) => {
+      if (typeof path === 'string' && path.endsWith(FOUNDRY_ENV_SUFFIX)) {
+        return '';
+      }
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      return actual.readFileSync(path, ...(rest as [any]));
+    }),
+  };
+});
 
 // Store original env
 const originalEnv = process.env;
