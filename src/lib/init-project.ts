@@ -27,7 +27,6 @@ import {
   loadExistingConfig,
   saveEnvConfig,
   saveMcpConfig,
-  copyClaudeCommands,
   checkAndDisplayCliAvailability,
   autoSelectProvider,
   validateLinearKey,
@@ -286,11 +285,6 @@ export async function configProject(): Promise<void> {
     saveMcpConfig(apiKey);
 
     console.log('Saved configuration to .foundry/env');
-
-    // Copy Claude commands if using Claude provider
-    if (provider === 'claude') {
-      copyClaudeCommands();
-    }
 
     // ═══════════════════════════════════════════════════════════════════════════
     // Linear Workflow Statuses

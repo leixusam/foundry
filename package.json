@@ -9,8 +9,7 @@
   },
   "files": [
     "dist/**/*",
-    "prompts/**/*",
-    ".claude/**/*"
+    "prompts/**/*"
   ],
   "scripts": {
     "build": "tsc",

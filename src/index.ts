@@ -20,7 +20,6 @@ import {
   saveEnvConfig,
   saveMcpConfig,
   copyPromptsToProject,
-  copyClaudeCommands,
   checkAndDisplayCliAvailability,
   autoSelectProvider,
   validateLinearKey,
@@ -641,12 +640,6 @@ export async function main(): Promise<void> {
 
   // Sync prompts from package to .foundry/prompts/ (ensures they're always up-to-date)
   copyPromptsToProject();
-
-  // Copy Claude commands if using Claude provider
-  const existingConfig = loadExistingConfig();
-  if (!existingConfig.provider || existingConfig.provider === 'claude') {
-    copyClaudeCommands();
-  }
 
   let config = getConfig();
 

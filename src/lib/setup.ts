@@ -470,31 +470,6 @@ export function copyPromptsToProject(): void {
   console.log(`   Prompts synced (${copied} files, merge mode: ${mergeMode})`);
 }
 
-/**
- * Copies Claude Code commands to project .claude/commands/.
- */
-export function copyClaudeCommands(): void {
-  const sourceDir = join(PACKAGE_ROOT, '.claude/commands');
-  const destDir = join(getRepoRoot(), '.claude', 'commands');
-
-  if (!existsSync(sourceDir)) {
-    return;
-  }
-
-  if (!existsSync(destDir)) {
-    mkdirSync(destDir, { recursive: true });
-  }
-
-  const files = readdirSync(sourceDir).filter((f) => f.endsWith('.md'));
-  for (const file of files) {
-    copyFileSync(join(sourceDir, file), join(destDir, file));
-  }
-
-  if (files.length > 0) {
-    console.log(`   Claude commands synced (${files.length} files)`);
-  }
-}
-
 // ════════════════════════════════════════════════════════════════════════════
 // Prompt Helpers
 // ════════════════════════════════════════════════════════════════════════════
