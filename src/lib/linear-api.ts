@@ -43,6 +43,18 @@ export function createLinearClient(apiKey: string): LinearClient {
   return new LinearClient({ apiKey });
 }
 
+// Create Linear client with signed file URLs (for downloading attachments)
+// The public-file-urls-expire-in header makes Linear return signed URLs in responses
+// See: https://linear.app/developers/file-storage-authentication
+export function createLinearClientWithSignedUrls(apiKey: string, expireInSeconds = 3600): LinearClient {
+  return new LinearClient({
+    apiKey,
+    headers: {
+      'public-file-urls-expire-in': String(expireInSeconds),
+    },
+  });
+}
+
 // Get all workflow states for a team
 export async function listWorkflowStates(client: LinearClient, teamId: string): Promise<WorkflowState[]> {
   const team = await client.team(teamId);
@@ -171,6 +183,28 @@ async function getIssueCountForState(client: LinearClient, stateId: string): Pro
   const state = await client.workflowState(stateId);
   const issues = await state.issues();
   return issues.nodes.length;
+}
+
+// Fetch issue description with fresh pre-signed URLs
+// Linear generates short-lived signed URLs for uploads, so we need to fetch fresh URLs right before download
+export async function getIssueDescription(
+  client: LinearClient,
+  issueIdentifier: string
+): Promise<string | null> {
+  try {
+    // Search for the issue by identifier (e.g., "F-69")
+    const searchResult = await client.searchIssues(issueIdentifier);
+    const issues = searchResult.nodes;
+    if (!issues || issues.length === 0) return null;
+
+    // Find exact match for identifier
+    const issue = issues.find((i) => i.identifier === issueIdentifier);
+    if (!issue) return null;
+
+    return issue.description ?? null;
+  } catch {
+    return null;
+  }
 }
 
 // Delete Foundry workflow statuses that have no issues

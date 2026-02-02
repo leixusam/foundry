@@ -6,7 +6,8 @@ import { generatePodName } from './lib/loop-instance-name.js';
 import { initLoopLogger, getCurrentOutputDir } from './lib/output-logger.js';
 import { initLoopStats, logAgentStats, finalizeLoopStats } from './lib/stats-logger.js';
 import { createProvider, ProviderResult } from './lib/provider.js';
-import { downloadAttachmentsFromAgent1Output } from './lib/attachment-downloader.js';
+import { extractLinearUrls, downloadIssueAttachments } from './lib/attachment-downloader.js';
+import { createLinearClientWithSignedUrls, getIssueDescription } from './lib/linear-api.js';
 import { isRunningOnGcp, stopGcpInstance } from './lib/gcp.js';
 import { checkForUncompletedTickets } from './lib/linear-quick-check.js';
 import { getVersion } from './lib/version.js';
@@ -227,13 +228,20 @@ ${agent1BasePrompt}`;
   if (issueIdentifier && config.linearApiKey) {
     console.log('\nDownloading attachments from Linear...');
     try {
-      // Use raw output (streaming JSON) which contains full URLs with signatures
-      // The finalOutput (agent1Output) may have truncated URLs in the human-readable summary
-      attachmentPaths = await downloadAttachmentsFromAgent1Output(
-        config.linearApiKey,
-        agent1Result.output,
-        issueIdentifier
-      );
+      // Fetch fresh description from Linear API with signed URLs
+      // The public-file-urls-expire-in header makes Linear return pre-signed URLs (1 hour expiry)
+      const linearClient = createLinearClientWithSignedUrls(config.linearApiKey, 3600);
+      const freshDescription = await getIssueDescription(linearClient, issueIdentifier);
+
+      if (freshDescription) {
+        // Extract URLs from the fresh description (has valid signatures)
+        const attachments = extractLinearUrls(freshDescription);
+        if (attachments.length > 0) {
+          const result = await downloadIssueAttachments(config.linearApiKey, issueIdentifier, attachments);
+          attachmentPaths = result.attachments.map(a => a.localPath);
+        }
+      }
+
       if (attachmentPaths.length > 0) {
         console.log(`Downloaded ${attachmentPaths.length} attachment(s)`);
       } else {

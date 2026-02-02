@@ -33,3 +33,12 @@ All stages output a `WORK_RESULT` block. See your stage-specific file for the ex
 - All Linear context you need is provided above from Agent 1
 - If something is unclear, make reasonable assumptions and note them
 - If you encounter errors you can't fix, document them clearly
+
+## Attachments
+
+If the Linear issue has attachments (images, documents, etc.), they are automatically downloaded to:
+```
+.foundry/attachments/{issue-identifier}/
+```
+
+For example, attachments for issue F-69 would be in `.foundry/attachments/F-69/`. Check this folder if the issue description references attached files - you can read them directly from there instead of trying to fetch URLs.
