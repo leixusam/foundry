@@ -201,7 +201,7 @@ ${agent1BasePrompt}`;
         return;
       }
 
-      console.log('[Quick Check] Checking for uncompleted tickets...');
+      console.log('[Quick Check] Checking for ready-to-work tickets...');
       const result = await checkForUncompletedTickets(config.linearApiKey, config.linearTeamId);
 
       if (result.error) {
@@ -210,13 +210,13 @@ ${agent1BasePrompt}`;
       }
 
       if (result.hasWork) {
-        console.log(`[Quick Check] Found ${result.ticketCount} uncompleted ticket(s). Triggering Agent 1.`);
+        console.log(`[Quick Check] Found ${result.ticketCount} ready-to-work ticket(s). Triggering Agent 1.`);
         return; // Work found - run Agent 1
       }
 
       // No work found - continue quick check loop
       const minutesUntilFallback = Math.round((fullCheckIntervalMs - timeSinceFullCheck) / 60000);
-      console.log(`[Quick Check] No uncompleted tickets. Fallback in ${minutesUntilFallback} minutes.`);
+      console.log(`[Quick Check] No ready-to-work tickets. Fallback in ${minutesUntilFallback} minutes.`);
     }
   }
 
@@ -567,6 +567,7 @@ async function runMinimalSetup(cliAvailability: CliAvailability): Promise<boolea
     // ─── Merge Mode ───
     console.log('When work completes:');
     const mergeModeOptions: SelectOption<MergeMode>[] = [
+      { value: 'auto', label: 'auto', description: 'Agent decides: merge directly or create PR (recommended)' },
       { value: 'merge', label: 'merge', description: 'Merge directly to main' },
       { value: 'pr', label: 'pr', description: 'Create PR for review' },
     ];

@@ -201,7 +201,7 @@ export function loadExistingConfig(): LoadedConfig {
   }
 
   const mergeMode = getValue('FOUNDRY_MERGE_MODE');
-  if (mergeMode === 'merge' || mergeMode === 'pr') {
+  if (mergeMode === 'auto' || mergeMode === 'merge' || mergeMode === 'pr') {
     config.mergeMode = mergeMode;
   }
 
@@ -246,8 +246,8 @@ export function saveEnvConfig(config: LoadedConfig): void {
   lines.push(`FOUNDRY_MAX_ITERATIONS=${config.maxIterations ?? 0}`);
 
   lines.push('');
-  lines.push('# Merge mode: "merge" (direct to main) or "pr" (create pull request)');
-  lines.push(`FOUNDRY_MERGE_MODE=${config.mergeMode || 'merge'}`);
+  lines.push('# Merge mode: "auto" (agent decides), "merge" (direct to main), or "pr" (create pull request)');
+  lines.push(`FOUNDRY_MERGE_MODE=${config.mergeMode || 'auto'}`);
 
   lines.push(''); // Trailing newline
 
@@ -466,11 +466,15 @@ export function copyPromptsToProject(): void {
 
   // Load current config to determine merge mode
   const config = loadExistingConfig();
-  const mergeMode = config.mergeMode || 'merge';
+  const mergeMode = config.mergeMode || 'auto';
   const provider = config.provider || 'claude';
 
   // Load the appropriate merge fragment
-  const fragmentName = mergeMode === 'pr' ? 'merge-pr.md' : 'merge-direct.md';
+  const fragmentName = mergeMode === 'auto'
+    ? 'merge-auto.md'
+    : mergeMode === 'pr'
+      ? 'merge-pr.md'
+      : 'merge-direct.md';
   const fragmentPath = join(fragmentsDir, fragmentName);
   let mergeFragment = '';
   if (existsSync(fragmentPath)) {

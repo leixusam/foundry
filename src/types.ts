@@ -3,7 +3,7 @@
 export type ProviderName = 'claude' | 'codex';
 export type ClaudeModel = 'opus' | 'sonnet' | 'haiku';
 export type CodexReasoningEffort = 'low' | 'medium' | 'high' | 'extra_high';
-export type MergeMode = 'merge' | 'pr';
+export type MergeMode = 'auto' | 'merge' | 'pr';
 
 // Claude CLI types
 
@@ -31,6 +31,7 @@ export interface WorkflowState {
   name: string;
   type: LinearStateType;
   position: number;
+  color?: string;
 }
 
 // Foundry status definition for creating workflow states

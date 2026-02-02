@@ -1,18 +1,12 @@
 import { LinearClient } from '@linear/sdk';
 import { QuickCheckResult } from '../types.js';
-import { FOUNDRY_STATUS_PREFIX } from './linear-api.js';
-
-// Status name for blocked tickets that require human intervention
-const BLOCKED_STATUS_NAME = `${FOUNDRY_STATUS_PREFIX} Blocked`;
 
 /**
- * Performs a lightweight check for uncompleted tickets in a Linear team.
+ * Performs a lightweight check for tickets that are ready to be picked up.
  *
- * This queries the Linear API for issues that are NOT in 'completed' or 'canceled'
- * status types, and NOT in the '∞ Blocked' status, scoped to the specified team.
- *
- * The '∞ Blocked' status is excluded because it requires human intervention and
- * should not trigger automated agent loops.
+ * This queries the Linear API for issues in "backlog" or "unstarted" status types
+ * (i.e., waiting for work). It intentionally ignores "started" states, which often
+ * represent human intervention or in-progress work.
  *
  * @param apiKey - Linear API key
  * @param teamKey - Team key (e.g., "F")
@@ -25,23 +19,13 @@ export async function checkForUncompletedTickets(
   try {
     const client = new LinearClient({ apiKey });
 
-    // Filter for actionable tickets:
-    // - NOT completed or canceled (by type)
-    // - NOT blocked (by name, since blocked has type 'started')
-    const stateFilter = {
-      and: [
-        { type: { nin: ['completed', 'canceled'] } },
-        { name: { neq: BLOCKED_STATUS_NAME } }
-      ]
-    };
-
-    // Query for issues not in completed, canceled, or blocked states
+    // Query for issues ready to be picked up (backlog/unstarted)
     // Using first: 1 for efficiency - we only need to know if ANY exist
     const issues = await client.issues({
       first: 1,
       filter: {
         team: { key: { eq: teamKey } },
-        state: stateFilter
+        state: { type: { in: ['backlog', 'unstarted'] } },
       }
     });
 
@@ -54,7 +38,7 @@ export async function checkForUncompletedTickets(
         first: 50,
         filter: {
           team: { key: { eq: teamKey } },
-          state: stateFilter
+          state: { type: { in: ['backlog', 'unstarted'] } },
         }
       });
       ticketCount = countResult.nodes.length;
