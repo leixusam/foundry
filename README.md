@@ -133,7 +133,6 @@ your-project/
 │   ├── mcp.json           # MCP configuration for Claude Code
 │   ├── output/            # Runtime logs
 │   └── attachments/       # Downloaded issue attachments
-├── .claude/commands/      # Claude Code slash commands
 ├── foundry-docs/          # Work artifacts (committed)
 │   ├── research/          # Research documents
 │   ├── plans/             # Implementation plans

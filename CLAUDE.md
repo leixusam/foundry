@@ -22,7 +22,6 @@ to work on Linear tickets autonomously.
 - `src/` - TypeScript source code
 - `dist/` - Compiled JavaScript (gitignored)
 - `prompts/` - Agent prompt templates
-- `.claude/commands/` - Claude Code slash commands
 
 ### Key Files
 - `src/index.ts` - Main loop entry point
