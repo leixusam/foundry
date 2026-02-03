@@ -14,7 +14,11 @@ vi.mock('@linear/sdk', () => {
 
 import { checkForUncompletedTickets } from '../linear-quick-check.js';
 
-const expectedStateFilter = { type: { in: ['backlog', 'unstarted'] } };
+// Helper to create mock issues with state
+const createMockIssue = (id: string, stateType: string) => ({
+  id,
+  state: Promise.resolve({ type: stateType }),
+});
 
 describe('linear-quick-check module', () => {
   beforeEach(() => {
@@ -22,24 +26,55 @@ describe('linear-quick-check module', () => {
   });
 
   describe('checkForUncompletedTickets()', () => {
-    it('returns hasWork=true with ticket count when issues exist', async () => {
-      // First query returns 1 issue (existence check)
-      mockIssues.mockResolvedValueOnce({
-        nodes: [{ id: 'issue-1', title: 'Test Issue' }],
-      });
-      // Second query returns 3 issues (count check)
-      mockIssues.mockResolvedValueOnce({
+    it('returns hasWork=true when backlog issues exist', async () => {
+      mockIssues.mockResolvedValue({
         nodes: [
-          { id: 'issue-1' },
-          { id: 'issue-2' },
-          { id: 'issue-3' },
+          createMockIssue('issue-1', 'backlog'),
+          createMockIssue('issue-2', 'completed'),
         ],
       });
 
       const result = await checkForUncompletedTickets('api-key', 'F');
 
       expect(result.hasWork).toBe(true);
-      expect(result.ticketCount).toBe(3);
+      expect(result.ticketCount).toBe(1);
+      expect(result.statusCounts.backlog).toBe(1);
+      expect(result.statusCounts.completed).toBe(1);
+      expect(result.error).toBeUndefined();
+    });
+
+    it('returns hasWork=true when unstarted issues exist', async () => {
+      mockIssues.mockResolvedValue({
+        nodes: [
+          createMockIssue('issue-1', 'unstarted'),
+          createMockIssue('issue-2', 'unstarted'),
+        ],
+      });
+
+      const result = await checkForUncompletedTickets('api-key', 'F');
+
+      expect(result.hasWork).toBe(true);
+      expect(result.ticketCount).toBe(2);
+      expect(result.statusCounts.unstarted).toBe(2);
+      expect(result.error).toBeUndefined();
+    });
+
+    it('returns hasWork=false when only started/completed/canceled issues exist', async () => {
+      mockIssues.mockResolvedValue({
+        nodes: [
+          createMockIssue('issue-1', 'started'),
+          createMockIssue('issue-2', 'completed'),
+          createMockIssue('issue-3', 'canceled'),
+        ],
+      });
+
+      const result = await checkForUncompletedTickets('api-key', 'F');
+
+      expect(result.hasWork).toBe(false);
+      expect(result.ticketCount).toBe(0);
+      expect(result.statusCounts.started).toBe(1);
+      expect(result.statusCounts.completed).toBe(1);
+      expect(result.statusCounts.canceled).toBe(1);
       expect(result.error).toBeUndefined();
     });
 
@@ -50,6 +85,13 @@ describe('linear-quick-check module', () => {
 
       expect(result.hasWork).toBe(false);
       expect(result.ticketCount).toBe(0);
+      expect(result.statusCounts).toEqual({
+        backlog: 0,
+        unstarted: 0,
+        started: 0,
+        completed: 0,
+        canceled: 0,
+      });
       expect(result.error).toBeUndefined();
     });
 
@@ -59,25 +101,42 @@ describe('linear-quick-check module', () => {
       await checkForUncompletedTickets('api-key', 'MYTEAM');
 
       expect(mockIssues).toHaveBeenCalledWith({
-        first: 1,
+        first: 250,
         filter: {
           team: { key: { eq: 'MYTEAM' } },
-          state: expectedStateFilter,
         },
+        includeArchived: false,
       });
     });
 
-    it('includes only backlog and unstarted states', async () => {
-      mockIssues.mockResolvedValue({ nodes: [] });
-
-      await checkForUncompletedTickets('api-key', 'F');
-
-      expect(mockIssues).toHaveBeenCalledWith({
-        first: 1,
-        filter: expect.objectContaining({
-          state: expectedStateFilter,
-        }),
+    it('counts all status categories correctly', async () => {
+      mockIssues.mockResolvedValue({
+        nodes: [
+          createMockIssue('issue-1', 'backlog'),
+          createMockIssue('issue-2', 'backlog'),
+          createMockIssue('issue-3', 'unstarted'),
+          createMockIssue('issue-4', 'started'),
+          createMockIssue('issue-5', 'started'),
+          createMockIssue('issue-6', 'started'),
+          createMockIssue('issue-7', 'completed'),
+          createMockIssue('issue-8', 'completed'),
+          createMockIssue('issue-9', 'completed'),
+          createMockIssue('issue-10', 'completed'),
+          createMockIssue('issue-11', 'canceled'),
+        ],
       });
+
+      const result = await checkForUncompletedTickets('api-key', 'F');
+
+      expect(result.statusCounts).toEqual({
+        backlog: 2,
+        unstarted: 1,
+        started: 3,
+        completed: 4,
+        canceled: 1,
+      });
+      expect(result.hasWork).toBe(true);
+      expect(result.ticketCount).toBe(3); // backlog + unstarted
     });
 
     it('returns error object on API failure', async () => {
@@ -87,6 +146,13 @@ describe('linear-quick-check module', () => {
 
       expect(result.hasWork).toBe(false);
       expect(result.ticketCount).toBe(0);
+      expect(result.statusCounts).toEqual({
+        backlog: 0,
+        unstarted: 0,
+        started: 0,
+        completed: 0,
+        canceled: 0,
+      });
       expect(result.error).toBe('API key invalid');
     });
 
@@ -100,27 +166,18 @@ describe('linear-quick-check module', () => {
       expect(result.error).toBe('ENOTFOUND');
     });
 
-    it('second query gets count (up to 50)', async () => {
-      // First query returns 1 issue
-      mockIssues.mockResolvedValueOnce({
-        nodes: [{ id: 'issue-1' }],
-      });
-      // Second query returns issues
-      mockIssues.mockResolvedValueOnce({
-        nodes: Array(50).fill({ id: 'issue' }),
+    it('handles issues with missing state gracefully', async () => {
+      mockIssues.mockResolvedValue({
+        nodes: [
+          { id: 'issue-1', state: Promise.resolve(null) },
+          createMockIssue('issue-2', 'completed'),
+        ],
       });
 
-      await checkForUncompletedTickets('api-key', 'F');
+      const result = await checkForUncompletedTickets('api-key', 'F');
 
-      // Verify second call uses first: 50
-      expect(mockIssues).toHaveBeenCalledTimes(2);
-      expect(mockIssues).toHaveBeenNthCalledWith(2, {
-        first: 50,
-        filter: {
-          team: { key: { eq: 'F' } },
-          state: expectedStateFilter,
-        },
-      });
+      expect(result.statusCounts.completed).toBe(1);
+      expect(result.hasWork).toBe(false);
     });
   });
 });

@@ -1,56 +1,70 @@
 import { LinearClient } from '@linear/sdk';
-import { QuickCheckResult } from '../types.js';
+import { PulseCheckResult, StatusCategoryCounts, LinearStateType } from '../types.js';
 
 /**
- * Performs a lightweight check for tickets that are ready to be picked up.
+ * Performs a pulse check that returns ticket counts by status category.
  *
- * This queries the Linear API for issues in "backlog" or "unstarted" status types
- * (i.e., waiting for work). It intentionally ignores "started" states, which often
- * represent human intervention or in-progress work.
+ * This queries the Linear API for all issues in the team and groups them by
+ * status type (backlog, unstarted, started, completed, canceled).
  *
  * @param apiKey - Linear API key
  * @param teamKey - Team key (e.g., "F")
- * @returns QuickCheckResult with hasWork boolean and ticket count
+ * @returns PulseCheckResult with hasWork boolean, ticket count, and status breakdown
  */
 export async function checkForUncompletedTickets(
   apiKey: string,
   teamKey: string
-): Promise<QuickCheckResult> {
+): Promise<PulseCheckResult> {
+  const emptyStatusCounts: StatusCategoryCounts = {
+    backlog: 0,
+    unstarted: 0,
+    started: 0,
+    completed: 0,
+    canceled: 0,
+  };
+
   try {
     const client = new LinearClient({ apiKey });
 
-    // Query for issues ready to be picked up (backlog/unstarted)
-    // Using first: 1 for efficiency - we only need to know if ANY exist
+    // Get all issues for the team to count by status category
+    // Using a reasonable limit to get accurate counts
     const issues = await client.issues({
-      first: 1,
+      first: 250,
       filter: {
         team: { key: { eq: teamKey } },
-        state: { type: { in: ['backlog', 'unstarted'] } },
-      }
+      },
+      includeArchived: false,
     });
 
-    const hasWork = issues.nodes.length > 0;
+    // Count issues by status type
+    const statusCounts: StatusCategoryCounts = { ...emptyStatusCounts };
 
-    // If we found at least one, get the actual count (capped at 50 for efficiency)
-    let ticketCount = 0;
-    if (hasWork) {
-      const countResult = await client.issues({
-        first: 50,
-        filter: {
-          team: { key: { eq: teamKey } },
-          state: { type: { in: ['backlog', 'unstarted'] } },
+    for (const issue of issues.nodes) {
+      const state = await issue.state;
+      if (state) {
+        const stateType = state.type as LinearStateType;
+        if (stateType in statusCounts) {
+          statusCounts[stateType]++;
         }
-      });
-      ticketCount = countResult.nodes.length;
+      }
     }
 
-    return { hasWork, ticketCount };
+    // Ready-to-work tickets are those in backlog or unstarted
+    const readyToWorkCount = statusCounts.backlog + statusCounts.unstarted;
+    const hasWork = readyToWorkCount > 0;
+
+    return {
+      hasWork,
+      ticketCount: readyToWorkCount,
+      statusCounts,
+    };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     return {
       hasWork: false,
       ticketCount: 0,
-      error: errorMessage
+      statusCounts: emptyStatusCounts,
+      error: errorMessage,
     };
   }
 }

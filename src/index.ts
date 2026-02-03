@@ -173,50 +173,55 @@ ${agent1BasePrompt}`;
           console.log('Failed to stop GCP instance. Falling back to quick check.');
         }
       } else {
-        console.log('Not running on GCP VM. Falling back to quick check.');
+        console.log('Not running on GCP VM. Falling back to pulse check.');
       }
     }
 
-    // Two-tier polling: quick check loop with fallback
+    // Two-tier polling: pulse check loop with fallback
     const fullCheckIntervalMs = config.fullCheckIntervalMinutes * 60 * 1000;
-    const quickCheckIntervalMs = config.quickCheckIntervalMinutes * 60 * 1000;
+    const pulseCheckIntervalMs = config.quickCheckIntervalMinutes * 60 * 1000;
     let lastFullCheck = Date.now(); // Agent 1 just ran
 
     while (true) {
-      console.log(`\n[Quick Check] Sleeping ${config.quickCheckIntervalMinutes} minutes...`);
-      await sleep(quickCheckIntervalMs);
+      console.log(`\n[Pulse Check] Sleeping ${config.quickCheckIntervalMinutes} minutes...`);
+      await sleep(pulseCheckIntervalMs);
 
       // Check if fallback is due
       const timeSinceFullCheck = Date.now() - lastFullCheck;
       const fallbackDue = timeSinceFullCheck >= fullCheckIntervalMs;
 
       if (fallbackDue) {
-        console.log('[Quick Check] Fallback interval reached. Running full Agent 1 check.');
+        console.log('[Pulse Check] Full check interval reached. Running full Agent 1 check.');
         return; // Exit to let main loop run Agent 1
       }
 
-      // Perform quick check
+      // Perform pulse check
       if (!config.linearApiKey || !config.linearTeamId) {
-        console.log('[Quick Check] Missing Linear credentials. Falling back to Agent 1.');
+        console.log('[Pulse Check] Missing Linear credentials. Falling back to Agent 1.');
         return;
       }
 
-      console.log('[Quick Check] Checking for ready-to-work tickets...');
+      console.log('[Pulse Check] Checking for ready-to-work tickets...');
       const result = await checkForUncompletedTickets(config.linearApiKey, config.linearTeamId);
 
       if (result.error) {
-        console.log(`[Quick Check] Error: ${result.error}. Falling back to Agent 1.`);
+        console.log(`[Pulse Check] Error: ${result.error}. Falling back to Agent 1.`);
         return; // Error - let Agent 1 handle it
       }
 
+      // Display status category stats
+      const { statusCounts } = result;
+      const statsLine = `[Pulse Check] Status: ${statusCounts.completed} done, ${statusCounts.started} in progress, ${statusCounts.unstarted} todo, ${statusCounts.backlog} backlog, ${statusCounts.canceled} canceled`;
+      console.log(statsLine);
+
       if (result.hasWork) {
-        console.log(`[Quick Check] Found ${result.ticketCount} ready-to-work ticket(s). Triggering Agent 1.`);
+        console.log(`[Pulse Check] Found ${result.ticketCount} ready-to-work ticket(s). Initiating next loop.`);
         return; // Work found - run Agent 1
       }
 
-      // No work found - continue quick check loop
+      // No work found - continue pulse check loop
       const minutesUntilFallback = Math.round((fullCheckIntervalMs - timeSinceFullCheck) / 60000);
-      console.log(`[Quick Check] No ready-to-work tickets. Fallback in ${minutesUntilFallback} minutes.`);
+      console.log(`[Pulse Check] No ready-to-work tickets. Checking again in ${config.quickCheckIntervalMinutes} minutes (full check in ${minutesUntilFallback} minutes).`);
     }
   }
 
