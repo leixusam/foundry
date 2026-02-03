@@ -115,3 +115,16 @@ export interface QuickCheckResult {
   ticketCount: number;
   error?: string;
 }
+
+// Pulse check result with status category breakdown
+export interface StatusCategoryCounts {
+  backlog: number;
+  unstarted: number;
+  started: number;
+  completed: number;
+  canceled: number;
+}
+
+export interface PulseCheckResult extends QuickCheckResult {
+  statusCounts: StatusCategoryCounts;
+}
