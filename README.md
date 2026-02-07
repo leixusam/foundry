@@ -1,6 +1,6 @@
 # Foundry - Autonomous Product Development Agent
 
-Foundry is an AI-powered autonomous development system that works on Linear tickets without human intervention. It orchestrates multiple AI agents to research, plan, implement, and validate code changes, all while keeping Linear updated with progress.
+Foundry is an AI-powered autonomous development system that works on Linear tickets without human intervention. It orchestrates multiple AI agents to research, plan, implement, and validate code changes — all while keeping Linear updated with progress.
 
 ## Installation
 
@@ -33,9 +33,9 @@ npm install --save-dev @leixusam/foundry
    - Create necessary directories and configuration
    - Start the development loop
 
-4. **Create tickets** in Linear and Foundry will work on them autonomously
+4. **Create tickets** in Linear — Foundry will pick them up and work on them autonomously
 
-For advanced configuration, run `foundry config` to change settings like provider, model, and iteration limits.
+For advanced configuration, run `foundry config` to customize settings like provider, model, and iteration limits.
 
 ## How It Works
 
