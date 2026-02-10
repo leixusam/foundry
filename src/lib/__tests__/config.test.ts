@@ -326,6 +326,40 @@ describe('config module', () => {
     });
   });
 
+  describe('getConfig() - workflow mode', () => {
+    it('returns "staged" by default', async () => {
+      delete process.env.FOUNDRY_WORKFLOW_MODE;
+      vi.resetModules();
+      const { getConfig } = await import('../../config.js');
+      const config = getConfig(true);
+      expect(config.workflowMode).toBe('staged');
+    });
+
+    it('returns "oneshot" when FOUNDRY_WORKFLOW_MODE=oneshot', async () => {
+      process.env.FOUNDRY_WORKFLOW_MODE = 'oneshot';
+      vi.resetModules();
+      const { getConfig } = await import('../../config.js');
+      const config = getConfig(true);
+      expect(config.workflowMode).toBe('oneshot');
+    });
+
+    it('returns "oneshot" when FOUNDRY_WORKFLOW_MODE=ONESHOT (case insensitive)', async () => {
+      process.env.FOUNDRY_WORKFLOW_MODE = 'ONESHOT';
+      vi.resetModules();
+      const { getConfig } = await import('../../config.js');
+      const config = getConfig(true);
+      expect(config.workflowMode).toBe('oneshot');
+    });
+
+    it('returns "staged" for invalid values', async () => {
+      process.env.FOUNDRY_WORKFLOW_MODE = 'invalid';
+      vi.resetModules();
+      const { getConfig } = await import('../../config.js');
+      const config = getConfig(true);
+      expect(config.workflowMode).toBe('staged');
+    });
+  });
+
   describe('getConfig() - caching behavior', () => {
     it('returns cached config by default', async () => {
       const { getConfig } = await import('../../config.js');

@@ -25,7 +25,7 @@ import {
   FOUNDRY_STATUS_PREFIX,
 } from './linear-api.js';
 import { isClaudeCliInstalled, isCodexCliInstalled, hasAnyCli, CliAvailability } from './cli-detection.js';
-import { ProviderName, ClaudeModel, CodexReasoningEffort, InitResult, MergeMode } from '../types.js';
+import { ProviderName, ClaudeModel, CodexReasoningEffort, InitResult, MergeMode, WorkflowMode } from '../types.js';
 
 // Get the package directory (where Foundry is installed)
 const __filename = fileURLToPath(import.meta.url);
@@ -49,6 +49,7 @@ export interface LoadedConfig {
   codexReasoningEffort?: CodexReasoningEffort;
   maxIterations?: number;
   mergeMode?: MergeMode;
+  workflowMode?: WorkflowMode;
 }
 
 // MCP configuration interface
@@ -205,6 +206,11 @@ export function loadExistingConfig(): LoadedConfig {
     config.mergeMode = mergeMode;
   }
 
+  const workflowMode = getValue('FOUNDRY_WORKFLOW_MODE');
+  if (workflowMode === 'staged' || workflowMode === 'oneshot') {
+    config.workflowMode = workflowMode;
+  }
+
   return config;
 }
 
@@ -248,6 +254,10 @@ export function saveEnvConfig(config: LoadedConfig): void {
   lines.push('');
   lines.push('# Merge mode: "auto" (agent decides), "merge" (direct to main), or "pr" (create pull request)');
   lines.push(`FOUNDRY_MERGE_MODE=${config.mergeMode || 'auto'}`);
+
+  lines.push('');
+  lines.push('# Workflow mode: "staged" (default flow) or "oneshot" (always run oneshot)');
+  lines.push(`FOUNDRY_WORKFLOW_MODE=${config.workflowMode || 'staged'}`);
 
   lines.push(''); // Trailing newline
 
