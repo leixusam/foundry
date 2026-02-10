@@ -238,7 +238,7 @@ export function saveEnvConfig(config: LoadedConfig): void {
 
   lines.push('');
   lines.push('# Codex options');
-  lines.push(`CODEX_MODEL=${config.codexModel || 'gpt-5.2'}`);
+  lines.push(`CODEX_MODEL=${config.codexModel || 'gpt-5.3-codex'}`);
   lines.push(`CODEX_REASONING_EFFORT=${config.codexReasoningEffort || 'high'}`);
 
   lines.push('');

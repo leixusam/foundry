@@ -585,7 +585,7 @@ async function runMinimalSetup(cliAvailability: CliAvailability): Promise<boolea
       linearTeamKey: teamKey,
       provider,
       claudeModel: existingConfig.claudeModel || 'opus',
-      codexModel: existingConfig.codexModel || 'gpt-5.2',
+      codexModel: existingConfig.codexModel || 'gpt-5.3-codex',
       codexReasoningEffort: existingConfig.codexReasoningEffort || 'high',
       maxIterations: existingConfig.maxIterations ?? 0,
       mergeMode,
