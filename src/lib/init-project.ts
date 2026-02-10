@@ -187,7 +187,7 @@ export async function configProject(): Promise<void> {
     console.log('─── Model ───\n');
 
     let claudeModel: ClaudeModel = existingConfig.claudeModel || 'opus';
-    let codexModel: string = existingConfig.codexModel || 'gpt-5.2';
+    let codexModel: string = existingConfig.codexModel || 'gpt-5.3-codex';
     let codexEffort: CodexReasoningEffort = existingConfig.codexReasoningEffort || 'high';
     let maxIterations: number = existingConfig.maxIterations ?? 0;
 

@@ -111,6 +111,22 @@ describe('config module', () => {
     });
   });
 
+  describe('getConfig() - codex model', () => {
+    it('returns gpt-5.3-codex as default codex model', async () => {
+      delete process.env.CODEX_MODEL;
+      const { getConfig } = await import('../../config.js');
+      const config = getConfig(true);
+      expect(config.codexModel).toBe('gpt-5.3-codex');
+    });
+
+    it('returns custom codex model when CODEX_MODEL is set', async () => {
+      process.env.CODEX_MODEL = 'gpt-5.2-codex';
+      const { getConfig } = await import('../../config.js');
+      const config = getConfig(true);
+      expect(config.codexModel).toBe('gpt-5.2-codex');
+    });
+  });
+
   describe('getConfig() - max iterations', () => {
     it('returns 0 (unlimited) by default', async () => {
       delete process.env.FOUNDRY_MAX_ITERATIONS;

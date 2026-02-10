@@ -277,7 +277,7 @@ function buildConfig(): FoundryConfig {
     // Provider configuration
     provider: getProvider(),
     claudeModel: getClaudeModel(),
-    codexModel: process.env.CODEX_MODEL || 'gpt-5.2-codex',
+    codexModel: process.env.CODEX_MODEL || 'gpt-5.3-codex',
     codexReasoningEffort: getCodexReasoningEffort(),
     codexAgentReasoning: getCodexAgentReasoning(),
     maxIterations: getMaxIterations(),
