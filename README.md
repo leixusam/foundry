@@ -153,13 +153,20 @@ Set these in `.foundry/env` or export them:
 | `FOUNDRY_PROVIDER` | AI provider: "claude" or "codex" | "claude" |
 | `FOUNDRY_CLAUDE_MODEL` | Claude model: "opus", "sonnet", "haiku" | "opus" |
 | `FOUNDRY_MAX_ITERATIONS` | Stop after N iterations (0 = unlimited) | 0 |
-| `FOUNDRY_MERGE_MODE` | Merge mode: "merge" or "pr" | "merge" |
+| `FOUNDRY_MERGE_MODE` | Merge mode: "auto", "merge", or "pr" | "auto" |
+| `FOUNDRY_WORKFLOW_MODE` | Workflow mode: "staged" or "oneshot" | "staged" |
 
 ### Merge Modes
 
-Foundry supports two modes for completing work:
+Foundry supports three modes for completing work:
 
-**Direct Merge (default)**
+**Auto Mode (default)**
+```bash
+export FOUNDRY_MERGE_MODE=auto
+```
+Foundry includes both merge and PR instructions and lets the worker choose the safer path for each ticket.
+
+**Direct Merge**
 ```bash
 export FOUNDRY_MERGE_MODE=merge
 ```
@@ -170,6 +177,22 @@ Foundry merges completed work directly to main. Best for trusted autonomous oper
 export FOUNDRY_MERGE_MODE=pr
 ```
 Foundry creates a pull request instead of merging. The ticket moves to `∞ Awaiting Merge` status until a human reviews and merges the PR. Best for teams that want human oversight.
+
+### Workflow Modes
+
+Foundry supports two workflow execution modes:
+
+**Staged Mode (default)**
+```bash
+export FOUNDRY_WORKFLOW_MODE=staged
+```
+Runs the normal research/specification/plan/implement/validate flow, with oneshot used only for small tasks.
+
+**Oneshot-Only Mode**
+```bash
+export FOUNDRY_WORKFLOW_MODE=oneshot
+```
+Routes every ticket through the oneshot worker.
 
 ### Using Codex CLI as Provider
 

@@ -96,6 +96,19 @@ async function runLoop(podName: string, iteration: number): Promise<void> {
 
   const agent1Provider = createProvider(config.provider);
   const agent1BasePrompt = await loadPrompt('agent1-linear-reader');
+  const workflowModeInstructions = config.workflowMode === 'oneshot'
+    ? `
+
+## Workflow Override: Oneshot-Only
+
+Foundry is configured with \`FOUNDRY_WORKFLOW_MODE=oneshot\`.
+
+For this run:
+- Always route the selected issue to stage \`oneshot\`, regardless of current status.
+- When claiming the issue in Step 7, set status to \`∞ Oneshot In Progress\`.
+- In your Agent 2 handoff, set \`Stage to execute: oneshot\`.
+`
+    : '';
   const agent1Prompt = `## Agent Instance
 
 You are part of pod: **${podName}** / Loop ${iteration} / Agent 1 (Linear Reader)
@@ -113,7 +126,7 @@ Use this team key for all Linear MCP tool calls (list_issues, list_issue_statuse
 
 ---
 
-${agent1BasePrompt}`;
+${agent1BasePrompt}${workflowModeInstructions}`;
 
   // Select model based on provider
   const agent1Model = config.provider === 'codex' ? config.codexModel : 'opus';
@@ -589,6 +602,7 @@ async function runMinimalSetup(cliAvailability: CliAvailability): Promise<boolea
       codexReasoningEffort: existingConfig.codexReasoningEffort || 'high',
       maxIterations: existingConfig.maxIterations ?? 0,
       mergeMode,
+      workflowMode: existingConfig.workflowMode || 'staged',
     };
 
     saveEnvConfig(newConfig);
@@ -600,6 +614,7 @@ async function runMinimalSetup(cliAvailability: CliAvailability): Promise<boolea
     process.env.LINEAR_TEAM_KEY = teamKey;
     process.env.FOUNDRY_PROVIDER = provider;
     process.env.FOUNDRY_MERGE_MODE = mergeMode;
+    process.env.FOUNDRY_WORKFLOW_MODE = existingConfig.workflowMode || 'staged';
 
     console.log('\n✓ Configuration saved!\n');
     return true;
@@ -678,6 +693,7 @@ export async function main(): Promise<void> {
   if (config.gcpAutoStop) {
     console.log(`   GCP Auto-Stop: enabled`);
   }
+  console.log(`   Workflow Mode: ${config.workflowMode}`);
   console.log(`   Merge Mode: ${config.mergeMode}`);
 
   // Check if Foundry ∞ statuses exist in Linear, create if needed

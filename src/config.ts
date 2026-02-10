@@ -1,7 +1,7 @@
 import { execSync } from 'child_process';
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
-import { FoundryConfig, ProviderName, ClaudeModel, CodexReasoningEffort, CodexAgentReasoningConfig, MergeMode } from './types.js';
+import { FoundryConfig, ProviderName, ClaudeModel, CodexReasoningEffort, CodexAgentReasoningConfig, MergeMode, WorkflowMode } from './types.js';
 import { parseArgs } from 'util';
 
 // Get the git repo root directory
@@ -115,6 +115,7 @@ Environment Variables:
   FOUNDRY_QUICK_CHECK_INTERVAL_MINUTES   Quick check interval (default: 5)
   FOUNDRY_FULL_CHECK_INTERVAL_MINUTES    Full check fallback interval (default: 120)
   FOUNDRY_MERGE_MODE                     Merge mode: auto (default), merge, or pr
+  FOUNDRY_WORKFLOW_MODE                  Workflow mode: staged (default) or oneshot
 
 Examples:
   npm start                      # Run with Claude (default)
@@ -241,6 +242,13 @@ function getMergeMode(): MergeMode {
   return 'auto'; // Default: agent decides safest path
 }
 
+// Parse workflow mode (default: staged)
+function getWorkflowMode(): WorkflowMode {
+  const envMode = process.env.FOUNDRY_WORKFLOW_MODE?.toLowerCase();
+  if (envMode === 'oneshot') return 'oneshot';
+  return 'staged'; // Default: staged workflow with optional oneshot fast path
+}
+
 // Parse per-agent reasoning effort from environment variables
 // Agent 1 and 2 default to 'high', Agent 3 defaults to 'medium' (as specified in ticket RSK-40)
 function getCodexAgentReasoning(): CodexAgentReasoningConfig {
@@ -294,6 +302,9 @@ function buildConfig(): FoundryConfig {
 
     // Merge mode
     mergeMode: getMergeMode(),
+
+    // Workflow mode
+    workflowMode: getWorkflowMode(),
   };
 }
 

@@ -44,7 +44,7 @@ import {
   TeamInfo,
   SelectOption,
 } from './setup.js';
-import { ProviderName, ClaudeModel, CodexReasoningEffort, MergeMode } from '../types.js';
+import { ProviderName, ClaudeModel, CodexReasoningEffort, MergeMode, WorkflowMode } from '../types.js';
 
 /**
  * Main configuration wizard for `foundry config`.
@@ -237,6 +237,35 @@ export async function configProject(): Promise<void> {
     console.log('');
 
     // ═══════════════════════════════════════════════════════════════════════════
+    // Workflow Mode Configuration
+    // ═══════════════════════════════════════════════════════════════════════════
+    console.log('─── Workflow Mode ───\n');
+
+    const currentWorkflowMode: WorkflowMode = existingConfig.workflowMode || 'staged';
+    const workflowModeOptions: SelectOption<WorkflowMode>[] = [
+      {
+        value: 'staged',
+        label: 'staged',
+        description: 'Default flow: research/spec/plan/implement/validate (oneshot when small)',
+      },
+      {
+        value: 'oneshot',
+        label: 'oneshot',
+        description: 'Always run every ticket as oneshot',
+      },
+    ];
+    const defaultWorkflowModeIndex = workflowModeOptions.findIndex((m) => m.value === currentWorkflowMode);
+
+    console.log('How should tickets be processed?');
+    const workflowMode = await promptSelect(
+      rl,
+      workflowModeOptions,
+      defaultWorkflowModeIndex >= 0 ? defaultWorkflowModeIndex : 0
+    );
+
+    console.log('');
+
+    // ═══════════════════════════════════════════════════════════════════════════
     // Merge Mode Configuration
     // ═══════════════════════════════════════════════════════════════════════════
     console.log('─── Merge Mode ───\n');
@@ -261,6 +290,7 @@ export async function configProject(): Promise<void> {
     console.log('─── Summary ───\n');
     console.log(`  Team: ${selectedTeam.name} (${selectedTeam.key})`);
     console.log(`  Provider: ${provider}${provider === 'claude' ? ` (${claudeModel})` : ` (${codexModel})`}`);
+    console.log(`  Workflow: ${workflowMode}`);
     console.log(`  Merge: ${mergeMode}`);
     console.log(`  Max iterations: ${maxIterations === 0 ? 'unlimited' : maxIterations}`);
     console.log('');
@@ -278,6 +308,7 @@ export async function configProject(): Promise<void> {
       codexReasoningEffort: codexEffort,
       maxIterations,
       mergeMode,
+      workflowMode,
     };
 
     saveEnvConfig(newConfig);

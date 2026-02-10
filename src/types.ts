@@ -4,6 +4,7 @@ export type ProviderName = 'claude' | 'codex';
 export type ClaudeModel = 'opus' | 'sonnet' | 'haiku';
 export type CodexReasoningEffort = 'low' | 'medium' | 'high' | 'extra_high';
 export type MergeMode = 'auto' | 'merge' | 'pr';
+export type WorkflowMode = 'staged' | 'oneshot';
 
 // Claude CLI types
 
@@ -107,6 +108,9 @@ export interface FoundryConfig {
 
   // Merge mode configuration
   mergeMode: MergeMode;
+
+  // Workflow mode configuration
+  workflowMode: WorkflowMode;
 }
 
 // Quick check result

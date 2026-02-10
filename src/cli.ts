@@ -24,6 +24,8 @@ Environment Variables:
   FOUNDRY_PROVIDER          "claude" (default) or "codex"
   FOUNDRY_CLAUDE_MODEL      "opus" (default), "sonnet", or "haiku"
   FOUNDRY_MAX_ITERATIONS    Limit iterations (0 = unlimited)
+  FOUNDRY_MERGE_MODE        "auto" (default), "merge", or "pr"
+  FOUNDRY_WORKFLOW_MODE     "staged" (default) or "oneshot"
 
 For more information, see https://github.com/leixusam/foundry
 `);
